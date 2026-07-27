@@ -1,0 +1,93 @@
+# HamsterHub project context
+
+## Product vision
+
+HamsterHub is a family web application that helps a child care for a real
+animal, initially focused on hamsters. The child records real actions such as
+feeding, refreshing water, cleaning, playing, and health checks. Completed
+actions earn care points. A later phase will define safe, parent-managed ways
+to spend those points.
+
+The core product loop is:
+
+1. Care for the pet in real life.
+2. Record the completed task in HamsterHub.
+3. Optionally wait for parent approval.
+4. Receive the task's historical point value.
+5. Celebrate consistency and progress.
+
+## Users and permissions
+
+- Parents create public accounts and manage the family household.
+- Children do not self-register publicly. A parent will create or invite child
+  accounts from a protected parent area.
+- Parents and children belong to a household.
+- Pets, custom care categories, and care tasks belong to a household.
+- Every care task is assigned to one pet, one active family member, and one
+  reusable category.
+- A user may only access records belonging to one of their active household
+  memberships.
+
+## Current experience
+
+- The early landing page is implemented.
+- Login and parent registration are functional modal dialogs.
+- New public registrations receive the `Parent` role.
+- Russian is the default language, with a persistent English switch.
+- Light and dark themes are available; the first visit follows the device
+  preference and later uses the saved choice.
+- The page includes responsive phone, tablet, and desktop layouts.
+- Authenticated parents have a family dashboard for creating family accounts,
+  pets, and care tasks and for approving or rejecting completed care.
+- Authenticated children have a simplified dashboard for completing care tasks
+  and viewing their approved points and recent history.
+- Pet creation supports an optional birth date and validated photo upload.
+- Parents can use built-in localized care categories or create household-specific
+  categories in Cyrillic or Latin text.
+- Parents can edit and remove family members, pets, and care tasks. Removal is
+  archival so existing care history remains valid.
+- The task form remembers the last selected pet and family member for the
+  current browser session.
+- Parents have a localized account page for changing their display name and
+  reaching secure email and password settings.
+- Parents can open any active family member's care history, including report
+  time, approval time, awarded task points, and the member's point total
+  immediately after that approval.
+- Child history sharing is private by default. Parents independently control
+  whether a child may view other children's approved history and whether that
+  child's approved history may be shared with other children.
+- Pet photos are a primary visual element on child task cards and care-history
+  views.
+- The child dashboard is designed picture-first for children around ages 3–6,
+  with Лилит—a creative 4–5-year-old who loves animals and drawing—as the
+  primary design persona. It uses minimal copy, oversized pet imagery, familiar
+  symbols, large tap targets, and an art-book visual language.
+
+## Durable product decisions
+
+- The design should feel warm, calm, playful, and trustworthy rather than
+  competitive or overstimulating.
+- Child-facing screens may be substantially more expressive than parent tools,
+  but must remain calm, accessible, gender-inclusive in palette, and usable
+  without strong reading skills.
+- Care points reward real care and consistency. They are not purchased.
+- A care log stores `PointsAwarded` so later task-value changes never alter
+  history.
+- An approved care log stores `PointsTotalAfterApproval` so the historical
+  running total remains stable and auditable.
+- The points balance is derived from approved history for now; do not add a
+  mutable balance column.
+- Parent approval states are `Pending`, `Approved`, and `Rejected`.
+- Email confirmation is temporarily disabled during early local development
+  because no email provider is configured. Enable it before public deployment.
+- Russian and English must remain feature-equivalent.
+- Child accounts cannot open the Identity account-management area. Parents
+  manage family accounts during this early phase.
+- Until email invitations exist, parents create family accounts with a
+  temporary password and share it in person.
+
+## Working with future chats
+
+This file is the canonical product summary. `AGENTS.md` tells Codex to read it
+automatically for future work in this repository. Record new durable decisions
+here rather than relying only on conversational memory.

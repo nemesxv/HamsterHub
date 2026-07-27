@@ -11,6 +11,7 @@ public class CareLog
     public CareLogStatus Status { get; set; } = CareLogStatus.Pending;
     public string? ApprovedByUserId { get; set; }
     public DateTimeOffset? ApprovedAt { get; set; }
+    public int? PointsTotalAfterApproval { get; set; }
     public Pet Pet { get; set; } = null!;
     public CareTask CareTask { get; set; } = null!;
     public ApplicationUser CompletedByUser { get; set; } = null!;

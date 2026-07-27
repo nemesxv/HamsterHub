@@ -7,5 +7,6 @@ public class Household
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public ICollection<HouseholdMember> Members { get; set; } = [];
     public ICollection<Pet> Pets { get; set; } = [];
+    public ICollection<CareCategory> CareCategories { get; set; } = [];
     public ICollection<CareTask> CareTasks { get; set; } = [];
 }

@@ -8,8 +8,11 @@ public class HouseholdMember
     public HouseholdMemberRole MemberRole { get; set; }
     public DateTimeOffset JoinedAt { get; set; } = DateTimeOffset.UtcNow;
     public bool IsActive { get; set; } = true;
+    public bool CanViewOtherChildrenHistory { get; set; }
+    public bool ShareHistoryWithChildren { get; set; }
     public Household Household { get; set; } = null!;
     public ApplicationUser User { get; set; } = null!;
+    public ICollection<CareTask> AssignedCareTasks { get; set; } = [];
 }
 
 public enum HouseholdMemberRole { Parent = 1, Child = 2 }

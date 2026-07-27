@@ -1,0 +1,146 @@
+@model FamilyMemberHistoryViewModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+@{
+    ViewData["Title"] = L["MemberHistoryTitle", Model.DisplayName];
+}
+
+<div class="dashboard-shell member-history-page">
+    <nav class="page-back-nav">
+        <a asp-action="Parent">← @L["BackToDashboard"]</a>
+    </nav>
+
+    <section class="member-history-hero">
+        <div class="member-history-avatar" aria-hidden="true">
+            @(string.IsNullOrWhiteSpace(Model.DisplayName) ? "?" : Model.DisplayName[..1].ToUpperInvariant())
+        </div>
+        <div>
+            <p class="dashboard-kicker">@L["FamilyMemberHistory"]</p>
+            <h1>@Model.DisplayName</h1>
+            <p>@Model.Email · @L[$"Role_{Model.Role}"]</p>
+        </div>
+        <div class="member-points-total">
+            <span>@L["CurrentPoints"]</span>
+            <strong>@Model.CurrentPoints</strong>
+        </div>
+        @if (Model.Role == HouseholdMemberRole.Child)
+        {
+            <button type="button" class="dashboard-button"
+                    data-bs-toggle="modal" data-bs-target="#privacyModal">
+                @L["HistoryPrivacy"]
+            </button>
+        }
+    </section>
+
+    @if (TempData["StatusMessage"] is string statusMessage)
+    {
+        <div class="dashboard-notice" role="status">@statusMessage</div>
+    }
+
+    <section class="dashboard-panel dashboard-panel-wide">
+        <div class="panel-heading">
+            <div>
+                <p>@L["Activity"]</p>
+                <h2>@L["TaskHistory"]</h2>
+            </div>
+            <span class="count-badge">@Model.History.Count</span>
+        </div>
+
+        @if (Model.History.Count == 0)
+        {
+            <div class="empty-state compact-empty">
+                <span aria-hidden="true">◷</span>
+                <p>@L["NoMemberHistory"]</p>
+            </div>
+        }
+        else
+        {
+            <div class="member-history-list">
+                @foreach (var item in Model.History)
+                {
+                    <article class="member-history-card">
+                        @if (item.PetPhotoPath is not null)
+                        {
+                            <img class="history-pet-photo" src="@item.PetPhotoPath"
+                                 alt="@L["PetPhotoAlt", item.PetName]" />
+                        }
+                        else
+                        {
+                            <div class="history-pet-photo history-pet-fallback" aria-hidden="true">♡</div>
+                        }
+                        <div class="member-history-main">
+                            <span class="history-status status-text-@item.Status.ToString().ToLowerInvariant()">
+                                @L[$"Status_{item.Status}"]
+                            </span>
+                            <h3>@item.TaskName</h3>
+                            <p>@item.PetName</p>
+                            <dl class="history-dates">
+                                <div>
+                                    <dt>@L["ReportedAt"]</dt>
+                                    <dd>@item.ReportedAt.ToLocalTime().ToString("g")</dd>
+                                </div>
+                                <div>
+                                    <dt>@L["ApprovedAt"]</dt>
+                                    <dd>
+                                        @(item.ApprovedAt is null
+                                            ? "—"
+                                            : item.ApprovedAt.Value.ToLocalTime().ToString("g"))
+                                    </dd>
+                                </div>
+                                @if (item.ApprovedByName is not null)
+                                {
+                                    <div>
+                                        <dt>@L["ReviewedBy"]</dt>
+                                        <dd>@item.ApprovedByName</dd>
+                                    </div>
+                                }
+                            </dl>
+                        </div>
+                        <div class="history-score-card">
+                            <span>@L["TaskPoints"]</span>
+                            <strong>+@item.Points</strong>
+                            <span>@L["TotalAtTheTime"]</span>
+                            <strong>@(item.PointsTotalAfterApproval?.ToString() ?? "—")</strong>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+@if (Model.Role == HouseholdMemberRole.Child)
+{
+    <div class="modal fade" id="privacyModal" tabindex="-1"
+         aria-labelledby="privacyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content account-modal dashboard-modal privacy-modal">
+                <button type="button" class="modal-close" data-bs-dismiss="modal"
+                        aria-label="@L["Close"]">×</button>
+                <div class="modal-mark" aria-hidden="true">◉</div>
+                <h2 id="privacyModalLabel">@L["HistoryPrivacyFor", Model.DisplayName]</h2>
+                <p>@L["PrivacyIntro"]</p>
+                <form asp-action="UpdateHistoryPrivacy" method="post">
+                    <input type="hidden" name="MemberId" value="@Model.MemberId" />
+                    <label class="privacy-option">
+                        <input type="checkbox" name="CanViewOtherChildrenHistory" value="true"
+                               checked="@Model.CanViewOtherChildrenHistory" />
+                        <span>
+                            <strong>@L["AllowViewOthers"]</strong>
+                            <small>@L["AllowViewOthersHint"]</small>
+                        </span>
+                    </label>
+                    <label class="privacy-option">
+                        <input type="checkbox" name="ShareHistoryWithChildren" value="true"
+                               checked="@Model.ShareHistoryWithChildren" />
+                        <span>
+                            <strong>@L["AllowOthersView"]</strong>
+                            <small>@L["AllowOthersViewHint"]</small>
+                        </span>
+                    </label>
+                    <button type="submit" class="modal-submit">@L["SavePrivacy"]</button>
+                </form>
+            </div>
+        </div>
+    </div>
+}

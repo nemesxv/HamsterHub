@@ -4,6 +4,7 @@ using HamsterHub.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HamsterHub.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260727000606_RedesignPetCareTasks")]
+    partial class RedesignPetCareTasks
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -191,9 +194,6 @@ namespace HamsterHub.Data.Migrations
                     b.Property<int>("PointsAwarded")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PointsTotalAfterApproval")
-                        .HasColumnType("int");
-
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -221,9 +221,6 @@ namespace HamsterHub.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AssignedMemberId")
-                        .HasColumnType("int");
-
                     b.Property<int>("CareCategoryId")
                         .HasColumnType("int");
 
@@ -243,8 +240,6 @@ namespace HamsterHub.Data.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AssignedMemberId");
 
                     b.HasIndex("CareCategoryId");
 
@@ -287,9 +282,6 @@ namespace HamsterHub.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("CanViewOtherChildrenHistory")
-                        .HasColumnType("bit");
-
                     b.Property<int>("HouseholdId")
                         .HasColumnType("int");
 
@@ -301,9 +293,6 @@ namespace HamsterHub.Data.Migrations
 
                     b.Property<int>("MemberRole")
                         .HasColumnType("int");
-
-                    b.Property<bool>("ShareHistoryWithChildren")
-                        .HasColumnType("bit");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -559,12 +548,6 @@ namespace HamsterHub.Data.Migrations
 
             modelBuilder.Entity("HamsterHub.Models.CareTask", b =>
                 {
-                    b.HasOne("HamsterHub.Models.HouseholdMember", "AssignedMember")
-                        .WithMany("AssignedCareTasks")
-                        .HasForeignKey("AssignedMemberId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("HamsterHub.Models.CareCategory", "CareCategory")
                         .WithMany("CareTasks")
                         .HasForeignKey("CareCategoryId")
@@ -582,8 +565,6 @@ namespace HamsterHub.Data.Migrations
                         .HasForeignKey("PetId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("AssignedMember");
 
                     b.Navigation("CareCategory");
 
@@ -697,11 +678,6 @@ namespace HamsterHub.Data.Migrations
                     b.Navigation("Members");
 
                     b.Navigation("Pets");
-                });
-
-            modelBuilder.Entity("HamsterHub.Models.HouseholdMember", b =>
-                {
-                    b.Navigation("AssignedCareTasks");
                 });
 
             modelBuilder.Entity("HamsterHub.Models.Pet", b =>

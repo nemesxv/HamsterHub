@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
+  <data name="SiteTitle" xml:space="preserve"><value>Happy pet care, together</value></data>
+  <data name="MetaDescription" xml:space="preserve"><value>A joyful family hub for building healthy pet-care habits.</value></data>
+  <data name="Login" xml:space="preserve"><value>Log in</value></data>
+  <data name="SignUp" xml:space="preserve"><value>Sign up</value></data>
+  <data name="Logout" xml:space="preserve"><value>Log out</value></data>
+  <data name="Greeting" xml:space="preserve"><value>Hi, {0}</value></data>
+  <data name="ToggleTheme" xml:space="preserve"><value>Toggle theme</value></data>
+  <data name="SwitchLanguage" xml:space="preserve"><value>Переключить на русский</value></data>
+  <data name="FooterText" xml:space="preserve"><value>Helping little hands care with a big heart.</value></data>
+  <data name="Privacy" xml:space="preserve"><value>Privacy</value></data>
+  <data name="Eyebrow" xml:space="preserve"><value>Little tasks, big care</value></data>
+  <data name="HeroLine1" xml:space="preserve"><value>Help them care.</value></data>
+  <data name="HeroLine2" xml:space="preserve"><value>Watch them grow.</value></data>
+  <data name="HeroLead" xml:space="preserve"><value>HamsterHub turns everyday pet care into simple, rewarding moments your whole family can feel proud of.</value></data>
+  <data name="StartHub" xml:space="preserve"><value>Start your family hub</value></data>
+  <data name="ExistingAccount" xml:space="preserve"><value>I already have an account</value></data>
+  <data name="TrustNote" xml:space="preserve"><value>Made for families. Parent-managed and child-friendly.</value></data>
+  <data name="CareArtLabel" xml:space="preserve"><value>A happy hamster beside a care checklist</value></data>
+  <data name="TodayCare" xml:space="preserve"><value>TODAY'S CARE</value></data>
+  <data name="FreshWater" xml:space="preserve"><value>Fresh water</value></data>
+  <data name="MorningFood" xml:space="preserve"><value>Morning food</value></data>
+  <data name="PlayTime" xml:space="preserve"><value>Play time</value></data>
+  <data name="CarePoints" xml:space="preserve"><value>care points!</value></data>
+  <data name="RoutineKicker" xml:space="preserve"><value>A happy little routine</value></data>
+  <data name="HowTitle" xml:space="preserve"><value>Care, celebrate, repeat.</value></data>
+  <data name="ChooseTask" xml:space="preserve"><value>Choose a care task</value></data>
+  <data name="ChooseDesc" xml:space="preserve"><value>Feeding, fresh water, cleaning or playtime.</value></data>
+  <data name="MarkComplete" xml:space="preserve"><value>Mark it complete</value></data>
+  <data name="MarkDesc" xml:space="preserve"><value>A satisfying little tap after a job well done.</value></data>
+  <data name="EarnPoints" xml:space="preserve"><value>Earn care points</value></data>
+  <data name="EarnDesc" xml:space="preserve"><value>Celebrate consistency and build healthy habits.</value></data>
+  <data name="LoginTitle" xml:space="preserve"><value>Welcome back</value></data>
+  <data name="LoginIntro" xml:space="preserve"><value>Sign in to see how your little caretaker is doing.</value></data>
+  <data name="Email" xml:space="preserve"><value>Email</value></data>
+  <data name="Password" xml:space="preserve"><value>Password</value></data>
+  <data name="EmailPlaceholder" xml:space="preserve"><value>you@example.com</value></data>
+  <data name="PasswordPlaceholder" xml:space="preserve"><value>Your password</value></data>
+  <data name="KeepSignedIn" xml:space="preserve"><value>Keep me signed in</value></data>
+  <data name="LoginSubmit" xml:space="preserve"><value>Log in</value></data>
+  <data name="NewUser" xml:space="preserve"><value>New to HamsterHub?</value></data>
+  <data name="CreateAccount" xml:space="preserve"><value>Create an account</value></data>
+  <data name="SignupTitle" xml:space="preserve"><value>Create your family hub</value></data>
+  <data name="SignupIntro" xml:space="preserve"><value>Start with a parent account. You can add kids and pets next.</value></data>
+  <data name="DisplayName" xml:space="preserve"><value>Your name</value></data>
+  <data name="NamePlaceholder" xml:space="preserve"><value>Alex</value></data>
+  <data name="ConfirmPassword" xml:space="preserve"><value>Confirm password</value></data>
+  <data name="Password6Placeholder" xml:space="preserve"><value>6+ characters</value></data>
+  <data name="RepeatPasswordPlaceholder" xml:space="preserve"><value>Repeat password</value></data>
+  <data name="CreateParentAccount" xml:space="preserve"><value>Create parent account</value></data>
+  <data name="AlreadyAccount" xml:space="preserve"><value>Already have an account?</value></data>
+  <data name="Required" xml:space="preserve"><value>This field is required.</value></data>
+  <data name="InvalidEmail" xml:space="preserve"><value>Enter a valid email address.</value></data>
+  <data name="DisplayNameLength" xml:space="preserve"><value>Name must be between 2 and 100 characters.</value></data>
+  <data name="PasswordLength" xml:space="preserve"><value>Password must be at least 6 characters.</value></data>
+  <data name="PasswordsDoNotMatch" xml:space="preserve"><value>The passwords do not match.</value></data>
+  <data name="LockedOut" xml:space="preserve"><value>This account is temporarily locked. Please try again later.</value></data>
+  <data name="InvalidLogin" xml:space="preserve"><value>We couldn't sign you in with that email and password.</value></data>
+  <data name="AccountCreationFailed" xml:space="preserve"><value>We couldn't finish creating the account. Please try again.</value></data>
+  <data name="EmailInUse" xml:space="preserve"><value>An account with this email already exists.</value></data>
+  <data name="PasswordRequirements" xml:space="preserve"><value>Password must include lowercase and uppercase letters, a number, and a special character.</value></data>
+  <data name="ManageAccount" xml:space="preserve"><value>Account</value></data>
+  <data name="ParentDashboardTitle" xml:space="preserve"><value>Family dashboard</value></data>
+  <data name="ParentSpace" xml:space="preserve"><value>Parent space</value></data>
+  <data name="ParentWelcome" xml:space="preserve"><value>Welcome, {0}</value></data>
+  <data name="HouseholdSubtitle" xml:space="preserve"><value>Manage care for the {0} household.</value></data>
+  <data name="AddFamilyMember" xml:space="preserve"><value>Add family member</value></data>
+  <data name="AddPet" xml:space="preserve"><value>Add pet</value></data>
+  <data name="AddCareTask" xml:space="preserve"><value>Add care task</value></data>
+  <data name="FamilyOverview" xml:space="preserve"><value>Family overview</value></data>
+  <data name="FamilyMembers" xml:space="preserve"><value>Family members</value></data>
+  <data name="Pets" xml:space="preserve"><value>Pets</value></data>
+  <data name="CareTasks" xml:space="preserve"><value>Care tasks</value></data>
+  <data name="AwaitingApproval" xml:space="preserve"><value>Awaiting approval</value></data>
+  <data name="Family" xml:space="preserve"><value>Family</value></data>
+  <data name="YourCareTeam" xml:space="preserve"><value>Your care team</value></data>
+  <data name="Add" xml:space="preserve"><value>Add</value></data>
+  <data name="NoFamilyMembers" xml:space="preserve"><value>Add a child or another parent.</value></data>
+  <data name="Role_Parent" xml:space="preserve"><value>Parent</value></data>
+  <data name="Role_Child" xml:space="preserve"><value>Child</value></data>
+  <data name="FamilyPets" xml:space="preserve"><value>Family pets</value></data>
+  <data name="NoPetsYet" xml:space="preserve"><value>Your family's first pet will appear here.</value></data>
+  <data name="Routine" xml:space="preserve"><value>Routine</value></data>
+  <data name="CareTaskSettings" xml:space="preserve"><value>Care tasks and points</value></data>
+  <data name="AddTask" xml:space="preserve"><value>Add task</value></data>
+  <data name="NoCareTasksYet" xml:space="preserve"><value>Create the first task: food, water, cleaning, or play.</value></data>
+  <data name="Category_Feeding" xml:space="preserve"><value>Feeding</value></data>
+  <data name="Category_Water" xml:space="preserve"><value>Fresh water</value></data>
+  <data name="Category_Cleaning" xml:space="preserve"><value>Cleaning</value></data>
+  <data name="Category_Playing" xml:space="preserve"><value>Playing</value></data>
+  <data name="Category_Health" xml:space="preserve"><value>Health</value></data>
+  <data name="Category_Other" xml:space="preserve"><value>Other</value></data>
+  <data name="Frequency_Daily" xml:space="preserve"><value>Daily</value></data>
+  <data name="Frequency_Weekly" xml:space="preserve"><value>Weekly</value></data>
+  <data name="Frequency_AsNeeded" xml:space="preserve"><value>As needed</value></data>
+  <data name="Review" xml:space="preserve"><value>Review</value></data>
+  <data name="PendingCare" xml:space="preserve"><value>Pending care</value></data>
+  <data name="NothingToApprove" xml:space="preserve"><value>Everything is reviewed—nothing new yet.</value></data>
+  <data name="Approve" xml:space="preserve"><value>Approve</value></data>
+  <data name="Reject" xml:space="preserve"><value>Reject</value></data>
+  <data name="Close" xml:space="preserve"><value>Close</value></data>
+  <data name="MemberFormIntro" xml:space="preserve"><value>For this early version, create the account and share its temporary password in person.</value></data>
+  <data name="TemporaryPassword" xml:space="preserve"><value>Temporary password</value></data>
+  <data name="FamilyRole" xml:space="preserve"><value>Family role</value></data>
+  <data name="CreateFamilyAccount" xml:space="preserve"><value>Create family account</value></data>
+  <data name="PetFormIntro" xml:space="preserve"><value>Add a pet for your family to care for.</value></data>
+  <data name="PetName" xml:space="preserve"><value>Pet name</value></data>
+  <data name="Species" xml:space="preserve"><value>Species</value></data>
+  <data name="BirthDate" xml:space="preserve"><value>Birth date</value></data>
+  <data name="SavePet" xml:space="preserve"><value>Save pet</value></data>
+  <data name="TaskFormIntro" xml:space="preserve"><value>Set up a helpful task and its point value.</value></data>
+  <data name="TaskName" xml:space="preserve"><value>Task name</value></data>
+  <data name="TaskCategory" xml:space="preserve"><value>Category</value></data>
+  <data name="TaskFrequency" xml:space="preserve"><value>Frequency</value></data>
+  <data name="PointValue" xml:space="preserve"><value>Points</value></data>
+  <data name="PointRange" xml:space="preserve"><value>Enter between 0 and 1000 points.</value></data>
+  <data name="SaveCareTask" xml:space="preserve"><value>Save care task</value></data>
+  <data name="CheckFormFields" xml:space="preserve"><value>Please check the form fields.</value></data>
+  <data name="FamilyMemberAdded" xml:space="preserve"><value>{0} was added to the family.</value></data>
+  <data name="PetAdded" xml:space="preserve"><value>{0} was added as a pet.</value></data>
+  <data name="CareTaskAdded" xml:space="preserve"><value>The task “{0}” was added.</value></data>
+  <data name="TaskAlreadyRecorded" xml:space="preserve"><value>This task has already been recorded for the current period.</value></data>
+  <data name="TaskSentForApproval" xml:space="preserve"><value>Great work! The task was sent to a parent for approval.</value></data>
+  <data name="CareApproved" xml:space="preserve"><value>Care approved and points awarded.</value></data>
+  <data name="CareRejected" xml:space="preserve"><value>The care record was rejected.</value></data>
+  <data name="DefaultHouseholdName" xml:space="preserve"><value>{0}'s family</value></data>
+  <data name="KidDashboardTitle" xml:space="preserve"><value>My care tasks</value></data>
+  <data name="KidSpace" xml:space="preserve"><value>My care corner</value></data>
+  <data name="KidWelcome" xml:space="preserve"><value>Hi, {0}!</value></data>
+  <data name="WaitingForFamily" xml:space="preserve"><value>A parent will add you to the family hub soon.</value></data>
+  <data name="ReadyToCare" xml:space="preserve"><value>Ready to care for your pet?</value></data>
+  <data name="ApprovedPoints" xml:space="preserve"><value>care points</value></data>
+  <data name="MyPets" xml:space="preserve"><value>my pets</value></data>
+  <data name="AvailableTasks" xml:space="preserve"><value>available tasks</value></data>
+  <data name="WaitingApproval" xml:space="preserve"><value>waiting for approval</value></data>
+  <data name="Today" xml:space="preserve"><value>Today</value></data>
+  <data name="WhatWillYouDo" xml:space="preserve"><value>What will you do for your pet?</value></data>
+  <data name="AskParentToSetUp" xml:space="preserve"><value>Ask a parent to add a pet and care tasks.</value></data>
+  <data name="ChoosePet" xml:space="preserve"><value>Who is it for?</value></data>
+  <data name="DoneButton" xml:space="preserve"><value>Done!</value></data>
+  <data name="MyProgress" xml:space="preserve"><value>My progress</value></data>
+  <data name="RecentCare" xml:space="preserve"><value>Recent care</value></data>
+  <data name="NoCareHistory" xml:space="preserve"><value>Your completed tasks will appear here.</value></data>
+  <data name="Status_Pending" xml:space="preserve"><value>Pending</value></data>
+  <data name="Status_Approved" xml:space="preserve"><value>Approved</value></data>
+  <data name="Status_Rejected" xml:space="preserve"><value>Rejected</value></data>
+  <data name="BirthDateOptional" xml:space="preserve"><value>Optional. Use the calendar to choose a date.</value></data>
+  <data name="PetPhoto" xml:space="preserve"><value>Pet photo</value></data>
+  <data name="PetPhotoHint" xml:space="preserve"><value>Optional JPG, PNG or WebP image, up to 5 MB.</value></data>
+  <data name="InvalidPetImage" xml:space="preserve"><value>Please choose a JPG, PNG or WebP image.</value></data>
+  <data name="PetImageTooLarge" xml:space="preserve"><value>The pet photo must be no larger than 5 MB.</value></data>
+  <data name="TaskPet" xml:space="preserve"><value>Pet</value></data>
+  <data name="ChooseCategory" xml:space="preserve"><value>Choose a category</value></data>
+  <data name="NewCategory" xml:space="preserve"><value>Or add a new category</value></data>
+  <data name="NewCategoryPlaceholder" xml:space="preserve"><value>For example: Brush fur</value></data>
+  <data name="NewCategoryHint" xml:space="preserve"><value>If filled in, the new category is used instead of the selected one.</value></data>
+  <data name="ChooseOrAddCategory" xml:space="preserve"><value>Choose an existing category or enter a new one.</value></data>
+  <data name="AssignedMember" xml:space="preserve"><value>Family member</value></data>
+  <data name="ChooseMember" xml:space="preserve"><value>Choose a family member</value></data>
+  <data name="Edit" xml:space="preserve"><value>Edit</value></data>
+  <data name="Delete" xml:space="preserve"><value>Delete</value></data>
+  <data name="SaveChanges" xml:space="preserve"><value>Save changes</value></data>
+  <data name="EditFamilyMember" xml:space="preserve"><value>Edit family member</value></data>
+  <data name="EditPet" xml:space="preserve"><value>Edit pet</value></data>
+  <data name="EditCareTask" xml:space="preserve"><value>Edit care task</value></data>
+  <data name="ReplacePetPhoto" xml:space="preserve"><value>Replace photo</value></data>
+  <data name="ConfirmDeleteMember" xml:space="preserve"><value>Remove {0} from the family? Their active tasks will also be removed.</value></data>
+  <data name="ConfirmDeletePet" xml:space="preserve"><value>Delete {0}? Its active tasks will also be removed.</value></data>
+  <data name="ConfirmDeleteTask" xml:space="preserve"><value>Delete the “{0}” task?</value></data>
+  <data name="CannotChangeOwnParentRole" xml:space="preserve"><value>You cannot remove your own parent access here.</value></data>
+  <data name="CannotDeleteYourself" xml:space="preserve"><value>You cannot remove your own account from the dashboard.</value></data>
+  <data name="FamilyMemberUpdated" xml:space="preserve"><value>Family member updated.</value></data>
+  <data name="FamilyMemberDeleted" xml:space="preserve"><value>Family member removed.</value></data>
+  <data name="PetUpdated" xml:space="preserve"><value>Pet updated.</value></data>
+  <data name="PetDeleted" xml:space="preserve"><value>Pet removed.</value></data>
+  <data name="CareTaskUpdated" xml:space="preserve"><value>Care task updated.</value></data>
+  <data name="CareTaskDeleted" xml:space="preserve"><value>Care task removed.</value></data>
+  <data name="AccountUpdateFailed" xml:space="preserve"><value>We could not update the account. Please try again.</value></data>
+  <data name="AccountUpdated" xml:space="preserve"><value>Your account was updated.</value></data>
+  <data name="AccountSettings" xml:space="preserve"><value>Account settings</value></data>
+  <data name="ManageYourAccount" xml:space="preserve"><value>Manage your account</value></data>
+  <data name="AccountSettingsIntro" xml:space="preserve"><value>Update your name and email, or open the secure password settings.</value></data>
+  <data name="EmailManagedSeparately" xml:space="preserve"><value>Use the email settings below to change this address.</value></data>
+  <data name="ChangeEmail" xml:space="preserve"><value>Change email</value></data>
+  <data name="ChangePassword" xml:space="preserve"><value>Change password</value></data>
+  <data name="BackToDashboard" xml:space="preserve"><value>Back to dashboard</value></data>
+  <data name="History" xml:space="preserve"><value>History</value></data>
+  <data name="MemberHistoryTitle" xml:space="preserve"><value>{0}'s care history</value></data>
+  <data name="FamilyMemberHistory" xml:space="preserve"><value>Family member history</value></data>
+  <data name="CurrentPoints" xml:space="preserve"><value>Current points</value></data>
+  <data name="HistoryPrivacy" xml:space="preserve"><value>History privacy</value></data>
+  <data name="Activity" xml:space="preserve"><value>Activity</value></data>
+  <data name="TaskHistory" xml:space="preserve"><value>Task history</value></data>
+  <data name="NoMemberHistory" xml:space="preserve"><value>No care tasks have been reported yet.</value></data>
+  <data name="PetPhotoAlt" xml:space="preserve"><value>Photo of {0}</value></data>
+  <data name="ReportedAt" xml:space="preserve"><value>Reported</value></data>
+  <data name="ApprovedAt" xml:space="preserve"><value>Approved</value></data>
+  <data name="ReviewedBy" xml:space="preserve"><value>Reviewed by</value></data>
+  <data name="TaskPoints" xml:space="preserve"><value>Task points</value></data>
+  <data name="TotalAtTheTime" xml:space="preserve"><value>Total at the time</value></data>
+  <data name="HistoryPrivacyFor" xml:space="preserve"><value>History privacy for {0}</value></data>
+  <data name="PrivacyIntro" xml:space="preserve"><value>These settings control family activity visibility for this child. Parents can always see the full history.</value></data>
+  <data name="AllowViewOthers" xml:space="preserve"><value>May view other children's history</value></data>
+  <data name="AllowViewOthersHint" xml:space="preserve"><value>Shows shared, approved family activity on this child's dashboard.</value></data>
+  <data name="AllowOthersView" xml:space="preserve"><value>Other children may view this child's history</value></data>
+  <data name="AllowOthersViewHint" xml:space="preserve"><value>Only approved tasks are shared, and only with children allowed to view family activity.</value></data>
+  <data name="SavePrivacy" xml:space="preserve"><value>Save privacy settings</value></data>
+  <data name="PrivacyUpdated" xml:space="preserve"><value>History privacy settings updated.</value></data>
+  <data name="TotalShort" xml:space="preserve"><value>Total: {0}</value></data>
+  <data name="FamilyActivity" xml:space="preserve"><value>Family activity</value></data>
+  <data name="NoSharedFamilyHistory" xml:space="preserve"><value>No shared family activity yet.</value></data>
+  <data name="KidLetsCare" xml:space="preserve"><value>Let's help our little friends!</value></data>
+  <data name="PointsLabel" xml:space="preserve"><value>{0} care stars</value></data>
+  <data name="KidOverview" xml:space="preserve"><value>My care overview</value></data>
+  <data name="KidPetsShort" xml:space="preserve"><value>pets</value></data>
+  <data name="KidTasksShort" xml:space="preserve"><value>to do</value></data>
+  <data name="KidWaitingShort" xml:space="preserve"><value>waiting</value></data>
+  <data name="KidChooseTask" xml:space="preserve"><value>Choose a picture</value></data>
+  <data name="KidAskGrownup" xml:space="preserve"><value>Ask a grown-up to add a pet</value></data>
+  <data name="TaskPointsLabel" xml:space="preserve"><value>{0} stars for this task</value></data>
+  <data name="KidDone" xml:space="preserve"><value>I did it!</value></data>
+  <data name="KidMyPictures" xml:space="preserve"><value>My little album</value></data>
+  <data name="KidNoMemories" xml:space="preserve"><value>Your pet pictures will appear here</value></data>
+  <data name="KidFriends" xml:space="preserve"><value>Our friends</value></data>
+  <data name="KidNoFriendStories" xml:space="preserve"><value>New stories will appear here</value></data>
+</root>

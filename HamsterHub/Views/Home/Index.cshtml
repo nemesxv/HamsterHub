@@ -1,8 +1,142 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@model HomeViewModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+@{
+    ViewData["Title"] = L["SiteTitle"];
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<section class="hero">
+    <div class="hero-copy">
+        <div class="eyebrow"><span aria-hidden="true">●</span> @L["Eyebrow"]</div>
+        <h1>@L["HeroLine1"]<br /><span>@L["HeroLine2"]</span></h1>
+        <p class="hero-lead">
+            @L["HeroLead"]
+        </p>
+        <div class="hero-actions">
+            <button class="primary-action" type="button" data-bs-toggle="modal" data-bs-target="#signupModal">
+                @L["StartHub"] <span aria-hidden="true">→</span>
+            </button>
+            <button class="text-action" type="button" data-bs-toggle="modal" data-bs-target="#loginModal">
+                @L["ExistingAccount"]
+            </button>
+        </div>
+        <div class="trust-note">
+            <span aria-hidden="true">✓</span>
+            @L["TrustNote"]
+        </div>
+    </div>
+
+    <div class="hero-art" aria-label="@L["CareArtLabel"]">
+        <div class="sun-dot sun-dot-one"></div>
+        <div class="sun-dot sun-dot-two"></div>
+        <div class="care-card">
+            <span class="care-card-label">@L["TodayCare"]</span>
+            <div class="care-row complete"><span>✓</span><strong>@L["FreshWater"]</strong><em>+5</em></div>
+            <div class="care-row complete"><span>✓</span><strong>@L["MorningFood"]</strong><em>+5</em></div>
+            <div class="care-row"><span>○</span><strong>@L["PlayTime"]</strong><em>+10</em></div>
+        </div>
+        <div class="hamster" aria-hidden="true">
+            <div class="hamster-ear ear-left"></div>
+            <div class="hamster-ear ear-right"></div>
+            <div class="hamster-body">
+                <div class="hamster-face">
+                    <i class="eye eye-left"></i><i class="eye eye-right"></i>
+                    <i class="cheek cheek-left"></i><i class="cheek cheek-right"></i>
+                    <i class="nose"></i><i class="mouth"></i>
+                </div>
+                <div class="hamster-belly"></div>
+                <div class="hamster-paw paw-left"></div>
+                <div class="hamster-paw paw-right"></div>
+            </div>
+        </div>
+        <div class="points-bubble"><strong>20</strong><span>@L["CarePoints"]</span></div>
+    </div>
+</section>
+
+<section class="how-it-works" aria-labelledby="how-title">
+    <p class="section-kicker">@L["RoutineKicker"]</p>
+    <h2 id="how-title">@L["HowTitle"]</h2>
+    <div class="step-grid">
+        <article>
+            <span class="step-icon water-icon" aria-hidden="true">●</span>
+            <div><small>01</small><h3>@L["ChooseTask"]</h3><p>@L["ChooseDesc"]</p></div>
+        </article>
+        <article>
+            <span class="step-icon check-icon" aria-hidden="true">✓</span>
+            <div><small>02</small><h3>@L["MarkComplete"]</h3><p>@L["MarkDesc"]</p></div>
+        </article>
+        <article>
+            <span class="step-icon star-icon" aria-hidden="true">★</span>
+            <div><small>03</small><h3>@L["EarnPoints"]</h3><p>@L["EarnDesc"]</p></div>
+        </article>
+    </div>
+</section>
+
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content account-modal">
+            <button type="button" class="modal-close" data-bs-dismiss="modal" aria-label="Close">×</button>
+            <div class="modal-mark" aria-hidden="true">H</div>
+            <h2 id="loginModalLabel">@L["LoginTitle"]</h2>
+            <p>@L["LoginIntro"]</p>
+            <form asp-controller="Home" asp-action="Login" method="post">
+                <div asp-validation-summary="ModelOnly" class="form-error"></div>
+                <label asp-for="Login.Email"></label>
+                <input asp-for="Login.Email" autocomplete="email" placeholder="@L["EmailPlaceholder"]" />
+                <span asp-validation-for="Login.Email" class="field-error"></span>
+                <label asp-for="Login.Password"></label>
+                <input asp-for="Login.Password" autocomplete="current-password" placeholder="@L["PasswordPlaceholder"]" />
+                <span asp-validation-for="Login.Password" class="field-error"></span>
+                <label class="remember-row">
+                    <input asp-for="Login.RememberMe" />
+                    <span>@L["KeepSignedIn"]</span>
+                </label>
+                <button class="modal-submit" type="submit">@L["LoginSubmit"]</button>
+            </form>
+            <p class="modal-switch">@L["NewUser"]
+                <button type="button" data-switch-modal="signupModal">@L["CreateAccount"]</button>
+            </p>
+        </div>
+    </div>
 </div>
+
+<div class="modal fade" id="signupModal" tabindex="-1" aria-labelledby="signupModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content account-modal">
+            <button type="button" class="modal-close" data-bs-dismiss="modal" aria-label="Close">×</button>
+            <div class="modal-mark" aria-hidden="true">H</div>
+            <h2 id="signupModalLabel">@L["SignupTitle"]</h2>
+            <p>@L["SignupIntro"]</p>
+            <form asp-controller="Home" asp-action="Register" method="post">
+                <div asp-validation-summary="ModelOnly" class="form-error"></div>
+                <label asp-for="Register.DisplayName"></label>
+                <input asp-for="Register.DisplayName" autocomplete="name" placeholder="@L["NamePlaceholder"]" />
+                <span asp-validation-for="Register.DisplayName" class="field-error"></span>
+                <label asp-for="Register.Email"></label>
+                <input asp-for="Register.Email" autocomplete="email" placeholder="@L["EmailPlaceholder"]" />
+                <span asp-validation-for="Register.Email" class="field-error"></span>
+                <div class="form-columns">
+                    <div>
+                        <label asp-for="Register.Password"></label>
+                        <input asp-for="Register.Password" autocomplete="new-password" placeholder="@L["Password6Placeholder"]" />
+                        <span asp-validation-for="Register.Password" class="field-error"></span>
+                    </div>
+                    <div>
+                        <label asp-for="Register.ConfirmPassword"></label>
+                        <input asp-for="Register.ConfirmPassword" autocomplete="new-password" placeholder="@L["RepeatPasswordPlaceholder"]" />
+                        <span asp-validation-for="Register.ConfirmPassword" class="field-error"></span>
+                    </div>
+                </div>
+                <button class="modal-submit" type="submit">@L["CreateParentAccount"]</button>
+            </form>
+            <p class="modal-switch">@L["AlreadyAccount"]
+                <button type="button" data-switch-modal="loginModal">@L["Login"]</button>
+            </p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>window.hamsterHubDialog = '@Model.ActiveDialog';</script>
+}

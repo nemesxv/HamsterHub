@@ -1,0 +1,206 @@
+@model KidDashboardViewModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+@{
+    ViewData["Title"] = L["KidDashboardTitle"];
+    ViewData["BodyClass"] = "kid-world";
+}
+
+<div class="kid-canvas">
+    <div class="kid-doodle kid-doodle-star" aria-hidden="true">☆</div>
+    <div class="kid-doodle kid-doodle-heart" aria-hidden="true">♡</div>
+    <div class="kid-doodle kid-doodle-flower" aria-hidden="true">✿</div>
+
+    <section class="kid-hello">
+        <div class="kid-hello-copy">
+            <span class="kid-sparkles" aria-hidden="true">✦ · ✧</span>
+            <h1>@L["KidWelcome", Model.ChildName]</h1>
+            <p>@(string.IsNullOrWhiteSpace(Model.HouseholdName) ? L["WaitingForFamily"] : L["KidLetsCare"])</p>
+        </div>
+        <div class="kid-star-jar" aria-label="@L["PointsLabel", Model.ApprovedPoints]">
+            <span aria-hidden="true">★</span>
+            <strong>@Model.ApprovedPoints</strong>
+        </div>
+    </section>
+
+    @if (TempData["StatusMessage"] is string statusMessage)
+    {
+        <div class="kid-celebration" role="status">
+            <span aria-hidden="true">🎉</span>
+            <strong>@statusMessage</strong>
+        </div>
+    }
+
+    <section class="kid-picture-counts" aria-label="@L["KidOverview"]">
+        <article>
+            <span class="kid-count-picture" aria-hidden="true">🐹</span>
+            <strong>@Model.Pets.Count</strong>
+            <small>@L["KidPetsShort"]</small>
+        </article>
+        <article>
+            <span class="kid-count-picture" aria-hidden="true">🎨</span>
+            <strong>@Model.CareTasks.Count</strong>
+            <small>@L["KidTasksShort"]</small>
+        </article>
+        <article>
+            <span class="kid-count-picture" aria-hidden="true">⏳</span>
+            <strong>@Model.PendingCount</strong>
+            <small>@L["KidWaitingShort"]</small>
+        </article>
+    </section>
+
+    <section class="kid-play-section">
+        <header class="kid-section-title">
+            <span aria-hidden="true">🌈</span>
+            <h2>@L["KidChooseTask"]</h2>
+        </header>
+
+        @if (Model.Pets.Count == 0 || Model.CareTasks.Count == 0)
+        {
+            <div class="kid-picture-empty">
+                <span aria-hidden="true">🐹</span>
+                <span aria-hidden="true">＋</span>
+                <span aria-hidden="true">💛</span>
+                <p>@L["KidAskGrownup"]</p>
+            </div>
+        }
+        else
+        {
+            <div class="kid-big-task-grid">
+                @foreach (var task in Model.CareTasks)
+                {
+                    var taskIcon = task.CategoryId switch
+                    {
+                        1 => "🥕",
+                        2 => "💧",
+                        3 => "🫧",
+                        4 => "🎾",
+                        5 => "🩹",
+                        _ => "🎨"
+                    };
+                    var rhythmIcon = task.Frequency switch
+                    {
+                        CareTaskFrequency.Daily => "☀",
+                        CareTaskFrequency.Weekly => "📅",
+                        _ => "✨"
+                    };
+                    <article class="kid-big-task-card">
+                        <div class="kid-task-art">
+                            @if (task.PetPhotoPath is not null)
+                            {
+                                <img src="@task.PetPhotoPath" alt="@L["PetPhotoAlt", task.PetName]" />
+                            }
+                            else
+                            {
+                                <div class="kid-pet-placeholder" aria-hidden="true">🐹</div>
+                            }
+                            <span class="kid-task-sticker" aria-hidden="true">@taskIcon</span>
+                            <span class="kid-rhythm-sticker" title="@L[$"Frequency_{task.Frequency}"]"
+                                  aria-label="@L[$"Frequency_{task.Frequency}"]">@rhythmIcon</span>
+                        </div>
+                        <div class="kid-task-name">
+                            <small>@task.PetName</small>
+                            <h3>@task.CategoryName</h3>
+                        </div>
+                        <div class="kid-task-reward" aria-label="@L["TaskPointsLabel", task.PointValue]">
+                            <span aria-hidden="true">★</span>
+                            <strong>+@task.PointValue</strong>
+                        </div>
+                        <form asp-action="CompleteTask" method="post">
+                            <input type="hidden" name="careTaskId" value="@task.Id" />
+                            <button type="submit">
+                                <span aria-hidden="true">✓</span>
+                                @L["KidDone"]
+                            </button>
+                        </form>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="kid-memory-section">
+        <header class="kid-section-title">
+            <span aria-hidden="true">🖍️</span>
+            <h2>@L["KidMyPictures"]</h2>
+        </header>
+        @if (Model.RecentCare.Count == 0)
+        {
+            <div class="kid-picture-empty kid-memory-empty">
+                <span aria-hidden="true">🖼️</span>
+                <p>@L["KidNoMemories"]</p>
+            </div>
+        }
+        else
+        {
+            <div class="kid-polaroid-row">
+                @foreach (var item in Model.RecentCare)
+                {
+                    var statusIcon = item.Status switch
+                    {
+                        CareLogStatus.Approved => "⭐",
+                        CareLogStatus.Rejected => "↺",
+                        _ => "⏳"
+                    };
+                    <article class="kid-polaroid status-@item.Status.ToString().ToLowerInvariant()">
+                        <div class="kid-polaroid-picture">
+                            @if (item.PetPhotoPath is not null)
+                            {
+                                <img src="@item.PetPhotoPath" alt="@L["PetPhotoAlt", item.PetName]" />
+                            }
+                            else
+                            {
+                                <div aria-hidden="true">🐹</div>
+                            }
+                            <span class="kid-polaroid-status" aria-label="@L[$"Status_{item.Status}"]">@statusIcon</span>
+                        </div>
+                        <strong>@item.TaskName</strong>
+                        <small>@item.PetName · @item.CompletedAt.ToLocalTime().ToString("dd.MM")</small>
+                        <span class="kid-polaroid-points">+@item.Points ★</span>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    @if (Model.CanViewFamilyActivity)
+    {
+        <section class="kid-family-section">
+            <header class="kid-section-title">
+                <span aria-hidden="true">👭</span>
+                <h2>@L["KidFriends"]</h2>
+            </header>
+            @if (Model.FamilyActivity.Count == 0)
+            {
+                <div class="kid-picture-empty kid-family-empty">
+                    <span aria-hidden="true">💌</span>
+                    <p>@L["KidNoFriendStories"]</p>
+                </div>
+            }
+            else
+            {
+                <div class="kid-friend-grid">
+                    @foreach (var item in Model.FamilyActivity)
+                    {
+                        <article class="kid-friend-card">
+                            @if (item.PetPhotoPath is not null)
+                            {
+                                <img src="@item.PetPhotoPath" alt="@L["PetPhotoAlt", item.PetName]" />
+                            }
+                            else
+                            {
+                                <div class="kid-friend-placeholder" aria-hidden="true">🐾</div>
+                            }
+                            <div>
+                                <small>@item.ChildName</small>
+                                <strong>@item.TaskName</strong>
+                                <span>@item.PetName</span>
+                            </div>
+                            <b>+@item.Points ★</b>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+    }
+</div>

@@ -1,0 +1,434 @@
+@model ParentDashboardViewModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+@{
+    ViewData["Title"] = L["ParentDashboardTitle"];
+}
+
+<div class="dashboard-shell">
+    <section class="dashboard-heading">
+        <div>
+            <p class="dashboard-kicker">@L["ParentSpace"]</p>
+            <h1>@L["ParentWelcome", Model.ParentName]</h1>
+            <p>@L["HouseholdSubtitle", Model.HouseholdName]</p>
+        </div>
+        <div class="dashboard-quick-actions">
+            <button type="button" class="dashboard-button dashboard-button-primary"
+                    data-bs-toggle="modal" data-bs-target="#memberModal">＋ @L["AddFamilyMember"]</button>
+            <button type="button" class="dashboard-button"
+                    data-bs-toggle="modal" data-bs-target="#petModal">＋ @L["AddPet"]</button>
+            <button type="button" class="dashboard-button"
+                    data-bs-toggle="modal" data-bs-target="#taskModal">＋ @L["AddCareTask"]</button>
+        </div>
+    </section>
+
+    @if (TempData["StatusMessage"] is string statusMessage)
+    {
+        <div class="dashboard-notice" role="status">@statusMessage</div>
+    }
+
+    <section class="dashboard-stats" aria-label="@L["FamilyOverview"]">
+        <article><span>@L["FamilyMembers"]</span><strong>@Model.Members.Count</strong></article>
+        <article><span>@L["Pets"]</span><strong>@Model.Pets.Count</strong></article>
+        <article><span>@L["CareTasks"]</span><strong>@Model.CareTasks.Count</strong></article>
+        <article class="attention-stat"><span>@L["AwaitingApproval"]</span><strong>@Model.PendingCare.Count</strong></article>
+    </section>
+
+    <div class="dashboard-grid">
+        <section class="dashboard-panel">
+            <div class="panel-heading">
+                <div><p>@L["Family"]</p><h2>@L["YourCareTeam"]</h2></div>
+                <button type="button" class="panel-link" data-bs-toggle="modal" data-bs-target="#memberModal">
+                    @L["Add"]
+                </button>
+            </div>
+            @if (Model.Members.Count == 0)
+            {
+                <p class="empty-message">@L["NoFamilyMembers"]</p>
+            }
+            else
+            {
+                <div class="member-list">
+                    @foreach (var member in Model.Members)
+                    {
+                        <article class="member-row">
+                            <span class="member-avatar" aria-hidden="true">@(string.IsNullOrWhiteSpace(member.DisplayName) ? "?" : member.DisplayName[..1].ToUpperInvariant())</span>
+                            <div>
+                                <a class="member-history-link" asp-action="FamilyMember" asp-route-id="@member.Id">
+                                    @member.DisplayName
+                                </a>
+                                <small>@member.Email</small>
+                            </div>
+                            <span class="role-badge">@L[$"Role_{member.Role}"]</span>
+                            <div class="row-actions">
+                                <a class="icon-action" asp-action="FamilyMember" asp-route-id="@member.Id">
+                                    @L["History"]
+                                </a>
+                                <button type="button" class="icon-action"
+                                        data-bs-toggle="modal" data-bs-target="#edit-member-@member.Id">
+                                    @L["Edit"]
+                                </button>
+                                @if (!member.IsCurrentUser)
+                                {
+                                    <form asp-action="DeleteMember" method="post"
+                                          data-confirm="@L["ConfirmDeleteMember", member.DisplayName]">
+                                        <input type="hidden" name="id" value="@member.Id" />
+                                        <button type="submit" class="icon-action danger-action">@L["Delete"]</button>
+                                    </form>
+                                }
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+
+        <section class="dashboard-panel">
+            <div class="panel-heading">
+                <div><p>@L["Pets"]</p><h2>@L["FamilyPets"]</h2></div>
+                <button type="button" class="panel-link" data-bs-toggle="modal" data-bs-target="#petModal">
+                    @L["Add"]
+                </button>
+            </div>
+            @if (Model.Pets.Count == 0)
+            {
+                <div class="empty-state">
+                    <span aria-hidden="true">♡</span>
+                    <p>@L["NoPetsYet"]</p>
+                </div>
+            }
+            else
+            {
+                <div class="pet-list">
+                    @foreach (var pet in Model.Pets)
+                    {
+                        <article class="pet-row">
+                            @if (pet.PhotoPath is not null)
+                            {
+                                <img class="pet-avatar pet-photo" src="@pet.PhotoPath" alt="" />
+                            }
+                            else
+                            {
+                                <span class="pet-avatar" aria-hidden="true">●</span>
+                            }
+                            <div><strong>@pet.Name</strong><small>@pet.Species</small></div>
+                            <div class="row-actions">
+                                <button type="button" class="icon-action"
+                                        data-bs-toggle="modal" data-bs-target="#edit-pet-@pet.Id">
+                                    @L["Edit"]
+                                </button>
+                                <form asp-action="DeletePet" method="post"
+                                      data-confirm="@L["ConfirmDeletePet", pet.Name]">
+                                    <input type="hidden" name="id" value="@pet.Id" />
+                                    <button type="submit" class="icon-action danger-action">@L["Delete"]</button>
+                                </form>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+    </div>
+
+    <section class="dashboard-panel dashboard-panel-wide">
+        <div class="panel-heading">
+            <div><p>@L["Routine"]</p><h2>@L["CareTaskSettings"]</h2></div>
+            <button type="button" class="panel-link" data-bs-toggle="modal" data-bs-target="#taskModal">
+                @L["AddTask"]
+            </button>
+        </div>
+        @if (Model.CareTasks.Count == 0)
+        {
+            <p class="empty-message">@L["NoCareTasksYet"]</p>
+        }
+        else
+        {
+            <div class="task-admin-grid">
+                @foreach (var task in Model.CareTasks)
+                {
+                    <article class="task-admin-card">
+                        <span class="task-symbol" aria-hidden="true">✓</span>
+                        <div>
+                            <strong>@task.CategoryName</strong>
+                            <small>@task.PetName · @task.AssignedMemberName · @L[$"Frequency_{task.Frequency}"]</small>
+                        </div>
+                        <span class="point-pill">+@task.PointValue</span>
+                        <div class="row-actions">
+                            <button type="button" class="icon-action"
+                                    data-bs-toggle="modal" data-bs-target="#edit-task-@task.Id">
+                                @L["Edit"]
+                            </button>
+                            <form asp-action="DeleteCareTask" method="post"
+                                  data-confirm="@L["ConfirmDeleteTask", task.CategoryName]">
+                                <input type="hidden" name="id" value="@task.Id" />
+                                <button type="submit" class="icon-action danger-action">@L["Delete"]</button>
+                            </form>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+
+    <section class="dashboard-panel dashboard-panel-wide">
+        <div class="panel-heading">
+            <div><p>@L["Review"]</p><h2>@L["PendingCare"]</h2></div>
+            <span class="count-badge">@Model.PendingCare.Count</span>
+        </div>
+        @if (Model.PendingCare.Count == 0)
+        {
+            <div class="empty-state compact-empty">
+                <span aria-hidden="true">✓</span>
+                <p>@L["NothingToApprove"]</p>
+            </div>
+        }
+        else
+        {
+            <div class="approval-list">
+                @foreach (var item in Model.PendingCare)
+                {
+                    <article class="approval-row">
+                        <div>
+                            <strong>@item.ChildName — @item.TaskName</strong>
+                            <small>@item.PetName · @item.CompletedAt.ToLocalTime().ToString("g") · +@item.Points</small>
+                        </div>
+                        <div class="approval-actions">
+                            <form asp-action="ReviewCareLog" method="post">
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <input type="hidden" name="decision" value="@CareLogStatus.Approved" />
+                                <button type="submit" class="approve-button">@L["Approve"]</button>
+                            </form>
+                            <form asp-action="ReviewCareLog" method="post">
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <input type="hidden" name="decision" value="@CareLogStatus.Rejected" />
+                                <button type="submit" class="reject-button">@L["Reject"]</button>
+                            </form>
+                        </div>
+                    </article>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+<div class="modal fade" id="memberModal" tabindex="-1" aria-labelledby="memberModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content account-modal dashboard-modal">
+            <button type="button" class="modal-close" data-bs-dismiss="modal" aria-label="@L["Close"]">×</button>
+            <div class="modal-mark" aria-hidden="true">＋</div>
+            <h2 id="memberModalLabel">@L["AddFamilyMember"]</h2>
+            <p>@L["MemberFormIntro"]</p>
+            <form asp-action="AddMember" method="post">
+                <label asp-for="AddMember.Role"></label>
+                <select asp-for="AddMember.Role">
+                    <option value="@((int)HouseholdMemberRole.Child)">@L["Role_Child"]</option>
+                    <option value="@((int)HouseholdMemberRole.Parent)">@L["Role_Parent"]</option>
+                </select>
+                <label asp-for="AddMember.DisplayName"></label>
+                <input asp-for="AddMember.DisplayName" autocomplete="name" />
+                <label asp-for="AddMember.Email"></label>
+                <input asp-for="AddMember.Email" autocomplete="email" />
+                <label asp-for="AddMember.Password"></label>
+                <input asp-for="AddMember.Password" autocomplete="new-password" />
+                <button type="submit" class="modal-submit">@L["CreateFamilyAccount"]</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="petModal" tabindex="-1" aria-labelledby="petModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content account-modal dashboard-modal">
+            <button type="button" class="modal-close" data-bs-dismiss="modal" aria-label="@L["Close"]">×</button>
+            <div class="modal-mark" aria-hidden="true">♡</div>
+            <h2 id="petModalLabel">@L["AddPet"]</h2>
+            <p>@L["PetFormIntro"]</p>
+            <form asp-action="AddPet" method="post" enctype="multipart/form-data">
+                <label asp-for="AddPet.Name"></label>
+                <input asp-for="AddPet.Name" />
+                <label asp-for="AddPet.Species"></label>
+                <input asp-for="AddPet.Species" />
+                <label asp-for="AddPet.BirthDate"></label>
+                <input asp-for="AddPet.BirthDate" type="date" />
+                <small class="field-hint">@L["BirthDateOptional"]</small>
+                <label asp-for="AddPet.Photo"></label>
+                <input asp-for="AddPet.Photo" type="file" accept="image/jpeg,image/png,image/webp" />
+                <small class="field-hint">@L["PetPhotoHint"]</small>
+                <button type="submit" class="modal-submit">@L["SavePet"]</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="taskModal" tabindex="-1" aria-labelledby="taskModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content account-modal dashboard-modal">
+            <button type="button" class="modal-close" data-bs-dismiss="modal" aria-label="@L["Close"]">×</button>
+            <div class="modal-mark" aria-hidden="true">✓</div>
+            <h2 id="taskModalLabel">@L["AddCareTask"]</h2>
+            <p>@L["TaskFormIntro"]</p>
+            <form asp-action="AddCareTask" method="post">
+                <label asp-for="AddCareTask.PetId"></label>
+                <select asp-for="AddCareTask.PetId">
+                    <option value="">@L["ChoosePet"]</option>
+                    @foreach (var pet in Model.Pets)
+                    {
+                        <option value="@pet.Id">@pet.Name</option>
+                    }
+                </select>
+                <label asp-for="AddCareTask.AssignedMemberId"></label>
+                <select asp-for="AddCareTask.AssignedMemberId">
+                    <option value="">@L["ChooseMember"]</option>
+                    @foreach (var member in Model.Members)
+                    {
+                        <option value="@member.Id">@member.DisplayName · @L[$"Role_{member.Role}"]</option>
+                    }
+                </select>
+                <label asp-for="AddCareTask.CategoryId"></label>
+                <select asp-for="AddCareTask.CategoryId">
+                    <option value="">@L["ChooseCategory"]</option>
+                    @foreach (var category in Model.CareCategories)
+                    {
+                        <option value="@category.Id">@category.Name</option>
+                    }
+                </select>
+                <label asp-for="AddCareTask.NewCategoryName"></label>
+                <input asp-for="AddCareTask.NewCategoryName" placeholder="@L["NewCategoryPlaceholder"]" />
+                <small class="field-hint">@L["NewCategoryHint"]</small>
+                <div class="form-columns">
+                    <div>
+                        <label asp-for="AddCareTask.Frequency"></label>
+                        <select asp-for="AddCareTask.Frequency">
+                            @foreach (var frequency in Enum.GetValues<CareTaskFrequency>())
+                            {
+                                <option value="@((int)frequency)">@L[$"Frequency_{frequency}"]</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label asp-for="AddCareTask.PointValue"></label>
+                        <input asp-for="AddCareTask.PointValue" />
+                    </div>
+                </div>
+                <button type="submit" class="modal-submit">@L["SaveCareTask"]</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@foreach (var member in Model.Members)
+{
+    <div class="modal fade" id="edit-member-@member.Id" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content account-modal dashboard-modal">
+                <button type="button" class="modal-close" data-bs-dismiss="modal" aria-label="@L["Close"]">×</button>
+                <h2>@L["EditFamilyMember"]</h2>
+                <form asp-action="UpdateMember" method="post">
+                    <input type="hidden" name="UpdateMember.Id" value="@member.Id" />
+                    <label for="member-name-@member.Id">@L["DisplayName"]</label>
+                    <input id="member-name-@member.Id" name="UpdateMember.DisplayName" value="@member.DisplayName" required maxlength="100" />
+                    <label for="member-role-@member.Id">@L["FamilyRole"]</label>
+                    <select id="member-role-@member.Id" name="UpdateMember.Role"
+                            disabled="@member.IsCurrentUser">
+                        <option value="@((int)HouseholdMemberRole.Child)" selected="@(member.Role == HouseholdMemberRole.Child)">@L["Role_Child"]</option>
+                        <option value="@((int)HouseholdMemberRole.Parent)" selected="@(member.Role == HouseholdMemberRole.Parent)">@L["Role_Parent"]</option>
+                    </select>
+                    @if (member.IsCurrentUser)
+                    {
+                        <input type="hidden" name="UpdateMember.Role" value="@((int)member.Role)" />
+                    }
+                    <button type="submit" class="modal-submit">@L["SaveChanges"]</button>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@foreach (var pet in Model.Pets)
+{
+    <div class="modal fade" id="edit-pet-@pet.Id" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content account-modal dashboard-modal">
+                <button type="button" class="modal-close" data-bs-dismiss="modal" aria-label="@L["Close"]">×</button>
+                <h2>@L["EditPet"]</h2>
+                <form asp-action="UpdatePet" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="UpdatePet.Id" value="@pet.Id" />
+                    <label for="pet-name-@pet.Id">@L["PetName"]</label>
+                    <input id="pet-name-@pet.Id" name="UpdatePet.Name" value="@pet.Name" required maxlength="100" />
+                    <label for="pet-species-@pet.Id">@L["Species"]</label>
+                    <input id="pet-species-@pet.Id" name="UpdatePet.Species" value="@pet.Species" required maxlength="100" />
+                    <label for="pet-birth-@pet.Id">@L["BirthDate"]</label>
+                    <input id="pet-birth-@pet.Id" name="UpdatePet.BirthDate" type="date"
+                           value="@pet.BirthDate?.ToString("yyyy-MM-dd")" />
+                    <label for="pet-photo-@pet.Id">@L["ReplacePetPhoto"]</label>
+                    <input id="pet-photo-@pet.Id" name="UpdatePet.Photo" type="file"
+                           accept="image/jpeg,image/png,image/webp" />
+                    <small class="field-hint">@L["PetPhotoHint"]</small>
+                    <button type="submit" class="modal-submit">@L["SaveChanges"]</button>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@foreach (var task in Model.CareTasks)
+{
+    <div class="modal fade" id="edit-task-@task.Id" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content account-modal dashboard-modal">
+                <button type="button" class="modal-close" data-bs-dismiss="modal" aria-label="@L["Close"]">×</button>
+                <h2>@L["EditCareTask"]</h2>
+                <form asp-action="UpdateCareTask" method="post">
+                    <input type="hidden" name="UpdateCareTask.Id" value="@task.Id" />
+                    <label for="task-pet-@task.Id">@L["TaskPet"]</label>
+                    <select id="task-pet-@task.Id" name="UpdateCareTask.PetId">
+                        @foreach (var pet in Model.Pets)
+                        {
+                            <option value="@pet.Id" selected="@(pet.Id == task.PetId)">@pet.Name</option>
+                        }
+                    </select>
+                    <label for="task-member-@task.Id">@L["AssignedMember"]</label>
+                    <select id="task-member-@task.Id" name="UpdateCareTask.AssignedMemberId">
+                        @foreach (var member in Model.Members)
+                        {
+                            <option value="@member.Id" selected="@(member.Id == task.AssignedMemberId)">
+                                @member.DisplayName · @L[$"Role_{member.Role}"]
+                            </option>
+                        }
+                    </select>
+                    <label for="task-category-@task.Id">@L["TaskCategory"]</label>
+                    <select id="task-category-@task.Id" name="UpdateCareTask.CategoryId">
+                        @foreach (var category in Model.CareCategories)
+                        {
+                            <option value="@category.Id" selected="@(category.Id == task.CategoryId)">@category.Name</option>
+                        }
+                    </select>
+                    <label for="task-new-category-@task.Id">@L["NewCategory"]</label>
+                    <input id="task-new-category-@task.Id" name="UpdateCareTask.NewCategoryName"
+                           placeholder="@L["NewCategoryPlaceholder"]" maxlength="100" />
+                    <div class="form-columns">
+                        <div>
+                            <label for="task-frequency-@task.Id">@L["TaskFrequency"]</label>
+                            <select id="task-frequency-@task.Id" name="UpdateCareTask.Frequency">
+                                @foreach (var frequency in Enum.GetValues<CareTaskFrequency>())
+                                {
+                                    <option value="@((int)frequency)" selected="@(frequency == task.Frequency)">@L[$"Frequency_{frequency}"]</option>
+                                }
+                            </select>
+                        </div>
+                        <div>
+                            <label for="task-points-@task.Id">@L["PointValue"]</label>
+                            <input id="task-points-@task.Id" name="UpdateCareTask.PointValue"
+                                   type="number" min="0" max="1000" value="@task.PointValue" />
+                        </div>
+                    </div>
+                    <button type="submit" class="modal-submit">@L["SaveChanges"]</button>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

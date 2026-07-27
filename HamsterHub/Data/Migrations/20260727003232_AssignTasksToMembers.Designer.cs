@@ -4,6 +4,7 @@ using HamsterHub.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HamsterHub.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260727003232_AssignTasksToMembers")]
+    partial class AssignTasksToMembers
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -191,9 +194,6 @@ namespace HamsterHub.Data.Migrations
                     b.Property<int>("PointsAwarded")
                         .HasColumnType("int");
 
-                    b.Property<int?>("PointsTotalAfterApproval")
-                        .HasColumnType("int");
-
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -287,9 +287,6 @@ namespace HamsterHub.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<bool>("CanViewOtherChildrenHistory")
-                        .HasColumnType("bit");
-
                     b.Property<int>("HouseholdId")
                         .HasColumnType("int");
 
@@ -301,9 +298,6 @@ namespace HamsterHub.Data.Migrations
 
                     b.Property<int>("MemberRole")
                         .HasColumnType("int");
-
-                    b.Property<bool>("ShareHistoryWithChildren")
-                        .HasColumnType("bit");
 
                     b.Property<string>("UserId")
                         .IsRequired()

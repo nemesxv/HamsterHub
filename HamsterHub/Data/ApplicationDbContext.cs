@@ -11,6 +11,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Household> Households => Set<Household>();
     public DbSet<HouseholdMember> HouseholdMembers => Set<HouseholdMember>();
     public DbSet<Pet> Pets => Set<Pet>();
+    public DbSet<CareCategory> CareCategories => Set<CareCategory>();
     public DbSet<CareTask> CareTasks => Set<CareTask>();
     public DbSet<CareLog> CareLogs => Set<CareLog>();
 
@@ -45,9 +46,39 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<CareTask>(entity =>
         {
-            entity.Property(task => task.Name).HasMaxLength(100).IsRequired();
             entity.ToTable(table =>
                 table.HasCheckConstraint("CK_CareTasks_PointValue_NonNegative", "[PointValue] >= 0"));
+            entity.HasOne(task => task.Pet)
+                .WithMany(pet => pet.CareTasks)
+                .HasForeignKey(task => task.PetId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(task => task.CareCategory)
+                .WithMany(category => category.CareTasks)
+                .HasForeignKey(task => task.CareCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(task => task.AssignedMember)
+                .WithMany(member => member.AssignedCareTasks)
+                .HasForeignKey(task => task.AssignedMemberId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<CareCategory>(entity =>
+        {
+            entity.Property(category => category.Code).HasMaxLength(50);
+            entity.Property(category => category.CustomName).HasMaxLength(100);
+            entity.HasIndex(category => new { category.HouseholdId, category.CustomName })
+                .IsUnique()
+                .HasFilter("[HouseholdId] IS NOT NULL AND [CustomName] IS NOT NULL");
+            entity.HasOne(category => category.Household)
+                .WithMany(household => household.CareCategories)
+                .HasForeignKey(category => category.HouseholdId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasData(
+                new CareCategory { Id = 1, Code = "Feeding" },
+                new CareCategory { Id = 2, Code = "Water" },
+                new CareCategory { Id = 3, Code = "Cleaning" },
+                new CareCategory { Id = 4, Code = "Playing" },
+                new CareCategory { Id = 5, Code = "Health" });
         });
 
         builder.Entity<CareLog>(entity =>

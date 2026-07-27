@@ -1,26 +1,31 @@
-﻿@using Microsoft.AspNetCore.Identity
-@inject SignInManager<IdentityUser> SignInManager
-@inject UserManager<IdentityUser> UserManager
+@using HamsterHub.Models
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Localization
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+@inject IStringLocalizer<SharedResource> L
 
-<ul class="navbar-nav">
 @if (SignInManager.IsSignedIn(User))
 {
-    <li class="nav-item">
-        <a  class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @User.Identity?.Name!</a>
-    </li>
-    <li class="nav-item">
-        <form  class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
-            <button  type="submit" class="nav-link btn btn-link text-dark">Logout</button>
+    var currentUser = await UserManager.GetUserAsync(User);
+    <div class="account-actions">
+        <span class="account-greeting">@L["Greeting", currentUser?.DisplayName ?? ""]</span>
+        @if (User.IsInRole("Parent"))
+        {
+            <a class="nav-button nav-button-secondary" asp-area="Identity" asp-page="/Account/Manage/Index">
+                @L["ManageAccount"]
+            </a>
+        }
+        <form asp-area="Identity" asp-page="/Account/Logout"
+              asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
+            <button type="submit" class="nav-button nav-button-secondary">@L["Logout"]</button>
         </form>
-    </li>
+    </div>
 }
 else
 {
-    <li class="nav-item">
-        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Register</a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Login</a>
-    </li>
+    <div class="account-actions">
+        <a class="nav-button nav-button-secondary" asp-controller="Home" asp-action="Index" asp-route-dialog="login">@L["Login"]</a>
+        <a class="nav-button nav-button-primary" asp-controller="Home" asp-action="Index" asp-route-dialog="signup">@L["SignUp"]</a>
+    </div>
 }
-</ul>

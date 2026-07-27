@@ -11,5 +11,6 @@ public class Pet
     public bool IsActive { get; set; } = true;
     public DateTimeOffset CreatedAt { get; set; } = DateTimeOffset.UtcNow;
     public Household Household { get; set; } = null!;
+    public ICollection<CareTask> CareTasks { get; set; } = [];
     public ICollection<CareLog> CareLogs { get; set; } = [];
 }

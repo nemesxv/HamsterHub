@@ -1,25 +1,125 @@
 using HamsterHub.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using System.Diagnostics;
 
-namespace HamsterHub.Controllers
+namespace HamsterHub.Controllers;
+
+public class HomeController(
+    SignInManager<ApplicationUser> signInManager,
+    UserManager<ApplicationUser> userManager,
+    IStringLocalizer<SharedResource> localizer) : Controller
 {
-    public class HomeController : Controller
+    public IActionResult Index(string? dialog)
     {
-        public IActionResult Index()
+        if (User.Identity?.IsAuthenticated == true)
         {
-            return View();
+            return RedirectToAction("Index", "Dashboard");
         }
 
-        public IActionResult Privacy()
+        return View(new HomeViewModel
         {
-            return View();
+            ActiveDialog = dialog is "login" or "signup" ? dialog : null
+        });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login([Bind(Prefix = "Login")] LoginInputModel input)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View("Index", new HomeViewModel { Login = input, ActiveDialog = "login" });
         }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
+        var result = await signInManager.PasswordSignInAsync(
+            input.Email, input.Password, input.RememberMe, lockoutOnFailure: true);
+
+        if (result.Succeeded)
         {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+            return RedirectToAction("Index", "Dashboard");
         }
+
+        ModelState.AddModelError(string.Empty,
+            result.IsLockedOut
+                ? localizer["LockedOut"]
+                : localizer["InvalidLogin"]);
+
+        return View("Index", new HomeViewModel { Login = input, ActiveDialog = "login" });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register([Bind(Prefix = "Register")] RegisterInputModel input)
+    {
+        if (!ModelState.IsValid)
+        {
+            return View("Index", new HomeViewModel { Register = input, ActiveDialog = "signup" });
+        }
+
+        var email = input.Email.Trim();
+        var user = new ApplicationUser
+        {
+            DisplayName = input.DisplayName.Trim(),
+            Email = email,
+            UserName = email
+        };
+
+        var result = await userManager.CreateAsync(user, input.Password);
+
+        if (result.Succeeded)
+        {
+            var roleResult = await userManager.AddToRoleAsync(user, "Parent");
+            if (!roleResult.Succeeded)
+            {
+                await userManager.DeleteAsync(user);
+                ModelState.AddModelError(string.Empty, localizer["AccountCreationFailed"]);
+                return View("Index", new HomeViewModel { Register = input, ActiveDialog = "signup" });
+            }
+
+            await signInManager.SignInAsync(user, isPersistent: false);
+            return RedirectToAction("Index", "Dashboard");
+        }
+
+        foreach (var error in result.Errors)
+        {
+            var message = error.Code is "DuplicateEmail" or "DuplicateUserName"
+                ? localizer["EmailInUse"]
+                : localizer["PasswordRequirements"];
+            ModelState.AddModelError(string.Empty, message);
+        }
+
+        return View("Index", new HomeViewModel { Register = input, ActiveDialog = "signup" });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult SetLanguage(string culture, string? returnUrl)
+    {
+        var selectedCulture = culture is "ru" or "en" ? culture : "ru";
+        Response.Cookies.Append(
+            CookieRequestCultureProvider.DefaultCookieName,
+            CookieRequestCultureProvider.MakeCookieValue(new RequestCulture(selectedCulture)),
+            new CookieOptions
+            {
+                Expires = DateTimeOffset.UtcNow.AddYears(1),
+                IsEssential = true,
+                SameSite = SameSiteMode.Lax
+            });
+
+        return LocalRedirect(Url.IsLocalUrl(returnUrl) ? returnUrl! : Url.Action(nameof(Index))!);
+    }
+
+    public IActionResult Privacy() => View();
+
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult Error()
+    {
+        return View(new ErrorViewModel
+        {
+            RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+        });
     }
 }
