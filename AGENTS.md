@@ -34,6 +34,7 @@ Before making product or architectural changes, read:
 Run this before handing off code changes:
 
 ```powershell
+dotnet test .\HamsterHub.slnx --no-restore
 dotnet build .\HamsterHub\HamsterHub.csproj --no-restore
 ```
 

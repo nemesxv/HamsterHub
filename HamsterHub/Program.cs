@@ -1,6 +1,7 @@
 using HamsterHub;
 using HamsterHub.Data;
 using HamsterHub.Models;
+using HamsterHub.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,8 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddScoped<CareLogService>();
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     {

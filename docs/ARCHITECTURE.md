@@ -8,6 +8,7 @@
 - Entity Framework Core 10
 - SQL Server LocalDB for local development
 - Bootstrap utilities plus project-owned CSS and JavaScript
+- xUnit v3 tests with SQLite in-memory relational test databases
 
 ## Domain model
 
@@ -85,6 +86,14 @@ Cross-record household invariants must be checked in application logic, ideally
 in a dedicated service layer, because simple database constraints cannot express
 all of them safely.
 
+`CareLogService` is the domain-policy boundary for care completion and review.
+It validates task assignment and household ownership, snapshots the task's
+point value into new care logs, applies approval metadata and historical running
+totals, and centralizes daily and weekly recurrence cutoffs. It uses the
+framework `TimeProvider` so time-sensitive behavior can be tested with a fixed
+clock. The dashboard controller remains responsible for HTTP behavior,
+household-scoped database queries, transactions, and file handling.
+
 The authenticated dashboard checks both the global Identity role and the active
 household membership. Task submissions verify that the completing user is the
 task assignee and that the member, pet, and care task belong to the same
@@ -132,3 +141,16 @@ Apply committed migrations with:
 ```powershell
 dotnet ef database update --project .\HamsterHub\HamsterHub.csproj
 ```
+
+## Automated testing
+
+`HamsterHub.Tests` contains fast unit tests for care-log policy and controller
+role routing plus SQLite-backed component tests for dashboard care-log flows
+and relational tests for the EF Core model. SQLite tests use a fresh, kept-open
+in-memory database per test so foreign keys, unique indexes, check constraints,
+transactions, and cascades are exercised.
+
+SQLite is not treated as proof of SQL Server-specific behavior. Provider
+differences such as collations, `DateTimeOffset` translation, and concurrent
+serializable approvals should receive LocalDB or production-provider integration
+coverage when that test tier is introduced.

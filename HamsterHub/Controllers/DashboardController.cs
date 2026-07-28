@@ -1,5 +1,6 @@
 using HamsterHub.Data;
 using HamsterHub.Models;
+using HamsterHub.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -14,7 +15,8 @@ public class DashboardController(
     ApplicationDbContext dbContext,
     UserManager<ApplicationUser> userManager,
     IStringLocalizer<SharedResource> localizer,
-    IWebHostEnvironment environment) : Controller
+    IWebHostEnvironment environment,
+    CareLogService careLogService) : Controller
 {
     private const long MaximumPetPhotoBytes = 5 * 1024 * 1024;
     private const int MaximumCompletionPhotos = 8;
@@ -74,7 +76,11 @@ public class DashboardController(
             .Include(log => log.Pet)
             .Include(log => log.CareTask)
                 .ThenInclude(task => task.CareCategory)
-            .Where(log => log.Pet.HouseholdId == householdId && log.Status == CareLogStatus.Pending)
+            .Where(log =>
+                log.Pet.HouseholdId == householdId &&
+                log.CareTask.HouseholdId == householdId &&
+                log.CareTask.PetId == log.PetId &&
+                log.Status == CareLogStatus.Pending)
             .OrderByDescending(log => log.CompletedAt)
             .ToListAsync();
         var categoryEntities = await dbContext.CareCategories
@@ -191,7 +197,11 @@ public class DashboardController(
             .Include(log => log.Pet)
             .Include(log => log.CareTask)
                 .ThenInclude(task => task.CareCategory)
-            .Where(log => log.CompletedByUserId == user.Id)
+            .Where(log =>
+                log.CompletedByUserId == user.Id &&
+                log.Pet.HouseholdId == householdId &&
+                log.CareTask.HouseholdId == householdId &&
+                log.CareTask.PetId == log.PetId)
             .OrderByDescending(log => log.CompletedAt)
             .Take(8)
             .ToListAsync();
@@ -221,10 +231,16 @@ public class DashboardController(
             ApprovedPoints = await dbContext.CareLogs
                 .Where(log =>
                     log.CompletedByUserId == user.Id &&
+                    log.Pet.HouseholdId == householdId &&
+                    log.CareTask.HouseholdId == householdId &&
+                    log.CareTask.PetId == log.PetId &&
                     log.Status == CareLogStatus.Approved)
                 .SumAsync(log => (int?)log.PointsAwarded) ?? 0,
             PendingCount = await dbContext.CareLogs.CountAsync(log =>
                 log.CompletedByUserId == user.Id &&
+                log.Pet.HouseholdId == householdId &&
+                log.CareTask.HouseholdId == householdId &&
+                log.CareTask.PetId == log.PetId &&
                 log.Status == CareLogStatus.Pending),
             Pets = await dbContext.Pets
                 .AsNoTracking()
@@ -299,7 +315,9 @@ public class DashboardController(
             .Include(log => log.ApprovedByUser)
             .Where(log =>
                 log.CompletedByUserId == member.UserId &&
-                log.Pet.HouseholdId == membership.HouseholdId)
+                log.Pet.HouseholdId == membership.HouseholdId &&
+                log.CareTask.HouseholdId == membership.HouseholdId &&
+                log.CareTask.PetId == log.PetId)
             .OrderByDescending(log => log.CompletedAt)
             .ToListAsync();
 
@@ -370,6 +388,8 @@ public class DashboardController(
             .Where(log =>
                 log.CompletedByUserId == member.UserId &&
                 log.Pet.HouseholdId == viewer.HouseholdId &&
+                log.CareTask.HouseholdId == viewer.HouseholdId &&
+                log.CareTask.PetId == log.PetId &&
                 log.Status == CareLogStatus.Approved)
             .OrderByDescending(log => log.CompletedAt)
             .Take(30)
@@ -705,18 +725,15 @@ public class DashboardController(
             item.Pet.IsActive &&
             item.AssignedMember.IsActive);
 
-        if (careTask is null)
+        if (careTask is null ||
+            !careLogService.CanCompleteTask(careTask, membership))
         {
             return Forbid();
         }
 
-        var earliestAllowed = careTask.Frequency switch
-        {
-            CareTaskFrequency.Daily =>
-                new DateTimeOffset(DateTime.UtcNow.Date, TimeSpan.Zero),
-            CareTaskFrequency.Weekly => DateTimeOffset.UtcNow.AddDays(-7),
-            _ => (DateTimeOffset?)null
-        };
+        var now = careLogService.GetUtcNow();
+        var earliestAllowed = careLogService.GetEarliestAllowed(
+            careTask.Frequency, now);
 
         if (earliestAllowed is not null &&
             await dbContext.CareLogs.AnyAsync(log =>
@@ -756,16 +773,11 @@ public class DashboardController(
             savedPhotoPaths.Add(photoResult.Path!);
         }
 
-        var careLog = new CareLog
-        {
-            PetId = careTask.PetId,
-            CareTaskId = careTask.Id,
-            CompletedByUserId = user.Id,
-            PointsAwarded = careTask.PointValue,
-            Photos = savedPhotoPaths
-                .Select(path => new CareLogPhoto { ImagePath = path })
-                .ToList()
-        };
+        var careLog = careLogService.CreateChildCompletion(
+            careTask, membership, now);
+        careLog.Photos = savedPhotoPaths
+            .Select(path => new CareLogPhoto { ImagePath = path })
+            .ToList();
         dbContext.CareLogs.Add(careLog);
         try
         {
@@ -807,19 +819,15 @@ public class DashboardController(
                 item.IsActive &&
                 item.Pet.IsActive &&
                 item.AssignedMember.IsActive);
-        if (careTask is null)
+        if (careTask is null ||
+            !careLogService.CanCompleteTask(careTask, membership))
         {
             return Forbid();
         }
 
-        var now = DateTimeOffset.UtcNow;
-        var earliestAllowed = careTask.Frequency switch
-        {
-            CareTaskFrequency.Daily =>
-                new DateTimeOffset(now.UtcDateTime.Date, TimeSpan.Zero),
-            CareTaskFrequency.Weekly => now.AddDays(-7),
-            _ => (DateTimeOffset?)null
-        };
+        var now = careLogService.GetUtcNow();
+        var earliestAllowed = careLogService.GetEarliestAllowed(
+            careTask.Frequency, now);
         if (earliestAllowed is not null &&
             await dbContext.CareLogs.AnyAsync(log =>
                 log.PetId == careTask.PetId &&
@@ -835,20 +843,13 @@ public class DashboardController(
         var previousTotal = await dbContext.CareLogs
             .Where(log =>
                 log.CompletedByUserId == parent.Id &&
+                log.Pet.HouseholdId == membership.HouseholdId &&
+                log.CareTask.HouseholdId == membership.HouseholdId &&
+                log.CareTask.PetId == log.PetId &&
                 log.Status == CareLogStatus.Approved)
             .SumAsync(log => (int?)log.PointsAwarded) ?? 0;
-        dbContext.CareLogs.Add(new CareLog
-        {
-            PetId = careTask.PetId,
-            CareTaskId = careTask.Id,
-            CompletedByUserId = parent.Id,
-            CompletedAt = now,
-            PointsAwarded = careTask.PointValue,
-            Status = CareLogStatus.Approved,
-            ApprovedByUserId = parent.Id,
-            ApprovedAt = now,
-            PointsTotalAfterApproval = previousTotal + careTask.PointValue
-        });
+        dbContext.CareLogs.Add(careLogService.CreateParentCompletion(
+            careTask, membership, previousTotal, now));
         await dbContext.SaveChangesAsync();
         await transaction.CommitAsync();
 
@@ -875,26 +876,36 @@ public class DashboardController(
             IsolationLevel.Serializable);
         var careLog = await dbContext.CareLogs
             .Include(log => log.Pet)
+            .Include(log => log.CareTask)
             .FirstOrDefaultAsync(log =>
                 log.Id == id &&
                 log.Pet.HouseholdId == membership.HouseholdId &&
+                log.CareTask.HouseholdId == membership.HouseholdId &&
+                log.CareTask.PetId == log.PetId &&
                 log.Status == CareLogStatus.Pending);
 
-        if (careLog is null)
+        if (careLog is null ||
+            !careLogService.CanReviewCareLog(careLog, membership))
         {
             return NotFound();
         }
 
-        careLog.Status = decision;
-        careLog.ApprovedByUserId = parent.Id;
-        careLog.ApprovedAt = DateTimeOffset.UtcNow;
-        careLog.PointsTotalAfterApproval = decision == CareLogStatus.Approved
-            ? (await dbContext.CareLogs
+        var previousTotal = decision == CareLogStatus.Approved
+            ? await dbContext.CareLogs
                 .Where(log =>
                     log.CompletedByUserId == careLog.CompletedByUserId &&
+                    log.Pet.HouseholdId == membership.HouseholdId &&
+                    log.CareTask.HouseholdId == membership.HouseholdId &&
+                    log.CareTask.PetId == log.PetId &&
                     log.Status == CareLogStatus.Approved)
-                .SumAsync(log => (int?)log.PointsAwarded) ?? 0) + careLog.PointsAwarded
-            : null;
+                .SumAsync(log => (int?)log.PointsAwarded) ?? 0
+            : 0;
+        careLogService.ReviewCareLog(
+            careLog,
+            membership,
+            decision,
+            previousTotal,
+            careLogService.GetUtcNow());
         await dbContext.SaveChangesAsync();
         await transaction.CommitAsync();
 

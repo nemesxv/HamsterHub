@@ -14,7 +14,6 @@ its implementation and proportionate verification are complete.
 - Parent-managed rewards and spending rules.
 - Email delivery and mandatory email confirmation.
 - Accessibility review with children and parents.
-- Automated tests for household authorization and point-history invariants.
 - Production hosting, database, secrets, monitoring, and backups.
 
 ## Done
@@ -53,3 +52,5 @@ its implementation and proportionate verification are complete.
 - Optional parent-managed family-member profile photos.
 - Auto-approved parent completion of tasks assigned to that parent.
 - Privacy-filtered child family profiles with approved history and photo viewing.
+- Automated tests for household authorization, recurrence rules, relational
+  constraints, and point-history invariants.
