@@ -63,7 +63,7 @@
   <data name="InvalidLogin" xml:space="preserve"><value>We couldn't sign you in with that email and password.</value></data>
   <data name="AccountCreationFailed" xml:space="preserve"><value>We couldn't finish creating the account. Please try again.</value></data>
   <data name="EmailInUse" xml:space="preserve"><value>An account with this email already exists.</value></data>
-  <data name="PasswordRequirements" xml:space="preserve"><value>Password must include lowercase and uppercase letters, a number, and a special character.</value></data>
+  <data name="PasswordRequirements" xml:space="preserve"><value>Password must include lowercase and uppercase letters and a number. A special character is optional.</value></data>
   <data name="ManageAccount" xml:space="preserve"><value>Account</value></data>
   <data name="ParentDashboardTitle" xml:space="preserve"><value>Family dashboard</value></data>
   <data name="ParentSpace" xml:space="preserve"><value>Parent space</value></data>
@@ -290,4 +290,48 @@
   <data name="AuthenticatorEnabled" xml:space="preserve"><value>Two-step security is enabled</value></data>
   <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Done" xml:space="preserve"><value>Done</value></data>
+  <data name="AuthenticatorQrAlt" xml:space="preserve"><value>QR code for connecting HamsterHub to an authenticator app</value></data>
+  <data name="TaskImage" xml:space="preserve"><value>Task picture</value></data>
+  <data name="TaskImageHint" xml:space="preserve"><value>Optional. Built-in care categories already have a picture. JPG, PNG, or WebP, up to 5 MB.</value></data>
+  <data name="TaskImageAlt" xml:space="preserve"><value>Picture for {0}</value></data>
+  <data name="ReplaceTaskImage" xml:space="preserve"><value>Replace task picture</value></data>
+  <data name="CustomTaskImage" xml:space="preserve"><value>Custom picture</value></data>
+  <data name="DefaultTaskImage" xml:space="preserve"><value>Default category picture</value></data>
+  <data name="UseDefaultTaskImage" xml:space="preserve"><value>Return to the default category picture</value></data>
+  <data name="InvalidTaskImage" xml:space="preserve"><value>Choose a valid JPG, PNG, or WebP task picture.</value></data>
+  <data name="TaskImageTooLarge" xml:space="preserve"><value>The task picture must be 5 MB or smaller.</value></data>
+  <data name="OpenTask" xml:space="preserve"><value>Open {0} for {1}</value></data>
+  <data name="TakeTaskPhoto" xml:space="preserve"><value>Take a photo</value></data>
+  <data name="ChooseTaskPhotos" xml:space="preserve"><value>Choose photos</value></data>
+  <data name="TaskPhotosOptional" xml:space="preserve"><value>Photos are optional. You can add up to 8.</value></data>
+  <data name="SendForApproval" xml:space="preserve"><value>All done!</value></data>
+  <data name="TaskPhotos" xml:space="preserve"><value>Task photos</value></data>
+  <data name="TaskPhotoAlt" xml:space="preserve"><value>Completion photo for {0}</value></data>
+  <data name="InvalidTaskPhoto" xml:space="preserve"><value>One of the photos is not a valid JPG, PNG, or WebP image.</value></data>
+  <data name="TaskPhotoTooLarge" xml:space="preserve"><value>Each task photo must be 5 MB or smaller.</value></data>
+  <data name="TooManyTaskPhotos" xml:space="preserve"><value>You can add up to {0} photos to one task.</value></data>
+  <data name="PhotoViewer" xml:space="preserve"><value>Photo viewer</value></data>
+  <data name="PreviousPhoto" xml:space="preserve"><value>Previous photo</value></data>
+  <data name="NextPhoto" xml:space="preserve"><value>Next photo</value></data>
+  <data name="OpenPets" xml:space="preserve"><value>Open my {0} pets</value></data>
+  <data name="KidMyPets" xml:space="preserve"><value>My pets</value></data>
+  <data name="OpenTaskPhotos" xml:space="preserve"><value>Open photos for {0}</value></data>
+  <data name="PhotoCount" xml:space="preserve"><value>{0} photos</value></data>
+  <data name="CameraPreview" xml:space="preserve"><value>Camera preview</value></data>
+  <data name="CapturePhoto" xml:space="preserve"><value>Take this photo</value></data>
+  <data name="SelectedPhotos" xml:space="preserve"><value>Selected photo previews</value></data>
+  <data name="MemberPhoto" xml:space="preserve"><value>Family member photo</value></data>
+  <data name="MemberPhotoHint" xml:space="preserve"><value>Optional. JPG, PNG, or WebP, up to 5 MB.</value></data>
+  <data name="ReplaceMemberPhoto" xml:space="preserve"><value>Replace family member photo</value></data>
+  <data name="RemoveMemberPhoto" xml:space="preserve"><value>Remove the current photo</value></data>
+  <data name="MemberPhotoAlt" xml:space="preserve"><value>Photo of {0}</value></data>
+  <data name="InvalidMemberImage" xml:space="preserve"><value>Choose a valid JPG, PNG, or WebP family member photo.</value></data>
+  <data name="MemberImageTooLarge" xml:space="preserve"><value>The family member photo must be 5 MB or smaller.</value></data>
+  <data name="CompleteTask" xml:space="preserve"><value>Mark done</value></data>
+  <data name="ParentTaskCompleted" xml:space="preserve"><value>Task completed and approved automatically.</value></data>
+  <data name="KidNoVisibleFamily" xml:space="preserve"><value>Your family will appear here.</value></data>
+  <data name="OpenMemberHistory" xml:space="preserve"><value>Open care memories for {0}</value></data>
+  <data name="BackToKidDashboard" xml:space="preserve"><value>Back to my tasks</value></data>
+  <data name="SharedCareMemories" xml:space="preserve"><value>Care memories</value></data>
+  <data name="NoSharedCareMemories" xml:space="preserve"><value>No shared care memories yet.</value></data>
 </root>

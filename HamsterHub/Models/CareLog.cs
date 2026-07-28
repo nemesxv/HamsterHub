@@ -16,6 +16,7 @@ public class CareLog
     public CareTask CareTask { get; set; } = null!;
     public ApplicationUser CompletedByUser { get; set; } = null!;
     public ApplicationUser? ApprovedByUser { get; set; }
+    public ICollection<CareLogPhoto> Photos { get; set; } = [];
 }
 
 public enum CareLogStatus { Pending = 1, Approved = 2, Rejected = 3 }

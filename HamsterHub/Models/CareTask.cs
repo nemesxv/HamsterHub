@@ -9,6 +9,7 @@ public class CareTask
     public int AssignedMemberId { get; set; }
     public int PointValue { get; set; }
     public CareTaskFrequency Frequency { get; set; }
+    public string? ImagePath { get; set; }
     public bool IsActive { get; set; } = true;
     public Household Household { get; set; } = null!;
     public Pet Pet { get; set; } = null!;

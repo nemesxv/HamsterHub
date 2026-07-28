@@ -43,3 +43,13 @@ its implementation and proportionate verification are complete.
 - Parent-managed, private-by-default child history sharing.
 - Pet-forward child task and history presentation.
 - Picture-first creative child dashboard for the 3–6 age range.
+- Default illustrated care categories and parent-managed task pictures.
+- Optional multi-photo child task reports shown during approval and in history.
+- QR-based authenticator setup with a manual-key fallback.
+- Password symbols made optional while retaining length, case, and digit rules.
+- Child pet gallery, live camera capture, multi-photo previews, and in-page
+  photo viewing.
+- Accessible dark-theme point contrast on the child dashboard.
+- Optional parent-managed family-member profile photos.
+- Auto-approved parent completion of tasks assigned to that parent.
+- Privacy-filtered child family profiles with approved history and photo viewing.

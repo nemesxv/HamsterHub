@@ -17,6 +17,16 @@ public class DashboardController(
     IWebHostEnvironment environment) : Controller
 {
     private const long MaximumPetPhotoBytes = 5 * 1024 * 1024;
+    private const int MaximumCompletionPhotos = 8;
+    private static readonly IReadOnlyDictionary<string, string> DefaultTaskImages =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Feeding"] = "/images/tasks/feeding.webp",
+            ["Water"] = "/images/tasks/water.webp",
+            ["Cleaning"] = "/images/tasks/cleaning.webp",
+            ["Playing"] = "/images/tasks/playing.webp",
+            ["Health"] = "/images/tasks/health.webp"
+        };
     private static readonly HashSet<string> AllowedPhotoExtensions =
         new(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".webp" };
     private static readonly HashSet<string> AllowedPhotoContentTypes =
@@ -59,6 +69,7 @@ public class DashboardController(
             .ToListAsync();
         var pendingEntities = await dbContext.CareLogs
             .AsNoTracking()
+            .Include(log => log.Photos)
             .Include(log => log.CompletedByUser)
             .Include(log => log.Pet)
             .Include(log => log.CareTask)
@@ -90,7 +101,8 @@ public class DashboardController(
                     member.User.DisplayName,
                     member.User.Email ?? "",
                     member.MemberRole,
-                    member.UserId == user.Id))
+                    member.UserId == user.Id,
+                    member.User.ProfilePhotoPath))
                 .ToListAsync(),
             Pets = await dbContext.Pets
                 .AsNoTracking()
@@ -113,7 +125,10 @@ public class DashboardController(
                     task.AssignedMemberId,
                     task.AssignedMember.User.DisplayName,
                     task.Frequency,
-                    task.PointValue))
+                    task.PointValue,
+                    GetTaskImagePath(task),
+                    task.ImagePath is not null,
+                    task.AssignedMember.UserId == user.Id))
                 .ToList(),
             PendingCare = pendingEntities
                 .Select(log => new PendingCareSummary(
@@ -122,7 +137,8 @@ public class DashboardController(
                     log.Pet.Name,
                     GetCategoryName(log.CareTask.CareCategory),
                     log.PointsAwarded,
-                    log.CompletedAt))
+                    log.CompletedAt,
+                    log.Photos.Select(photo => photo.ImagePath).ToList()))
                 .ToList()
         };
         model.AddCareTask.PetId = GetRememberedSelection(
@@ -171,6 +187,7 @@ public class DashboardController(
             .ToListAsync();
         var recentCareEntities = await dbContext.CareLogs
             .AsNoTracking()
+            .Include(log => log.Photos)
             .Include(log => log.Pet)
             .Include(log => log.CareTask)
                 .ThenInclude(task => task.CareCategory)
@@ -178,33 +195,24 @@ public class DashboardController(
             .OrderByDescending(log => log.CompletedAt)
             .Take(8)
             .ToListAsync();
-        var familyActivityEntities = new List<CareLog>();
-        if (membership.CanViewOtherChildrenHistory)
-        {
-            var visibleUserIds = await dbContext.HouseholdMembers
-                .AsNoTracking()
-                .Where(member =>
-                    member.HouseholdId == householdId &&
-                    member.Id != membership.Id &&
-                    member.MemberRole == HouseholdMemberRole.Child &&
-                    member.IsActive &&
-                    member.ShareHistoryWithChildren)
-                .Select(member => member.UserId)
-                .ToListAsync();
-            familyActivityEntities = await dbContext.CareLogs
-                .AsNoTracking()
-                .Include(log => log.CompletedByUser)
-                .Include(log => log.Pet)
-                .Include(log => log.CareTask)
-                    .ThenInclude(task => task.CareCategory)
-                .Where(log =>
-                    visibleUserIds.Contains(log.CompletedByUserId) &&
-                    log.Status == CareLogStatus.Approved &&
-                    log.PointsTotalAfterApproval != null)
-                .OrderByDescending(log => log.ApprovedAt)
-                .Take(10)
-                .ToListAsync();
-        }
+        var visibleFamilyMembers = await dbContext.HouseholdMembers
+            .AsNoTracking()
+            .Where(member =>
+                member.HouseholdId == householdId &&
+                member.Id != membership.Id &&
+                member.IsActive &&
+                (member.MemberRole == HouseholdMemberRole.Parent ||
+                 (membership.CanViewOtherChildrenHistory &&
+                  member.MemberRole == HouseholdMemberRole.Child &&
+                  member.ShareHistoryWithChildren)))
+            .OrderBy(member => member.MemberRole)
+            .ThenBy(member => member.User.DisplayName)
+            .Select(member => new KidFamilyMemberSummary(
+                member.Id,
+                member.User.DisplayName,
+                member.MemberRole,
+                member.User.ProfilePhotoPath))
+            .ToListAsync();
 
         return View(new KidDashboardViewModel
         {
@@ -236,7 +244,10 @@ public class DashboardController(
                     task.AssignedMemberId,
                     user.DisplayName,
                     task.Frequency,
-                    task.PointValue))
+                    task.PointValue,
+                    GetTaskImagePath(task),
+                    task.ImagePath is not null,
+                    true))
                 .ToList(),
             RecentCare = recentCareEntities
                 .Select(log => new KidCareHistorySummary(
@@ -247,20 +258,14 @@ public class DashboardController(
                     log.PointsTotalAfterApproval,
                     log.Status,
                     log.CompletedAt,
-                    log.ApprovedAt))
+                    log.ApprovedAt,
+                    GetCareLogImagePath(log),
+                    log.Photos
+                        .OrderBy(photo => photo.CreatedAt)
+                        .Select(photo => photo.ImagePath)
+                        .ToList()))
                 .ToList(),
-            CanViewFamilyActivity = membership.CanViewOtherChildrenHistory,
-            FamilyActivity = familyActivityEntities
-                .Select(log => new FamilyActivitySummary(
-                    log.CompletedByUser.DisplayName,
-                    log.Pet.Name,
-                    log.Pet.PhotoPath,
-                    GetCategoryName(log.CareTask.CareCategory),
-                    log.PointsAwarded,
-                    log.PointsTotalAfterApproval!.Value,
-                    log.CompletedAt,
-                    log.ApprovedAt!.Value))
-                .ToList()
+            FamilyMembers = visibleFamilyMembers
         });
     }
 
@@ -287,6 +292,7 @@ public class DashboardController(
 
         var logs = await dbContext.CareLogs
             .AsNoTracking()
+            .Include(log => log.Photos)
             .Include(log => log.Pet)
             .Include(log => log.CareTask)
                 .ThenInclude(task => task.CareCategory)
@@ -302,6 +308,7 @@ public class DashboardController(
             MemberId = member.Id,
             DisplayName = member.User.DisplayName,
             Email = member.User.Email ?? string.Empty,
+            PhotoPath = member.User.ProfilePhotoPath,
             Role = member.MemberRole,
             CurrentPoints = logs
                 .Where(log => log.Status == CareLogStatus.Approved)
@@ -317,7 +324,72 @@ public class DashboardController(
                 log.Status,
                 log.CompletedAt,
                 log.ApprovedAt,
-                log.ApprovedByUser?.DisplayName)).ToList()
+                log.ApprovedByUser?.DisplayName,
+                GetCareLogImagePath(log),
+                log.Photos.Select(photo => photo.ImagePath).ToList())).ToList()
+        });
+    }
+
+    [Authorize(Roles = "Child")]
+    public async Task<IActionResult> ChildFamilyMember(int id)
+    {
+        var viewer = await GetCurrentMembershipAsync(HouseholdMemberRole.Child);
+        if (viewer is null)
+        {
+            return Forbid();
+        }
+
+        var member = await dbContext.HouseholdMembers
+            .AsNoTracking()
+            .Include(item => item.User)
+            .FirstOrDefaultAsync(item =>
+                item.Id == id &&
+                item.Id != viewer.Id &&
+                item.HouseholdId == viewer.HouseholdId &&
+                item.IsActive);
+        if (member is null)
+        {
+            return NotFound();
+        }
+
+        var canView = member.MemberRole == HouseholdMemberRole.Parent ||
+            (member.MemberRole == HouseholdMemberRole.Child &&
+             viewer.CanViewOtherChildrenHistory &&
+             member.ShareHistoryWithChildren);
+        if (!canView)
+        {
+            return Forbid();
+        }
+
+        var logs = await dbContext.CareLogs
+            .AsNoTracking()
+            .Include(log => log.Photos)
+            .Include(log => log.Pet)
+            .Include(log => log.CareTask)
+                .ThenInclude(task => task.CareCategory)
+            .Where(log =>
+                log.CompletedByUserId == member.UserId &&
+                log.Pet.HouseholdId == viewer.HouseholdId &&
+                log.Status == CareLogStatus.Approved)
+            .OrderByDescending(log => log.CompletedAt)
+            .Take(30)
+            .ToListAsync();
+
+        return View(new KidFamilyMemberHistoryViewModel
+        {
+            MemberId = member.Id,
+            DisplayName = member.User.DisplayName,
+            Role = member.MemberRole,
+            PhotoPath = member.User.ProfilePhotoPath,
+            History = logs.Select(log => new KidSharedCareHistorySummary(
+                log.Pet.Name,
+                GetCategoryName(log.CareTask.CareCategory),
+                log.CompletedAt,
+                GetCareLogImagePath(log),
+                log.Photos
+                    .OrderBy(photo => photo.CreatedAt)
+                    .Select(photo => photo.ImagePath)
+                    .ToList())).ToList()
         });
     }
 
@@ -376,15 +448,31 @@ public class DashboardController(
             return RedirectToAction(nameof(Parent));
         }
 
+        string? photoPath = null;
+        if (input.Photo is not null)
+        {
+            var photoResult = await SaveUploadedImageAsync(
+                input.Photo, "members", "InvalidMemberImage", "MemberImageTooLarge");
+            if (!photoResult.Success)
+            {
+                TempData["StatusMessage"] = localizer[photoResult.ErrorKey!].Value;
+                return RedirectToAction(nameof(Parent));
+            }
+
+            photoPath = photoResult.Path;
+        }
+
         var newUser = new ApplicationUser
         {
             DisplayName = input.DisplayName.Trim(),
             Email = email,
-            UserName = email
+            UserName = email,
+            ProfilePhotoPath = photoPath
         };
         var createResult = await userManager.CreateAsync(newUser, input.Password);
         if (!createResult.Succeeded)
         {
+            DeleteUploadedImage(photoPath, "members");
             TempData["StatusMessage"] = localizer["PasswordRequirements"].Value;
             return RedirectToAction(nameof(Parent));
         }
@@ -394,6 +482,7 @@ public class DashboardController(
         if (!roleResult.Succeeded)
         {
             await userManager.DeleteAsync(newUser);
+            DeleteUploadedImage(photoPath, "members");
             TempData["StatusMessage"] = localizer["AccountCreationFailed"].Value;
             return RedirectToAction(nameof(Parent));
         }
@@ -404,7 +493,16 @@ public class DashboardController(
             UserId = newUser.Id,
             MemberRole = input.Role
         });
-        await dbContext.SaveChangesAsync();
+        try
+        {
+            await dbContext.SaveChangesAsync();
+        }
+        catch
+        {
+            await userManager.DeleteAsync(newUser);
+            DeleteUploadedImage(photoPath, "members");
+            throw;
+        }
 
         TempData["StatusMessage"] = localizer["FamilyMemberAdded", input.DisplayName].Value;
         return RedirectToAction(nameof(Parent));
@@ -547,6 +645,20 @@ public class DashboardController(
             return RedirectToAction(nameof(Parent));
         }
 
+        string? imagePath = null;
+        if (input.Image is not null)
+        {
+            var imageResult = await SaveUploadedImageAsync(
+                input.Image, "tasks", "InvalidTaskImage", "TaskImageTooLarge");
+            if (!imageResult.Success)
+            {
+                TempData["StatusMessage"] = localizer[imageResult.ErrorKey!].Value;
+                return RedirectToAction(nameof(Parent));
+            }
+
+            imagePath = imageResult.Path;
+        }
+
         dbContext.CareTasks.Add(new CareTask
         {
             HouseholdId = membership.HouseholdId,
@@ -554,9 +666,18 @@ public class DashboardController(
             AssignedMemberId = assignedMember.Id,
             CareCategory = category,
             Frequency = input.Frequency,
-            PointValue = input.PointValue
+            PointValue = input.PointValue,
+            ImagePath = imagePath
         });
-        await dbContext.SaveChangesAsync();
+        try
+        {
+            await dbContext.SaveChangesAsync();
+        }
+        catch
+        {
+            DeleteUploadedImage(imagePath, "tasks");
+            throw;
+        }
         RememberTaskSelections(pet.Id, assignedMember.Id);
 
         TempData["StatusMessage"] = localizer["CareTaskAdded", GetCategoryName(category)].Value;
@@ -564,7 +685,7 @@ public class DashboardController(
     }
 
     [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Child")]
-    public async Task<IActionResult> CompleteTask(int careTaskId)
+    public async Task<IActionResult> CompleteTask(int careTaskId, List<IFormFile>? photos)
     {
         var user = await userManager.GetUserAsync(User);
         var membership = await GetCurrentMembershipAsync(HouseholdMemberRole.Child);
@@ -609,17 +730,130 @@ public class DashboardController(
             return RedirectToAction(nameof(Child));
         }
 
-        dbContext.CareLogs.Add(new CareLog
+        photos ??= [];
+        if (photos.Count > MaximumCompletionPhotos)
+        {
+            TempData["StatusMessage"] = localizer["TooManyTaskPhotos", MaximumCompletionPhotos].Value;
+            return RedirectToAction(nameof(Child));
+        }
+
+        var savedPhotoPaths = new List<string>();
+        foreach (var photo in photos)
+        {
+            var photoResult = await SaveUploadedImageAsync(
+                photo, "care-logs", "InvalidTaskPhoto", "TaskPhotoTooLarge");
+            if (!photoResult.Success)
+            {
+                foreach (var savedPath in savedPhotoPaths)
+                {
+                    DeleteUploadedImage(savedPath, "care-logs");
+                }
+
+                TempData["StatusMessage"] = localizer[photoResult.ErrorKey!].Value;
+                return RedirectToAction(nameof(Child));
+            }
+
+            savedPhotoPaths.Add(photoResult.Path!);
+        }
+
+        var careLog = new CareLog
         {
             PetId = careTask.PetId,
             CareTaskId = careTask.Id,
             CompletedByUserId = user.Id,
-            PointsAwarded = careTask.PointValue
-        });
-        await dbContext.SaveChangesAsync();
+            PointsAwarded = careTask.PointValue,
+            Photos = savedPhotoPaths
+                .Select(path => new CareLogPhoto { ImagePath = path })
+                .ToList()
+        };
+        dbContext.CareLogs.Add(careLog);
+        try
+        {
+            await dbContext.SaveChangesAsync();
+        }
+        catch
+        {
+            foreach (var savedPath in savedPhotoPaths)
+            {
+                DeleteUploadedImage(savedPath, "care-logs");
+            }
+
+            throw;
+        }
 
         TempData["StatusMessage"] = localizer["TaskSentForApproval"].Value;
         return RedirectToAction(nameof(Child));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Parent")]
+    public async Task<IActionResult> CompleteTaskAsParent(int careTaskId)
+    {
+        var parent = await userManager.GetUserAsync(User);
+        var membership = await GetCurrentMembershipAsync(HouseholdMemberRole.Parent);
+        if (parent is null || membership is null)
+        {
+            return Forbid();
+        }
+
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(
+            IsolationLevel.Serializable);
+        var careTask = await dbContext.CareTasks
+            .Include(item => item.Pet)
+            .Include(item => item.AssignedMember)
+            .FirstOrDefaultAsync(item =>
+                item.Id == careTaskId &&
+                item.HouseholdId == membership.HouseholdId &&
+                item.AssignedMemberId == membership.Id &&
+                item.IsActive &&
+                item.Pet.IsActive &&
+                item.AssignedMember.IsActive);
+        if (careTask is null)
+        {
+            return Forbid();
+        }
+
+        var now = DateTimeOffset.UtcNow;
+        var earliestAllowed = careTask.Frequency switch
+        {
+            CareTaskFrequency.Daily =>
+                new DateTimeOffset(now.UtcDateTime.Date, TimeSpan.Zero),
+            CareTaskFrequency.Weekly => now.AddDays(-7),
+            _ => (DateTimeOffset?)null
+        };
+        if (earliestAllowed is not null &&
+            await dbContext.CareLogs.AnyAsync(log =>
+                log.PetId == careTask.PetId &&
+                log.CareTaskId == careTask.Id &&
+                log.CompletedByUserId == parent.Id &&
+                log.Status != CareLogStatus.Rejected &&
+                log.CompletedAt >= earliestAllowed))
+        {
+            TempData["StatusMessage"] = localizer["TaskAlreadyRecorded"].Value;
+            return RedirectToAction(nameof(Parent));
+        }
+
+        var previousTotal = await dbContext.CareLogs
+            .Where(log =>
+                log.CompletedByUserId == parent.Id &&
+                log.Status == CareLogStatus.Approved)
+            .SumAsync(log => (int?)log.PointsAwarded) ?? 0;
+        dbContext.CareLogs.Add(new CareLog
+        {
+            PetId = careTask.PetId,
+            CareTaskId = careTask.Id,
+            CompletedByUserId = parent.Id,
+            CompletedAt = now,
+            PointsAwarded = careTask.PointValue,
+            Status = CareLogStatus.Approved,
+            ApprovedByUserId = parent.Id,
+            ApprovedAt = now,
+            PointsTotalAfterApproval = previousTotal + careTask.PointValue
+        });
+        await dbContext.SaveChangesAsync();
+        await transaction.CommitAsync();
+
+        TempData["StatusMessage"] = localizer["ParentTaskCompleted"].Value;
+        return RedirectToAction(nameof(Parent));
     }
 
     [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Parent")]
@@ -704,8 +938,29 @@ public class DashboardController(
             return RedirectToAction(nameof(Parent));
         }
 
+        var previousPhotoPath = member.User.ProfilePhotoPath;
+        string? replacementPhotoPath = null;
+        var photoChanged = input.RemovePhoto;
+        if (input.Photo is not null)
+        {
+            var photoResult = await SaveUploadedImageAsync(
+                input.Photo, "members", "InvalidMemberImage", "MemberImageTooLarge");
+            if (!photoResult.Success)
+            {
+                TempData["StatusMessage"] = localizer[photoResult.ErrorKey!].Value;
+                return RedirectToAction(nameof(Parent));
+            }
+
+            replacementPhotoPath = photoResult.Path;
+            photoChanged = true;
+        }
+
         var previousRole = member.MemberRole;
         member.User.DisplayName = input.DisplayName.Trim();
+        if (photoChanged)
+        {
+            member.User.ProfilePhotoPath = replacementPhotoPath;
+        }
         member.MemberRole = input.Role;
         if (previousRole != input.Role)
         {
@@ -714,6 +969,7 @@ public class DashboardController(
             var addResult = await userManager.AddToRoleAsync(member.User, newRole);
             if (!addResult.Succeeded)
             {
+                DeleteUploadedImage(replacementPhotoPath, "members");
                 TempData["StatusMessage"] = localizer["AccountUpdateFailed"].Value;
                 return RedirectToAction(nameof(Parent));
             }
@@ -722,12 +978,26 @@ public class DashboardController(
             if (!removeResult.Succeeded)
             {
                 await userManager.RemoveFromRoleAsync(member.User, newRole);
+                DeleteUploadedImage(replacementPhotoPath, "members");
                 TempData["StatusMessage"] = localizer["AccountUpdateFailed"].Value;
                 return RedirectToAction(nameof(Parent));
             }
         }
 
-        await dbContext.SaveChangesAsync();
+        try
+        {
+            await dbContext.SaveChangesAsync();
+        }
+        catch
+        {
+            DeleteUploadedImage(replacementPhotoPath, "members");
+            throw;
+        }
+
+        if (photoChanged && previousPhotoPath is not null)
+        {
+            DeleteUploadedImage(previousPhotoPath, "members");
+        }
         TempData["StatusMessage"] = localizer["FamilyMemberUpdated"].Value;
         return RedirectToAction(nameof(Parent));
     }
@@ -903,7 +1173,40 @@ public class DashboardController(
         task.CareCategory = category;
         task.Frequency = input.Frequency;
         task.PointValue = input.PointValue;
-        await dbContext.SaveChangesAsync();
+        var oldImagePath = task.ImagePath;
+        string? newImagePath = null;
+        if (input.Image is not null)
+        {
+            var imageResult = await SaveUploadedImageAsync(
+                input.Image, "tasks", "InvalidTaskImage", "TaskImageTooLarge");
+            if (!imageResult.Success)
+            {
+                TempData["StatusMessage"] = localizer[imageResult.ErrorKey!].Value;
+                return RedirectToAction(nameof(Parent));
+            }
+
+            newImagePath = imageResult.Path;
+            task.ImagePath = newImagePath;
+        }
+        else if (input.RemoveImage)
+        {
+            task.ImagePath = null;
+        }
+
+        try
+        {
+            await dbContext.SaveChangesAsync();
+        }
+        catch
+        {
+            DeleteUploadedImage(newImagePath, "tasks");
+            throw;
+        }
+
+        if ((input.Image is not null || input.RemoveImage) && oldImagePath is not null)
+        {
+            DeleteUploadedImage(oldImagePath, "tasks");
+        }
         RememberTaskSelections(task.PetId, task.AssignedMemberId);
         TempData["StatusMessage"] = localizer["CareTaskUpdated"].Value;
         return RedirectToAction(nameof(Parent));
@@ -976,6 +1279,27 @@ public class DashboardController(
             ? localizer[$"Category_{category.Code}"].Value
             : category.CustomName ?? string.Empty;
 
+    private string GetTaskImagePath(CareTask task)
+    {
+        if (!string.IsNullOrWhiteSpace(task.ImagePath))
+        {
+            return task.ImagePath;
+        }
+
+        var categoryCode = task.CareCategory?.Code;
+        if (categoryCode is not null &&
+            DefaultTaskImages.TryGetValue(categoryCode, out var defaultPath))
+        {
+            return defaultPath;
+        }
+
+        return task.Pet?.PhotoPath ?? "/images/tasks/playing.webp";
+    }
+
+    private string GetCareLogImagePath(CareLog log) =>
+        log.Photos.OrderBy(photo => photo.CreatedAt).FirstOrDefault()?.ImagePath
+        ?? GetTaskImagePath(log.CareTask);
+
     private async Task<CareCategory?> ResolveCategoryAsync(
         int householdId,
         int? categoryId,
@@ -1012,35 +1336,76 @@ public class DashboardController(
 
     private async Task<(bool Success, string? Path, string? ErrorKey)> SavePetPhotoAsync(
         IFormFile photo)
+        => await SaveUploadedImageAsync(
+            photo, "pets", "InvalidPetImage", "PetImageTooLarge");
+
+    private async Task<(bool Success, string? Path, string? ErrorKey)> SaveUploadedImageAsync(
+        IFormFile photo,
+        string folder,
+        string invalidImageKey,
+        string tooLargeKey)
     {
         var extension = Path.GetExtension(photo.FileName);
         if (photo.Length == 0 ||
             !AllowedPhotoExtensions.Contains(extension) ||
-            !AllowedPhotoContentTypes.Contains(photo.ContentType))
+            !AllowedPhotoContentTypes.Contains(photo.ContentType) ||
+            !await HasValidImageSignatureAsync(photo, extension))
         {
-            return (false, null, "InvalidPetImage");
+            return (false, null, invalidImageKey);
         }
 
         if (photo.Length > MaximumPetPhotoBytes)
         {
-            return (false, null, "PetImageTooLarge");
+            return (false, null, tooLargeKey);
         }
 
-        var uploadDirectory = Path.Combine(environment.WebRootPath, "uploads", "pets");
+        var uploadDirectory = Path.Combine(environment.WebRootPath, "uploads", folder);
         Directory.CreateDirectory(uploadDirectory);
         var fileName = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
         var path = Path.Combine(uploadDirectory, fileName);
         await using var stream = System.IO.File.Create(path);
         await photo.CopyToAsync(stream);
-        return (true, $"/uploads/pets/{fileName}", null);
+        return (true, $"/uploads/{folder}/{fileName}", null);
+    }
+
+    private static async Task<bool> HasValidImageSignatureAsync(IFormFile photo, string extension)
+    {
+        var header = new byte[12];
+        await using var stream = photo.OpenReadStream();
+        var bytesRead = await stream.ReadAsync(header);
+        if (extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
+            extension.Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
+        {
+            return bytesRead >= 3 &&
+                   header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF;
+        }
+
+        if (extension.Equals(".png", StringComparison.OrdinalIgnoreCase))
+        {
+            byte[] pngSignature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+            return bytesRead >= pngSignature.Length &&
+                   header.AsSpan(0, pngSignature.Length).SequenceEqual(pngSignature);
+        }
+
+        return bytesRead >= 12 &&
+               header.AsSpan(0, 4).SequenceEqual("RIFF"u8) &&
+               header.AsSpan(8, 4).SequenceEqual("WEBP"u8);
     }
 
     private void DeletePetPhoto(string photoPath)
+        => DeleteUploadedImage(photoPath, "pets");
+
+    private void DeleteUploadedImage(string? photoPath, string folder)
     {
+        if (string.IsNullOrWhiteSpace(photoPath))
+        {
+            return;
+        }
+
         var relativePath = photoPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
         var fullPath = Path.GetFullPath(Path.Combine(environment.WebRootPath, relativePath));
         var uploadRoot = Path.GetFullPath(
-            Path.Combine(environment.WebRootPath, "uploads", "pets")) +
+            Path.Combine(environment.WebRootPath, "uploads", folder)) +
             Path.DirectorySeparatorChar;
         if (fullPath.StartsWith(uploadRoot, StringComparison.OrdinalIgnoreCase) &&
             System.IO.File.Exists(fullPath))

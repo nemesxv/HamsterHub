@@ -52,7 +52,15 @@
                     @foreach (var member in Model.Members)
                     {
                         <article class="member-row">
-                            <span class="member-avatar" aria-hidden="true">@(string.IsNullOrWhiteSpace(member.DisplayName) ? "?" : member.DisplayName[..1].ToUpperInvariant())</span>
+                            @if (member.PhotoPath is not null)
+                            {
+                                <img class="member-avatar member-photo" src="@member.PhotoPath"
+                                     alt="@L["MemberPhotoAlt", member.DisplayName]" />
+                            }
+                            else
+                            {
+                                <span class="member-avatar" aria-hidden="true">@(string.IsNullOrWhiteSpace(member.DisplayName) ? "?" : member.DisplayName[..1].ToUpperInvariant())</span>
+                            }
                             <div>
                                 <a class="member-history-link" asp-action="FamilyMember" asp-route-id="@member.Id">
                                     @member.DisplayName
@@ -147,13 +155,23 @@
                 @foreach (var task in Model.CareTasks)
                 {
                     <article class="task-admin-card">
-                        <span class="task-symbol" aria-hidden="true">✓</span>
-                        <div>
+                        <img class="task-admin-image" src="@task.ImagePath"
+                             alt="@L["TaskImageAlt", task.CategoryName]" />
+                        <div class="task-admin-copy">
                             <strong>@task.CategoryName</strong>
                             <small>@task.PetName · @task.AssignedMemberName · @L[$"Frequency_{task.Frequency}"]</small>
                         </div>
                         <span class="point-pill">+@task.PointValue</span>
                         <div class="row-actions">
+                            @if (task.CanCurrentUserComplete)
+                            {
+                                <form asp-action="CompleteTaskAsParent" method="post">
+                                    <input type="hidden" name="careTaskId" value="@task.Id" />
+                                    <button type="submit" class="icon-action complete-action">
+                                        ✓ @L["CompleteTask"]
+                                    </button>
+                                </form>
+                            }
                             <button type="button" class="icon-action"
                                     data-bs-toggle="modal" data-bs-target="#edit-task-@task.Id">
                                 @L["Edit"]
@@ -191,6 +209,18 @@
                         <div>
                             <strong>@item.ChildName — @item.TaskName</strong>
                             <small>@item.PetName · @item.CompletedAt.ToLocalTime().ToString("g") · +@item.Points</small>
+                            @if (item.PhotoPaths.Count > 0)
+                            {
+                                <div class="care-photo-strip" aria-label="@L["TaskPhotos"]">
+                                    @foreach (var photoPath in item.PhotoPaths)
+                                    {
+                                        <button type="button" data-photo-viewer-src="@photoPath"
+                                                data-photo-viewer-alt="@L["TaskPhotoAlt", item.TaskName]">
+                                            <img src="@photoPath" alt="@L["TaskPhotoAlt", item.TaskName]" />
+                                        </button>
+                                    }
+                                </div>
+                            }
                         </div>
                         <div class="approval-actions">
                             <form asp-action="ReviewCareLog" method="post">
@@ -218,7 +248,7 @@
             <div class="modal-mark" aria-hidden="true">＋</div>
             <h2 id="memberModalLabel">@L["AddFamilyMember"]</h2>
             <p>@L["MemberFormIntro"]</p>
-            <form asp-action="AddMember" method="post">
+            <form asp-action="AddMember" method="post" enctype="multipart/form-data">
                 <label asp-for="AddMember.Role"></label>
                 <select asp-for="AddMember.Role">
                     <option value="@((int)HouseholdMemberRole.Child)">@L["Role_Child"]</option>
@@ -230,6 +260,10 @@
                 <input asp-for="AddMember.Email" autocomplete="email" />
                 <label asp-for="AddMember.Password"></label>
                 <input asp-for="AddMember.Password" autocomplete="new-password" />
+                <label asp-for="AddMember.Photo"></label>
+                <input asp-for="AddMember.Photo" type="file"
+                       accept="image/jpeg,image/png,image/webp" />
+                <small class="field-hint">@L["MemberPhotoHint"]</small>
                 <button type="submit" class="modal-submit">@L["CreateFamilyAccount"]</button>
             </form>
         </div>
@@ -267,7 +301,7 @@
             <div class="modal-mark" aria-hidden="true">✓</div>
             <h2 id="taskModalLabel">@L["AddCareTask"]</h2>
             <p>@L["TaskFormIntro"]</p>
-            <form asp-action="AddCareTask" method="post">
+            <form asp-action="AddCareTask" method="post" enctype="multipart/form-data">
                 <label asp-for="AddCareTask.PetId"></label>
                 <select asp-for="AddCareTask.PetId">
                     <option value="">@L["ChoosePet"]</option>
@@ -295,6 +329,10 @@
                 <label asp-for="AddCareTask.NewCategoryName"></label>
                 <input asp-for="AddCareTask.NewCategoryName" placeholder="@L["NewCategoryPlaceholder"]" />
                 <small class="field-hint">@L["NewCategoryHint"]</small>
+                <label asp-for="AddCareTask.Image"></label>
+                <input asp-for="AddCareTask.Image" type="file"
+                       accept="image/jpeg,image/png,image/webp" />
+                <small class="field-hint">@L["TaskImageHint"]</small>
                 <div class="form-columns">
                     <div>
                         <label asp-for="AddCareTask.Frequency"></label>
@@ -323,7 +361,7 @@
             <div class="modal-content account-modal dashboard-modal">
                 <button type="button" class="modal-close" data-bs-dismiss="modal" aria-label="@L["Close"]">×</button>
                 <h2>@L["EditFamilyMember"]</h2>
-                <form asp-action="UpdateMember" method="post">
+                <form asp-action="UpdateMember" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="UpdateMember.Id" value="@member.Id" />
                     <label for="member-name-@member.Id">@L["DisplayName"]</label>
                     <input id="member-name-@member.Id" name="UpdateMember.DisplayName" value="@member.DisplayName" required maxlength="100" />
@@ -336,6 +374,17 @@
                     @if (member.IsCurrentUser)
                     {
                         <input type="hidden" name="UpdateMember.Role" value="@((int)member.Role)" />
+                    }
+                    <label for="member-photo-@member.Id">@L["ReplaceMemberPhoto"]</label>
+                    <input id="member-photo-@member.Id" name="UpdateMember.Photo" type="file"
+                           accept="image/jpeg,image/png,image/webp" />
+                    <small class="field-hint">@L["MemberPhotoHint"]</small>
+                    @if (member.PhotoPath is not null)
+                    {
+                        <label class="remember-row">
+                            <input type="checkbox" name="UpdateMember.RemovePhoto" value="true" />
+                            <span>@L["RemoveMemberPhoto"]</span>
+                        </label>
                     }
                     <button type="submit" class="modal-submit">@L["SaveChanges"]</button>
                 </form>
@@ -378,7 +427,7 @@
             <div class="modal-content account-modal dashboard-modal">
                 <button type="button" class="modal-close" data-bs-dismiss="modal" aria-label="@L["Close"]">×</button>
                 <h2>@L["EditCareTask"]</h2>
-                <form asp-action="UpdateCareTask" method="post">
+                <form asp-action="UpdateCareTask" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="UpdateCareTask.Id" value="@task.Id" />
                     <label for="task-pet-@task.Id">@L["TaskPet"]</label>
                     <select id="task-pet-@task.Id" name="UpdateCareTask.PetId">
@@ -406,6 +455,20 @@
                     <label for="task-new-category-@task.Id">@L["NewCategory"]</label>
                     <input id="task-new-category-@task.Id" name="UpdateCareTask.NewCategoryName"
                            placeholder="@L["NewCategoryPlaceholder"]" maxlength="100" />
+                    <div class="task-image-current">
+                        <img src="@task.ImagePath" alt="@L["TaskImageAlt", task.CategoryName]" />
+                        <span>@(task.HasCustomImage ? L["CustomTaskImage"] : L["DefaultTaskImage"])</span>
+                    </div>
+                    <label for="task-image-@task.Id">@L["ReplaceTaskImage"]</label>
+                    <input id="task-image-@task.Id" name="UpdateCareTask.Image" type="file"
+                           accept="image/jpeg,image/png,image/webp" />
+                    @if (task.HasCustomImage)
+                    {
+                        <label class="task-image-remove">
+                            <input type="checkbox" name="UpdateCareTask.RemoveImage" value="true" />
+                            <span>@L["UseDefaultTaskImage"]</span>
+                        </label>
+                    }
                     <div class="form-columns">
                         <div>
                             <label for="task-frequency-@task.Id">@L["TaskFrequency"]</label>

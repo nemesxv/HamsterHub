@@ -56,6 +56,11 @@ else
             <div>
                 <strong>@L["AuthenticatorStepTwo"]</strong>
                 <p>@L["AuthenticatorStepTwoHint"]</p>
+                <div class="authenticator-qr-wrap">
+                    <img class="authenticator-qr"
+                         src="@Model.QrCodeDataUri"
+                         alt="@L["AuthenticatorQrAlt"]" />
+                </div>
                 <div class="setup-key-row">
                     <code>@Model.SharedKey</code>
                     <a href="@Model.AuthenticatorUri">@L["OpenAuthenticatorApp"]</a>

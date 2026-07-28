@@ -46,6 +46,7 @@ The core product loop is:
   categories in Cyrillic or Latin text.
 - Parents can edit and remove family members, pets, and care tasks. Removal is
   archival so existing care history remains valid.
+- Family members can have an optional profile photo managed by a parent.
 - The task form remembers the last selected pet and family member for the
   current browser session.
 - Parents have a unified, localized account area for changing their display
@@ -56,8 +57,22 @@ The core product loop is:
 - Child history sharing is private by default. Parents independently control
   whether a child may view other children's approved history and whether that
   child's approved history may be shared with other children.
-- Pet photos are a primary visual element on child task cards and care-history
-  views.
+- The child's “Our friends” area shows active parents and privacy-permitted
+  children rather than scores or an activity feed. Tapping a person opens only
+  their approved care memories and completion photos.
+- Parents may complete tasks assigned to themselves. These records are approved
+  automatically by that parent and receive the task's current point value.
+- Built-in care categories have dedicated hamster illustrations. Parents can
+  optionally replace the image for an individual task, and custom tasks fall
+  back to the pet image.
+- Children can report a task without a photo or attach up to eight completion
+  photos. Parents see those photos in the approval queue and family history.
+- The child dashboard includes a tappable pet gallery, live camera capture,
+  multi-photo previews, and an accessible in-page viewer for pet and care
+  photos. Photo viewing never requires navigating away from the dashboard.
+- Authenticator setup provides both a scannable QR code and a manual setup key.
+- Passwords require upper- and lowercase letters and a number; punctuation and
+  symbols are optional.
 - The child dashboard is designed picture-first for children around ages 3–6,
   with Лилит—a creative 4–5-year-old who loves animals and drawing—as the
   primary design persona. It uses minimal copy, oversized pet imagery, familiar

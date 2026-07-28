@@ -26,8 +26,7 @@ public class KidDashboardViewModel
     public IReadOnlyList<PetSummary> Pets { get; set; } = [];
     public IReadOnlyList<CareTaskSummary> CareTasks { get; set; } = [];
     public IReadOnlyList<KidCareHistorySummary> RecentCare { get; set; } = [];
-    public bool CanViewFamilyActivity { get; set; }
-    public IReadOnlyList<FamilyActivitySummary> FamilyActivity { get; set; } = [];
+    public IReadOnlyList<KidFamilyMemberSummary> FamilyMembers { get; set; } = [];
 }
 
 public record FamilyMemberSummary(
@@ -36,7 +35,8 @@ public record FamilyMemberSummary(
     string DisplayName,
     string Email,
     HouseholdMemberRole Role,
-    bool IsCurrentUser);
+    bool IsCurrentUser,
+    string? PhotoPath);
 public record PetSummary(
     int Id,
     string Name,
@@ -54,14 +54,18 @@ public record CareTaskSummary(
     int AssignedMemberId,
     string AssignedMemberName,
     CareTaskFrequency Frequency,
-    int PointValue);
+    int PointValue,
+    string ImagePath,
+    bool HasCustomImage,
+    bool CanCurrentUserComplete);
 public record PendingCareSummary(
     int Id,
     string ChildName,
     string PetName,
     string TaskName,
     int Points,
-    DateTimeOffset CompletedAt);
+    DateTimeOffset CompletedAt,
+    IReadOnlyList<string> PhotoPaths);
 public record KidCareHistorySummary(
     string PetName,
     string? PetPhotoPath,
@@ -70,28 +74,43 @@ public record KidCareHistorySummary(
     int? PointsTotalAfterApproval,
     CareLogStatus Status,
     DateTimeOffset CompletedAt,
-    DateTimeOffset? ApprovedAt);
-public record FamilyActivitySummary(
-    string ChildName,
-    string PetName,
-    string? PetPhotoPath,
-    string TaskName,
-    int Points,
-    int PointsTotalAfterApproval,
-    DateTimeOffset CompletedAt,
-    DateTimeOffset ApprovedAt);
+    DateTimeOffset? ApprovedAt,
+    string ImagePath,
+    IReadOnlyList<string> PhotoPaths);
+public record KidFamilyMemberSummary(
+    int Id,
+    string DisplayName,
+    HouseholdMemberRole Role,
+    string? PhotoPath);
 
 public class FamilyMemberHistoryViewModel
 {
     public int MemberId { get; set; }
     public string DisplayName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+    public string? PhotoPath { get; set; }
     public HouseholdMemberRole Role { get; set; }
     public int CurrentPoints { get; set; }
     public bool CanViewOtherChildrenHistory { get; set; }
     public bool ShareHistoryWithChildren { get; set; }
     public IReadOnlyList<MemberCareHistorySummary> History { get; set; } = [];
 }
+
+public class KidFamilyMemberHistoryViewModel
+{
+    public int MemberId { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
+    public HouseholdMemberRole Role { get; set; }
+    public string? PhotoPath { get; set; }
+    public IReadOnlyList<KidSharedCareHistorySummary> History { get; set; } = [];
+}
+
+public record KidSharedCareHistorySummary(
+    string PetName,
+    string TaskName,
+    DateTimeOffset CompletedAt,
+    string ImagePath,
+    IReadOnlyList<string> PhotoPaths);
 
 public record MemberCareHistorySummary(
     string PetName,
@@ -102,7 +121,9 @@ public record MemberCareHistorySummary(
     CareLogStatus Status,
     DateTimeOffset ReportedAt,
     DateTimeOffset? ApprovedAt,
-    string? ApprovedByName);
+    string? ApprovedByName,
+    string ImagePath,
+    IReadOnlyList<string> PhotoPaths);
 
 public class AddMemberInput
 {
@@ -123,6 +144,9 @@ public class AddMemberInput
 
     [Display(Name = "FamilyRole")]
     public HouseholdMemberRole Role { get; set; } = HouseholdMemberRole.Child;
+
+    [Display(Name = "MemberPhoto")]
+    public IFormFile? Photo { get; set; }
 }
 
 public class AddPetInput
@@ -168,6 +192,9 @@ public class AddCareTaskInput
     [Range(0, 1000, ErrorMessage = "PointRange")]
     [Display(Name = "PointValue")]
     public int PointValue { get; set; } = 5;
+
+    [Display(Name = "TaskImage")]
+    public IFormFile? Image { get; set; }
 }
 
 public class UpdateMemberInput
@@ -182,6 +209,11 @@ public class UpdateMemberInput
 
     [Display(Name = "FamilyRole")]
     public HouseholdMemberRole Role { get; set; }
+
+    [Display(Name = "MemberPhoto")]
+    public IFormFile? Photo { get; set; }
+
+    public bool RemovePhoto { get; set; }
 }
 
 public class UpdatePetInput : AddPetInput
@@ -194,6 +226,8 @@ public class UpdateCareTaskInput : AddCareTaskInput
 {
     [Range(1, int.MaxValue)]
     public int Id { get; set; }
+
+    public bool RemoveImage { get; set; }
 }
 
 public class UpdateHistoryPrivacyInput

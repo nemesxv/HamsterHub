@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Localization;
+using QRCoder;
 
 namespace HamsterHub.Areas.Identity.Pages.Account.Manage;
 
@@ -24,6 +25,7 @@ public class EnableAuthenticatorModel(
 
     public string SharedKey { get; private set; } = string.Empty;
     public string AuthenticatorUri { get; private set; } = string.Empty;
+    public string QrCodeDataUri { get; private set; } = string.Empty;
     public bool SetupComplete { get; private set; }
     public string[]? RecoveryCodes { get; private set; }
 
@@ -102,6 +104,11 @@ public class EnableAuthenticatorModel(
         SharedKey = FormatKey(unformattedKey!);
         var email = await userManager.GetEmailAsync(user) ?? user.UserName ?? "HamsterHub";
         AuthenticatorUri = GenerateQrCodeUri(email, unformattedKey!);
+        var qrCodeBytes = PngByteQRCodeHelper.GetQRCode(
+            AuthenticatorUri,
+            QRCodeGenerator.ECCLevel.Q,
+            12);
+        QrCodeDataUri = $"data:image/png;base64,{Convert.ToBase64String(qrCodeBytes)}";
     }
 
     private static string FormatKey(string unformattedKey)

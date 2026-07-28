@@ -1,0 +1,76 @@
+@model KidFamilyMemberHistoryViewModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+@{
+    ViewData["Title"] = L["MemberHistoryTitle", Model.DisplayName];
+    ViewData["BodyClass"] = "kid-world";
+}
+
+<main class="kid-canvas kid-friend-history-page">
+    <nav class="kid-friend-back">
+        <a asp-action="Child">← @L["BackToKidDashboard"]</a>
+    </nav>
+
+    <section class="kid-friend-hero">
+        @if (Model.PhotoPath is not null)
+        {
+            <button type="button" class="kid-friend-portrait"
+                    data-photo-viewer-src="@Model.PhotoPath"
+                    data-photo-viewer-alt="@L["MemberPhotoAlt", Model.DisplayName]">
+                <img src="@Model.PhotoPath" alt="@L["MemberPhotoAlt", Model.DisplayName]" />
+            </button>
+        }
+        else
+        {
+            <div class="kid-friend-portrait kid-friend-portrait-placeholder" aria-hidden="true">
+                @(Model.Role == HouseholdMemberRole.Parent ? "🧑" : "🧒")
+            </div>
+        }
+        <div>
+            <span aria-hidden="true">💛</span>
+            <h1>@Model.DisplayName</h1>
+            <p>@L[$"Role_{Model.Role}"]</p>
+        </div>
+    </section>
+
+    <section class="kid-family-section kid-shared-history">
+        <header class="kid-section-title">
+            <span aria-hidden="true">📸</span>
+            <h2>@L["SharedCareMemories"]</h2>
+        </header>
+
+        @if (Model.History.Count == 0)
+        {
+            <div class="kid-picture-empty">
+                <span aria-hidden="true">🌱</span>
+                <p>@L["NoSharedCareMemories"]</p>
+            </div>
+        }
+        else
+        {
+            <div class="kid-shared-history-grid">
+                @foreach (var item in Model.History)
+                {
+                    <button type="button" class="kid-shared-history-card" data-photo-gallery>
+                        <img src="@item.ImagePath" alt="@L["TaskImageAlt", item.TaskName]" />
+                        <strong>@item.TaskName</strong>
+                        <small>@item.PetName · @item.CompletedAt.ToLocalTime().ToString("dd.MM")</small>
+                        @if (item.PhotoPaths.Count > 0)
+                        {
+                            @foreach (var photoPath in item.PhotoPaths)
+                            {
+                                <span data-gallery-photo data-src="@photoPath"
+                                      data-alt="@L["TaskPhotoAlt", item.TaskName]" hidden></span>
+                            }
+                        }
+                        else
+                        {
+                            <span data-gallery-photo data-src="@item.ImagePath"
+                                  data-alt="@L["TaskImageAlt", item.TaskName]" hidden></span>
+                        }
+                    </button>
+                }
+            </div>
+        }
+    </section>
+</main>

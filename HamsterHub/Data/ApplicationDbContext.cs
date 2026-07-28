@@ -14,13 +14,17 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<CareCategory> CareCategories => Set<CareCategory>();
     public DbSet<CareTask> CareTasks => Set<CareTask>();
     public DbSet<CareLog> CareLogs => Set<CareLog>();
+    public DbSet<CareLogPhoto> CareLogPhotos => Set<CareLogPhoto>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
 
         builder.Entity<ApplicationUser>(entity =>
-            entity.Property(user => user.DisplayName).HasMaxLength(100).IsRequired());
+        {
+            entity.Property(user => user.DisplayName).HasMaxLength(100).IsRequired();
+            entity.Property(user => user.ProfilePhotoPath).HasMaxLength(500);
+        });
 
         builder.Entity<Household>(entity =>
             entity.Property(household => household.Name).HasMaxLength(100).IsRequired());
@@ -46,6 +50,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<CareTask>(entity =>
         {
+            entity.Property(task => task.ImagePath).HasMaxLength(500);
             entity.ToTable(table =>
                 table.HasCheckConstraint("CK_CareTasks_PointValue_NonNegative", "[PointValue] >= 0"));
             entity.HasOne(task => task.Pet)
@@ -102,6 +107,16 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .WithMany()
                 .HasForeignKey(log => log.ApprovedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<CareLogPhoto>(entity =>
+        {
+            entity.Property(photo => photo.ImagePath).HasMaxLength(500).IsRequired();
+            entity.HasIndex(photo => photo.CareLogId);
+            entity.HasOne(photo => photo.CareLog)
+                .WithMany(log => log.Photos)
+                .HasForeignKey(photo => photo.CareLogId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         builder.Entity<IdentityRole>().HasData(

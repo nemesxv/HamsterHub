@@ -32,11 +32,14 @@
     }
 
     <section class="kid-picture-counts" aria-label="@L["KidOverview"]">
-        <article>
+        <button type="button" class="kid-count-card kid-pets-button"
+                data-bs-toggle="modal" data-bs-target="#kidPetsModal"
+                disabled="@(Model.Pets.Count == 0)"
+                aria-label="@L["OpenPets", Model.Pets.Count]">
             <span class="kid-count-picture" aria-hidden="true">🐹</span>
             <strong>@Model.Pets.Count</strong>
             <small>@L["KidPetsShort"]</small>
-        </article>
+        </button>
         <article>
             <span class="kid-count-picture" aria-hidden="true">🎨</span>
             <strong>@Model.CareTasks.Count</strong>
@@ -69,15 +72,6 @@
             <div class="kid-big-task-grid">
                 @foreach (var task in Model.CareTasks)
                 {
-                    var taskIcon = task.CategoryId switch
-                    {
-                        1 => "🥕",
-                        2 => "💧",
-                        3 => "🫧",
-                        4 => "🎾",
-                        5 => "🩹",
-                        _ => "🎨"
-                    };
                     var rhythmIcon = task.Frequency switch
                     {
                         CareTaskFrequency.Daily => "☀",
@@ -85,19 +79,18 @@
                         _ => "✨"
                     };
                     <article class="kid-big-task-card">
-                        <div class="kid-task-art">
+                        <button type="button" class="kid-task-art"
+                                data-bs-toggle="modal" data-bs-target="#complete-task-@task.Id"
+                                aria-label="@L["OpenTask", task.CategoryName, task.PetName]">
+                            <img src="@task.ImagePath" alt="@L["TaskImageAlt", task.CategoryName]" />
                             @if (task.PetPhotoPath is not null)
                             {
-                                <img src="@task.PetPhotoPath" alt="@L["PetPhotoAlt", task.PetName]" />
+                                <img class="kid-task-pet-badge" src="@task.PetPhotoPath"
+                                     alt="@L["PetPhotoAlt", task.PetName]" />
                             }
-                            else
-                            {
-                                <div class="kid-pet-placeholder" aria-hidden="true">🐹</div>
-                            }
-                            <span class="kid-task-sticker" aria-hidden="true">@taskIcon</span>
                             <span class="kid-rhythm-sticker" title="@L[$"Frequency_{task.Frequency}"]"
                                   aria-label="@L[$"Frequency_{task.Frequency}"]">@rhythmIcon</span>
-                        </div>
+                        </button>
                         <div class="kid-task-name">
                             <small>@task.PetName</small>
                             <h3>@task.CategoryName</h3>
@@ -106,13 +99,11 @@
                             <span aria-hidden="true">★</span>
                             <strong>+@task.PointValue</strong>
                         </div>
-                        <form asp-action="CompleteTask" method="post">
-                            <input type="hidden" name="careTaskId" value="@task.Id" />
-                            <button type="submit">
-                                <span aria-hidden="true">✓</span>
-                                @L["KidDone"]
-                            </button>
-                        </form>
+                        <button type="button" class="kid-complete-button"
+                                data-bs-toggle="modal" data-bs-target="#complete-task-@task.Id">
+                            <span aria-hidden="true">✓</span>
+                            @L["KidDone"]
+                        </button>
                     </article>
                 }
             </div>
@@ -142,65 +133,167 @@
                         CareLogStatus.Rejected => "↺",
                         _ => "⏳"
                     };
-                    <article class="kid-polaroid status-@item.Status.ToString().ToLowerInvariant()">
+                    <button type="button"
+                            class="kid-polaroid status-@item.Status.ToString().ToLowerInvariant()"
+                            data-photo-gallery
+                            aria-label="@L["OpenTaskPhotos", item.TaskName]">
                         <div class="kid-polaroid-picture">
-                            @if (item.PetPhotoPath is not null)
-                            {
-                                <img src="@item.PetPhotoPath" alt="@L["PetPhotoAlt", item.PetName]" />
-                            }
-                            else
-                            {
-                                <div aria-hidden="true">🐹</div>
-                            }
+                            <img src="@item.ImagePath" alt="@L["TaskImageAlt", item.TaskName]" />
                             <span class="kid-polaroid-status" aria-label="@L[$"Status_{item.Status}"]">@statusIcon</span>
+                            @if (item.PhotoPaths.Count > 1)
+                            {
+                                <span class="kid-photo-count" aria-label="@L["PhotoCount", item.PhotoPaths.Count]">
+                                    📷 @item.PhotoPaths.Count
+                                </span>
+                            }
                         </div>
                         <strong>@item.TaskName</strong>
                         <small>@item.PetName · @item.CompletedAt.ToLocalTime().ToString("dd.MM")</small>
                         <span class="kid-polaroid-points">+@item.Points ★</span>
-                    </article>
+                        @if (item.PhotoPaths.Count > 0)
+                        {
+                            @foreach (var photoPath in item.PhotoPaths)
+                            {
+                                <span data-gallery-photo data-src="@photoPath"
+                                      data-alt="@L["TaskPhotoAlt", item.TaskName]" hidden></span>
+                            }
+                        }
+                        else
+                        {
+                            <span data-gallery-photo data-src="@item.ImagePath"
+                                  data-alt="@L["TaskImageAlt", item.TaskName]" hidden></span>
+                        }
+                    </button>
                 }
             </div>
         }
     </section>
 
-    @if (Model.CanViewFamilyActivity)
-    {
-        <section class="kid-family-section">
-            <header class="kid-section-title">
-                <span aria-hidden="true">👭</span>
-                <h2>@L["KidFriends"]</h2>
-            </header>
-            @if (Model.FamilyActivity.Count == 0)
-            {
-                <div class="kid-picture-empty kid-family-empty">
-                    <span aria-hidden="true">💌</span>
-                    <p>@L["KidNoFriendStories"]</p>
-                </div>
-            }
-            else
-            {
-                <div class="kid-friend-grid">
-                    @foreach (var item in Model.FamilyActivity)
+    <section class="kid-family-section">
+        <header class="kid-section-title">
+            <span aria-hidden="true">👭</span>
+            <h2>@L["KidFriends"]</h2>
+        </header>
+        @if (Model.FamilyMembers.Count == 0)
+        {
+            <div class="kid-picture-empty kid-family-empty">
+                <span aria-hidden="true">💌</span>
+                <p>@L["KidNoVisibleFamily"]</p>
+            </div>
+        }
+        else
+        {
+            <div class="kid-friend-grid">
+                @foreach (var member in Model.FamilyMembers)
+                {
+                    <a class="kid-friend-card" asp-action="ChildFamilyMember"
+                       asp-route-id="@member.Id"
+                       aria-label="@L["OpenMemberHistory", member.DisplayName]">
+                        @if (member.PhotoPath is not null)
+                        {
+                            <img src="@member.PhotoPath"
+                                 alt="@L["MemberPhotoAlt", member.DisplayName]" />
+                        }
+                        else
+                        {
+                            <span class="kid-friend-placeholder" aria-hidden="true">
+                                @(member.Role == HouseholdMemberRole.Parent ? "🧑" : "🧒")
+                            </span>
+                        }
+                        <span class="kid-friend-name">
+                            <strong>@member.DisplayName</strong>
+                            <small>@L[$"Role_{member.Role}"]</small>
+                        </span>
+                        <span class="kid-friend-open" aria-hidden="true">›</span>
+                    </a>
+                }
+            </div>
+        }
+    </section>
+</div>
+
+<div class="modal fade kid-pets-modal" id="kidPetsModal" tabindex="-1"
+     aria-labelledby="kidPetsModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <button type="button" class="modal-close" data-bs-dismiss="modal"
+                    aria-label="@L["Close"]">×</button>
+            <span class="kid-pets-modal-icon" aria-hidden="true">🐾</span>
+            <h2 id="kidPetsModalTitle">@L["KidMyPets"]</h2>
+            <div class="kid-pet-gallery">
+                @foreach (var pet in Model.Pets)
+                {
+                    @if (pet.PhotoPath is not null)
                     {
-                        <article class="kid-friend-card">
-                            @if (item.PetPhotoPath is not null)
-                            {
-                                <img src="@item.PetPhotoPath" alt="@L["PetPhotoAlt", item.PetName]" />
-                            }
-                            else
-                            {
-                                <div class="kid-friend-placeholder" aria-hidden="true">🐾</div>
-                            }
-                            <div>
-                                <small>@item.ChildName</small>
-                                <strong>@item.TaskName</strong>
-                                <span>@item.PetName</span>
-                            </div>
-                            <b>+@item.Points ★</b>
+                        <button type="button" class="kid-pet-gallery-card"
+                                data-photo-viewer-src="@pet.PhotoPath"
+                                data-photo-viewer-alt="@L["PetPhotoAlt", pet.Name]">
+                            <img src="@pet.PhotoPath" alt="@L["PetPhotoAlt", pet.Name]" />
+                            <strong>@pet.Name</strong>
+                            <small>@pet.Species</small>
+                        </button>
+                    }
+                    else
+                    {
+                        <article class="kid-pet-gallery-card">
+                            <span class="kid-pet-gallery-placeholder" aria-hidden="true">🐹</span>
+                            <strong>@pet.Name</strong>
+                            <small>@pet.Species</small>
                         </article>
                     }
-                </div>
-            }
-        </section>
-    }
+                }
+            </div>
+        </div>
+    </div>
 </div>
+
+@foreach (var task in Model.CareTasks)
+{
+    <div class="modal fade kid-complete-modal" id="complete-task-@task.Id" tabindex="-1"
+         aria-labelledby="complete-task-title-@task.Id" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <button type="button" class="modal-close" data-bs-dismiss="modal"
+                        aria-label="@L["Close"]">×</button>
+                <img class="kid-complete-picture" src="@task.ImagePath"
+                     alt="@L["TaskImageAlt", task.CategoryName]" />
+                <h2 id="complete-task-title-@task.Id">@task.CategoryName</h2>
+                <p>@task.PetName</p>
+                <form asp-action="CompleteTask" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="careTaskId" value="@task.Id" />
+                    <div class="kid-photo-choices">
+                        <button type="button" data-camera-open>
+                            <span aria-hidden="true">📷</span>
+                            <strong>@L["TakeTaskPhoto"]</strong>
+                        </button>
+                        <label>
+                            <span aria-hidden="true">🖼️</span>
+                            <strong>@L["ChooseTaskPhotos"]</strong>
+                            <input type="file" name="photos" data-gallery-input
+                                   accept="image/jpeg,image/png,image/webp"
+                                   multiple />
+                        </label>
+                    </div>
+                    <input type="file" name="photos" data-camera-input
+                           accept="image/jpeg,image/png,image/webp" capture="environment" hidden />
+                    <div class="kid-camera-panel" data-camera-panel hidden>
+                        <video data-camera-video autoplay playsinline muted
+                               aria-label="@L["CameraPreview"]"></video>
+                        <div>
+                            <button type="button" data-camera-capture>📸 @L["CapturePhoto"]</button>
+                            <button type="button" data-camera-cancel>@L["Cancel"]</button>
+                        </div>
+                        <canvas data-camera-canvas hidden></canvas>
+                    </div>
+                    <div class="kid-selected-photo-preview" data-photo-preview
+                         aria-label="@L["SelectedPhotos"]"></div>
+                    <small class="kid-photo-hint">@L["TaskPhotosOptional"]</small>
+                    <button type="submit" class="kid-modal-done">
+                        <span aria-hidden="true">★</span>
+                        @L["SendForApproval"]
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+}

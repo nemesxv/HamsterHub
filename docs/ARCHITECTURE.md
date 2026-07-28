@@ -13,8 +13,9 @@
 
 ### ApplicationUser
 
-Extends the Identity user with `DisplayName`, `CreatedAt`, and `IsActive`.
-Authentication credentials remain entirely owned by ASP.NET Identity.
+Extends the Identity user with `DisplayName`, optional `ProfilePhotoPath`,
+`CreatedAt`, and `IsActive`. Authentication credentials remain entirely owned
+by ASP.NET Identity.
 
 ### Household
 
@@ -43,7 +44,9 @@ custom name and belong to one household.
 
 A parent-configured care action linked to exactly one pet, one active household
 member, and one category, with a non-negative point value, frequency, and
-active state.
+active state. It may store an optional custom image path. When absent,
+presentation resolves a built-in category illustration or a pet-photo fallback
+without persisting the derived path.
 
 ### CareLog
 
@@ -51,30 +54,43 @@ An immutable historical record connecting a pet, care task, completing user,
 completion time, awarded points, approval status, optional approving user, and
 the point total immediately after approval.
 
+### CareLogPhoto
+
+An optional, append-only completion image linked to one care log. A care log
+may have zero to eight uploaded photos in the current UI. Paths are stored in
+the database while files remain under the web root in local development.
+
 ## Important invariants
 
 - A care task, its selected pet, and any custom category must belong to the
   same household.
 - A care task's assigned member must be an active member of that household.
-- The completing child must be an active member of that household.
+- The completing user must be the active household member assigned to the task.
+- Parent completions are approved immediately by that same parent; child
+  completions remain pending for parent review.
 - The approving user must be an active parent in that household.
 - Point values cannot be negative.
 - Historical `PointsAwarded` values are not recalculated.
 - `PointsTotalAfterApproval` is assigned inside a serializable approval
   transaction and is not recalculated later.
 - Child-to-child history requires both viewer permission and owner sharing
-  permission. Only approved records are exposed; parents retain full access.
+  permission. Active parents remain visible to children in the same household.
+  Child-facing history exposes only approved records; parents retain full access.
 - Normal record removal should use `IsActive` where history must be retained.
+- Task, member-profile, and completion images accept validated JPG, PNG, or
+  WebP files up to 5 MB each. Extension, declared content type, and file
+  signature must agree.
 
 Cross-record household invariants must be checked in application logic, ideally
 in a dedicated service layer, because simple database constraints cannot express
 all of them safely.
 
 The authenticated dashboard checks both the global Identity role and the active
-household membership. Child task submissions verify that the child, pet, and
-care task all belong to the same household. Daily tasks can be submitted once
-per UTC calendar day and weekly tasks once per rolling seven-day period; this
-should become household-time-zone aware when household settings are introduced.
+household membership. Task submissions verify that the completing user is the
+task assignee and that the member, pet, and care task belong to the same
+household. Daily tasks can be submitted once per UTC calendar day and weekly
+tasks once per rolling seven-day period; this should become household-time-zone
+aware when household settings are introduced.
 
 The Identity account-management area requires the `Parent` role. Children can
 sign in, use their care dashboard, and sign out but cannot directly change
@@ -97,6 +113,11 @@ The child dashboard sets the `kid-world` body class so its picture-first,
 art-book presentation remains isolated from the denser parent-management UI.
 Meaningful controls retain localized accessible names even when their visible
 presentation is primarily photographic or symbolic.
+
+Pet and care photos open in a shared, keyboard-accessible overlay owned by the
+layout. Child camera capture uses `getUserMedia` where available and falls back
+to a mobile file input with environment-camera capture. Selected images remain
+local previews until the child submits the care-log form.
 
 ## Local database
 

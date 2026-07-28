@@ -63,7 +63,7 @@
   <data name="InvalidLogin" xml:space="preserve"><value>Не удалось войти с этой почтой и паролем.</value></data>
   <data name="AccountCreationFailed" xml:space="preserve"><value>Не удалось завершить создание аккаунта. Попробуйте ещё раз.</value></data>
   <data name="EmailInUse" xml:space="preserve"><value>Аккаунт с такой электронной почтой уже существует.</value></data>
-  <data name="PasswordRequirements" xml:space="preserve"><value>Пароль должен содержать строчную и заглавную буквы, цифру и специальный символ.</value></data>
+  <data name="PasswordRequirements" xml:space="preserve"><value>Пароль должен содержать строчную и заглавную буквы и цифру. Специальный символ необязателен.</value></data>
   <data name="ManageAccount" xml:space="preserve"><value>Аккаунт</value></data>
   <data name="ParentDashboardTitle" xml:space="preserve"><value>Семейный кабинет</value></data>
   <data name="ParentSpace" xml:space="preserve"><value>Кабинет родителя</value></data>
@@ -290,4 +290,48 @@
   <data name="AuthenticatorEnabled" xml:space="preserve"><value>Двухэтапная защита включена</value></data>
   <data name="Cancel" xml:space="preserve"><value>Отмена</value></data>
   <data name="Done" xml:space="preserve"><value>Готово</value></data>
+  <data name="AuthenticatorQrAlt" xml:space="preserve"><value>QR-код для подключения HamsterHub к приложению-аутентификатору</value></data>
+  <data name="TaskImage" xml:space="preserve"><value>Картинка дела</value></data>
+  <data name="TaskImageHint" xml:space="preserve"><value>Необязательно. У стандартных категорий уже есть картинки. JPG, PNG или WebP до 5 МБ.</value></data>
+  <data name="TaskImageAlt" xml:space="preserve"><value>Картинка для дела «{0}»</value></data>
+  <data name="ReplaceTaskImage" xml:space="preserve"><value>Заменить картинку дела</value></data>
+  <data name="CustomTaskImage" xml:space="preserve"><value>Своя картинка</value></data>
+  <data name="DefaultTaskImage" xml:space="preserve"><value>Стандартная картинка категории</value></data>
+  <data name="UseDefaultTaskImage" xml:space="preserve"><value>Вернуть стандартную картинку категории</value></data>
+  <data name="InvalidTaskImage" xml:space="preserve"><value>Выберите корректную картинку JPG, PNG или WebP.</value></data>
+  <data name="TaskImageTooLarge" xml:space="preserve"><value>Картинка дела должна быть не больше 5 МБ.</value></data>
+  <data name="OpenTask" xml:space="preserve"><value>Открыть дело «{0}» для питомца {1}</value></data>
+  <data name="TakeTaskPhoto" xml:space="preserve"><value>Сфотографировать</value></data>
+  <data name="ChooseTaskPhotos" xml:space="preserve"><value>Выбрать картинки</value></data>
+  <data name="TaskPhotosOptional" xml:space="preserve"><value>Фото необязательны. Можно добавить до 8.</value></data>
+  <data name="SendForApproval" xml:space="preserve"><value>Всё готово!</value></data>
+  <data name="TaskPhotos" xml:space="preserve"><value>Фотографии дела</value></data>
+  <data name="TaskPhotoAlt" xml:space="preserve"><value>Фото выполнения дела «{0}»</value></data>
+  <data name="InvalidTaskPhoto" xml:space="preserve"><value>Одна из фотографий не является корректным изображением JPG, PNG или WebP.</value></data>
+  <data name="TaskPhotoTooLarge" xml:space="preserve"><value>Каждая фотография должна быть не больше 5 МБ.</value></data>
+  <data name="TooManyTaskPhotos" xml:space="preserve"><value>К одному делу можно добавить до {0} фотографий.</value></data>
+  <data name="PhotoViewer" xml:space="preserve"><value>Просмотр фотографии</value></data>
+  <data name="PreviousPhoto" xml:space="preserve"><value>Предыдущая фотография</value></data>
+  <data name="NextPhoto" xml:space="preserve"><value>Следующая фотография</value></data>
+  <data name="OpenPets" xml:space="preserve"><value>Открыть моих питомцев: {0}</value></data>
+  <data name="KidMyPets" xml:space="preserve"><value>Мои питомцы</value></data>
+  <data name="OpenTaskPhotos" xml:space="preserve"><value>Открыть фотографии дела «{0}»</value></data>
+  <data name="PhotoCount" xml:space="preserve"><value>Фотографий: {0}</value></data>
+  <data name="CameraPreview" xml:space="preserve"><value>Изображение с камеры</value></data>
+  <data name="CapturePhoto" xml:space="preserve"><value>Сделать этот снимок</value></data>
+  <data name="SelectedPhotos" xml:space="preserve"><value>Предпросмотр выбранных фотографий</value></data>
+  <data name="MemberPhoto" xml:space="preserve"><value>Фото члена семьи</value></data>
+  <data name="MemberPhotoHint" xml:space="preserve"><value>Необязательно. JPG, PNG или WebP до 5 МБ.</value></data>
+  <data name="ReplaceMemberPhoto" xml:space="preserve"><value>Заменить фото члена семьи</value></data>
+  <data name="RemoveMemberPhoto" xml:space="preserve"><value>Удалить текущее фото</value></data>
+  <data name="MemberPhotoAlt" xml:space="preserve"><value>Фото: {0}</value></data>
+  <data name="InvalidMemberImage" xml:space="preserve"><value>Выберите корректное фото JPG, PNG или WebP.</value></data>
+  <data name="MemberImageTooLarge" xml:space="preserve"><value>Фото члена семьи должно быть не больше 5 МБ.</value></data>
+  <data name="CompleteTask" xml:space="preserve"><value>Отметить готовым</value></data>
+  <data name="ParentTaskCompleted" xml:space="preserve"><value>Дело выполнено и одобрено автоматически.</value></data>
+  <data name="KidNoVisibleFamily" xml:space="preserve"><value>Здесь появятся твои близкие.</value></data>
+  <data name="OpenMemberHistory" xml:space="preserve"><value>Открыть воспоминания о заботе: {0}</value></data>
+  <data name="BackToKidDashboard" xml:space="preserve"><value>Назад к моим делам</value></data>
+  <data name="SharedCareMemories" xml:space="preserve"><value>Воспоминания о заботе</value></data>
+  <data name="NoSharedCareMemories" xml:space="preserve"><value>Здесь скоро появятся добрые дела.</value></data>
 </root>

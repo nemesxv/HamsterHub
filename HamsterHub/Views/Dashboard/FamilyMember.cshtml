@@ -11,9 +11,17 @@
     </nav>
 
     <section class="member-history-hero">
-        <div class="member-history-avatar" aria-hidden="true">
-            @(string.IsNullOrWhiteSpace(Model.DisplayName) ? "?" : Model.DisplayName[..1].ToUpperInvariant())
-        </div>
+        @if (Model.PhotoPath is not null)
+        {
+            <img class="member-history-avatar member-history-photo" src="@Model.PhotoPath"
+                 alt="@L["MemberPhotoAlt", Model.DisplayName]" />
+        }
+        else
+        {
+            <div class="member-history-avatar" aria-hidden="true">
+                @(string.IsNullOrWhiteSpace(Model.DisplayName) ? "?" : Model.DisplayName[..1].ToUpperInvariant())
+            </div>
+        }
         <div>
             <p class="dashboard-kicker">@L["FamilyMemberHistory"]</p>
             <h1>@Model.DisplayName</h1>
@@ -59,21 +67,26 @@
                 @foreach (var item in Model.History)
                 {
                     <article class="member-history-card">
-                        @if (item.PetPhotoPath is not null)
-                        {
-                            <img class="history-pet-photo" src="@item.PetPhotoPath"
-                                 alt="@L["PetPhotoAlt", item.PetName]" />
-                        }
-                        else
-                        {
-                            <div class="history-pet-photo history-pet-fallback" aria-hidden="true">♡</div>
-                        }
+                        <img class="history-pet-photo" src="@item.ImagePath"
+                             alt="@L["TaskImageAlt", item.TaskName]" />
                         <div class="member-history-main">
                             <span class="history-status status-text-@item.Status.ToString().ToLowerInvariant()">
                                 @L[$"Status_{item.Status}"]
                             </span>
                             <h3>@item.TaskName</h3>
                             <p>@item.PetName</p>
+                            @if (item.PhotoPaths.Count > 0)
+                            {
+                                <div class="care-photo-strip" aria-label="@L["TaskPhotos"]">
+                                    @foreach (var photoPath in item.PhotoPaths)
+                                    {
+                                        <button type="button" data-photo-viewer-src="@photoPath"
+                                                data-photo-viewer-alt="@L["TaskPhotoAlt", item.TaskName]">
+                                            <img src="@photoPath" alt="@L["TaskPhotoAlt", item.TaskName]" />
+                                        </button>
+                                    }
+                                </div>
+                            }
                             <dl class="history-dates">
                                 <div>
                                     <dt>@L["ReportedAt"]</dt>

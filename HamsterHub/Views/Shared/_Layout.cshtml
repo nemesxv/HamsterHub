@@ -66,6 +66,21 @@
         <a asp-controller="Home" asp-action="Privacy">@L["Privacy"]</a>
     </footer>
 
+    <div class="photo-viewer" data-photo-viewer hidden role="dialog" aria-modal="true"
+         aria-label="@L["PhotoViewer"]">
+        <button type="button" class="photo-viewer-close" data-photo-viewer-close
+                aria-label="@L["Close"]">×</button>
+        <button type="button" class="photo-viewer-nav photo-viewer-previous"
+                data-photo-viewer-previous aria-label="@L["PreviousPhoto"]">‹</button>
+        <figure>
+            <img data-photo-viewer-image src="" alt="" />
+            <figcaption data-photo-viewer-caption></figcaption>
+        </figure>
+        <button type="button" class="photo-viewer-nav photo-viewer-next"
+                data-photo-viewer-next aria-label="@L["NextPhoto"]">›</button>
+        <span class="photo-viewer-count" data-photo-viewer-count aria-live="polite"></span>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
