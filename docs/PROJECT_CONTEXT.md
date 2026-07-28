@@ -48,8 +48,8 @@ The core product loop is:
   archival so existing care history remains valid.
 - The task form remembers the last selected pet and family member for the
   current browser session.
-- Parents have a localized account page for changing their display name and
-  reaching secure email and password settings.
+- Parents have a unified, localized account area for changing their display
+  name, sign-in email, password, and authenticator-based two-step security.
 - Parents can open any active family member's care history, including report
   time, approval time, awarded task points, and the member's point total
   immediately after that approval.

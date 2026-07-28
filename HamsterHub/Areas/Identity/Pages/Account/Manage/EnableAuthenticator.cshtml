@@ -1,0 +1,89 @@
+@page
+@model HamsterHub.Areas.Identity.Pages.Account.Manage.EnableAuthenticatorModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+@{
+    ViewData["Title"] = L["AuthenticatorSetup"];
+}
+
+<header class="account-section-heading">
+    <span class="account-section-icon" aria-hidden="true">✦</span>
+    <div>
+        <p class="dashboard-kicker">@L["TwoFactorShort"]</p>
+        <h2>@L["AuthenticatorSetup"]</h2>
+        <p>@L["AuthenticatorSetupIntro"]</p>
+    </div>
+</header>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="account-status is-success" role="status">
+        <span aria-hidden="true">✓</span>
+        @Model.StatusMessage
+    </div>
+}
+
+@if (Model.SetupComplete)
+{
+    <section class="recovery-code-panel" aria-labelledby="new-recovery-code-title">
+        <div class="account-warning-icon" aria-hidden="true">!</div>
+        <div>
+            <h3 id="new-recovery-code-title">@L["AuthenticatorEnabled"]</h3>
+            <p>@L["RecoveryCodesWarning"]</p>
+            @if (Model.RecoveryCodes is not null)
+            {
+                <div class="recovery-code-grid">
+                    @foreach (var code in Model.RecoveryCodes)
+                    {
+                        <code>@code</code>
+                    }
+                </div>
+            }
+            <a class="account-primary-button" asp-page="./TwoFactorAuthentication">@L["Done"]</a>
+        </div>
+    </section>
+}
+else
+{
+    <ol class="authenticator-steps">
+        <li>
+            <div>
+                <strong>@L["AuthenticatorStepOne"]</strong>
+                <p>@L["AuthenticatorStepOneHint"]</p>
+            </div>
+        </li>
+        <li>
+            <div>
+                <strong>@L["AuthenticatorStepTwo"]</strong>
+                <p>@L["AuthenticatorStepTwoHint"]</p>
+                <div class="setup-key-row">
+                    <code>@Model.SharedKey</code>
+                    <a href="@Model.AuthenticatorUri">@L["OpenAuthenticatorApp"]</a>
+                </div>
+            </div>
+        </li>
+        <li>
+            <div>
+                <strong>@L["AuthenticatorStepThree"]</strong>
+                <p>@L["AuthenticatorStepThreeHint"]</p>
+            </div>
+        </li>
+    </ol>
+
+    <form method="post" class="account-settings-form compact-form">
+        <div asp-validation-summary="ModelOnly" class="validation-message"></div>
+        <div class="account-field">
+            <label asp-for="Input.Code"></label>
+            <input asp-for="Input.Code" autocomplete="one-time-code" inputmode="numeric" maxlength="7" />
+            <span asp-validation-for="Input.Code" class="validation-message"></span>
+        </div>
+        <div class="account-form-actions">
+            <button type="submit" class="account-primary-button">@L["VerifyAndEnable"]</button>
+            <a class="account-text-link" asp-page="./TwoFactorAuthentication">@L["Cancel"]</a>
+        </div>
+    </form>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

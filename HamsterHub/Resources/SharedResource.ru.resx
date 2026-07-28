@@ -184,7 +184,7 @@
   <data name="AccountUpdated" xml:space="preserve"><value>Аккаунт обновлён.</value></data>
   <data name="AccountSettings" xml:space="preserve"><value>Настройки аккаунта</value></data>
   <data name="ManageYourAccount" xml:space="preserve"><value>Управление аккаунтом</value></data>
-  <data name="AccountSettingsIntro" xml:space="preserve"><value>Измените имя и почту или откройте защищённые настройки пароля.</value></data>
+  <data name="AccountSettingsIntro" xml:space="preserve"><value>Управляйте именем, адресом для входа и безопасностью родительского аккаунта.</value></data>
   <data name="EmailManagedSeparately" xml:space="preserve"><value>Чтобы изменить адрес, откройте настройки почты ниже.</value></data>
   <data name="ChangeEmail" xml:space="preserve"><value>Изменить почту</value></data>
   <data name="ChangePassword" xml:space="preserve"><value>Изменить пароль</value></data>
@@ -228,4 +228,66 @@
   <data name="KidNoMemories" xml:space="preserve"><value>Здесь появятся картинки с питомцами</value></data>
   <data name="KidFriends" xml:space="preserve"><value>Наши друзья</value></data>
   <data name="KidNoFriendStories" xml:space="preserve"><value>Здесь появятся новые истории</value></data>
+  <data name="AccountSafetyNote" xml:space="preserve"><value>Пароль и коды подтверждения надёжно обрабатываются системой входа и не показываются другим членам семьи.</value></data>
+  <data name="AccountNavigation" xml:space="preserve"><value>Разделы настроек аккаунта</value></data>
+  <data name="Profile" xml:space="preserve"><value>Профиль</value></data>
+  <data name="ProfileSettings" xml:space="preserve"><value>Личные данные</value></data>
+  <data name="ProfileSettingsIntro" xml:space="preserve"><value>Измените имя, которое видит семья, или адрес для входа.</value></data>
+  <data name="EmailSignInHint" xml:space="preserve"><value>После сохранения используйте новый адрес при следующем входе.</value></data>
+  <data name="PasswordAndAccess" xml:space="preserve"><value>Пароль и доступ</value></data>
+  <data name="PasswordSettingsIntro" xml:space="preserve"><value>Для безопасности сначала введите текущий пароль, а затем придумайте новый.</value></data>
+  <data name="CurrentPassword" xml:space="preserve"><value>Текущий пароль</value></data>
+  <data name="NewPassword" xml:space="preserve"><value>Новый пароль</value></data>
+  <data name="UpdatePassword" xml:space="preserve"><value>Обновить пароль</value></data>
+  <data name="CurrentPasswordIncorrect" xml:space="preserve"><value>Текущий пароль указан неверно.</value></data>
+  <data name="PasswordUpdateFailed" xml:space="preserve"><value>Не удалось изменить пароль. Проверьте требования и попробуйте снова.</value></data>
+  <data name="PasswordUpdated" xml:space="preserve"><value>Пароль успешно изменён.</value></data>
+  <data name="TwoFactorShort" xml:space="preserve"><value>Двухэтапная защита</value></data>
+  <data name="AccountSecurity" xml:space="preserve"><value>Безопасность аккаунта</value></data>
+  <data name="TwoFactorAuthentication" xml:space="preserve"><value>Двухэтапная защита</value></data>
+  <data name="TwoFactorIntro" xml:space="preserve"><value>Добавьте одноразовый код из приложения-аутентификатора при входе с нового устройства.</value></data>
+  <data name="TwoFactorEnabled" xml:space="preserve"><value>Двухэтапная защита включена</value></data>
+  <data name="TwoFactorDisabled" xml:space="preserve"><value>Двухэтапная защита выключена</value></data>
+  <data name="AuthenticatorConnected" xml:space="preserve"><value>Приложение-аутентификатор подключено.</value></data>
+  <data name="AuthenticatorNotConnected" xml:space="preserve"><value>Приложение-аутентификатор ещё не подключено.</value></data>
+  <data name="StatusActive" xml:space="preserve"><value>Включено</value></data>
+  <data name="StatusInactive" xml:space="preserve"><value>Выключено</value></data>
+  <data name="AddAuthenticator" xml:space="preserve"><value>Подключить приложение</value></data>
+  <data name="AddAuthenticatorHint" xml:space="preserve"><value>Подойдёт Microsoft Authenticator, Google Authenticator или другое приложение с одноразовыми кодами.</value></data>
+  <data name="SetUp" xml:space="preserve"><value>Настроить</value></data>
+  <data name="FinishAuthenticatorSetup" xml:space="preserve"><value>Завершить подключение</value></data>
+  <data name="FinishAuthenticatorHint" xml:space="preserve"><value>Ключ уже создан. Подтвердите код, чтобы включить защиту.</value></data>
+  <data name="Continue" xml:space="preserve"><value>Продолжить</value></data>
+  <data name="RecoveryCodes" xml:space="preserve"><value>Резервные коды</value></data>
+  <data name="RecoveryCodesRemaining" xml:space="preserve"><value>Осталось кодов: {0}. Каждый код можно использовать только один раз.</value></data>
+  <data name="GenerateNewCodes" xml:space="preserve"><value>Создать новые коды</value></data>
+  <data name="SaveRecoveryCodes" xml:space="preserve"><value>Сохраните новые резервные коды</value></data>
+  <data name="RecoveryCodesWarning" xml:space="preserve"><value>Сохраните их в безопасном месте. Без приложения и резервного кода восстановить доступ автоматически не получится.</value></data>
+  <data name="RememberedBrowser" xml:space="preserve"><value>Запомненный браузер</value></data>
+  <data name="RememberedBrowserHint" xml:space="preserve"><value>На этом устройстве код подтверждения сейчас не запрашивается.</value></data>
+  <data name="ForgetBrowser" xml:space="preserve"><value>Забыть браузер</value></data>
+  <data name="BrowserForgotten" xml:space="preserve"><value>Браузер больше не считается доверенным.</value></data>
+  <data name="AdvancedSecurityActions" xml:space="preserve"><value>Дополнительные действия</value></data>
+  <data name="ResetAuthenticator" xml:space="preserve"><value>Сбросить ключ приложения</value></data>
+  <data name="ResetAuthenticatorWarning" xml:space="preserve"><value>Старые коды приложения перестанут работать. После сброса потребуется подключить приложение заново.</value></data>
+  <data name="AuthenticatorReset" xml:space="preserve"><value>Ключ сброшен. Подключите приложение заново.</value></data>
+  <data name="DisableTwoFactor" xml:space="preserve"><value>Выключить двухэтапную защиту</value></data>
+  <data name="DisableTwoFactorWarning" xml:space="preserve"><value>Вход станет возможен только по паролю. Подключённое приложение при этом не удаляется.</value></data>
+  <data name="TwoFactorTurnedOff" xml:space="preserve"><value>Двухэтапная защита выключена.</value></data>
+  <data name="AuthenticatorSetup" xml:space="preserve"><value>Подключение приложения</value></data>
+  <data name="AuthenticatorSetupIntro" xml:space="preserve"><value>Это займёт несколько минут и заметно повысит безопасность родительского аккаунта.</value></data>
+  <data name="AuthenticatorStepOne" xml:space="preserve"><value>Откройте приложение-аутентификатор</value></data>
+  <data name="AuthenticatorStepOneHint" xml:space="preserve"><value>Выберите добавление нового аккаунта или ключа настройки.</value></data>
+  <data name="AuthenticatorStepTwo" xml:space="preserve"><value>Добавьте HamsterHub</value></data>
+  <data name="AuthenticatorStepTwoHint" xml:space="preserve"><value>Введите ключ вручную или откройте ссылку на телефоне.</value></data>
+  <data name="OpenAuthenticatorApp" xml:space="preserve"><value>Открыть в приложении</value></data>
+  <data name="AuthenticatorStepThree" xml:space="preserve"><value>Подтвердите код</value></data>
+  <data name="AuthenticatorStepThreeHint" xml:space="preserve"><value>Введите шестизначный код, который появился в приложении.</value></data>
+  <data name="VerificationCode" xml:space="preserve"><value>Код подтверждения</value></data>
+  <data name="AuthenticatorCodeLength" xml:space="preserve"><value>Введите шестизначный код из приложения.</value></data>
+  <data name="InvalidAuthenticatorCode" xml:space="preserve"><value>Код не подошёл. Проверьте его и попробуйте ещё раз.</value></data>
+  <data name="VerifyAndEnable" xml:space="preserve"><value>Проверить и включить</value></data>
+  <data name="AuthenticatorEnabled" xml:space="preserve"><value>Двухэтапная защита включена</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Отмена</value></data>
+  <data name="Done" xml:space="preserve"><value>Готово</value></data>
 </root>

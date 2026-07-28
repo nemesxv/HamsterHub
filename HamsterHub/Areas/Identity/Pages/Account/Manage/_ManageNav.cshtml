@@ -1,0 +1,24 @@
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+@{
+    var currentPage = ViewContext.RouteData.Values["page"]?.ToString() ?? string.Empty;
+    var isProfile = currentPage.EndsWith("/Manage/Index", StringComparison.OrdinalIgnoreCase);
+    var isPassword = currentPage.EndsWith("/Manage/ChangePassword", StringComparison.OrdinalIgnoreCase);
+    var isSecurity = currentPage.EndsWith("/Manage/TwoFactorAuthentication", StringComparison.OrdinalIgnoreCase)
+        || currentPage.EndsWith("/Manage/EnableAuthenticator", StringComparison.OrdinalIgnoreCase);
+}
+
+<nav class="account-manage-nav" aria-label="@L["AccountNavigation"]">
+    <a class="@(isProfile ? "is-active" : null)" asp-page="./Index" aria-current="@(isProfile ? "page" : null)">
+        <span class="account-nav-icon" aria-hidden="true">☺</span>
+        <span>@L["Profile"]</span>
+    </a>
+    <a class="@(isPassword ? "is-active" : null)" asp-page="./ChangePassword" aria-current="@(isPassword ? "page" : null)">
+        <span class="account-nav-icon" aria-hidden="true">⌁</span>
+        <span>@L["PasswordAndAccess"]</span>
+    </a>
+    <a class="@(isSecurity ? "is-active" : null)" asp-page="./TwoFactorAuthentication" aria-current="@(isSecurity ? "page" : null)">
+        <span class="account-nav-icon" aria-hidden="true">✦</span>
+        <span>@L["TwoFactorShort"]</span>
+    </a>
+</nav>

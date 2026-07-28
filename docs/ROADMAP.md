@@ -36,7 +36,8 @@ its implementation and proportionate verification are complete.
 - Pet-linked care tasks with reusable built-in and custom Unicode categories.
 - Parent editing and safe archival for members, pets, and care tasks.
 - Required family-member task assignment with session-scoped selection memory.
-- Localized parent account-management page.
+- Responsive, localized parent account-management area for profile, password,
+  and authenticator-based two-step security.
 - Parent family-member history with report and approval timestamps.
 - Durable point totals captured at approval time.
 - Parent-managed, private-by-default child history sharing.

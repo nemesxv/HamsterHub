@@ -184,7 +184,7 @@
   <data name="AccountUpdated" xml:space="preserve"><value>Your account was updated.</value></data>
   <data name="AccountSettings" xml:space="preserve"><value>Account settings</value></data>
   <data name="ManageYourAccount" xml:space="preserve"><value>Manage your account</value></data>
-  <data name="AccountSettingsIntro" xml:space="preserve"><value>Update your name and email, or open the secure password settings.</value></data>
+  <data name="AccountSettingsIntro" xml:space="preserve"><value>Manage your name, sign-in address, and parent-account security.</value></data>
   <data name="EmailManagedSeparately" xml:space="preserve"><value>Use the email settings below to change this address.</value></data>
   <data name="ChangeEmail" xml:space="preserve"><value>Change email</value></data>
   <data name="ChangePassword" xml:space="preserve"><value>Change password</value></data>
@@ -228,4 +228,66 @@
   <data name="KidNoMemories" xml:space="preserve"><value>Your pet pictures will appear here</value></data>
   <data name="KidFriends" xml:space="preserve"><value>Our friends</value></data>
   <data name="KidNoFriendStories" xml:space="preserve"><value>New stories will appear here</value></data>
+  <data name="AccountSafetyNote" xml:space="preserve"><value>Your password and verification codes are handled securely by the sign-in system and are never shown to other family members.</value></data>
+  <data name="AccountNavigation" xml:space="preserve"><value>Account settings sections</value></data>
+  <data name="Profile" xml:space="preserve"><value>Profile</value></data>
+  <data name="ProfileSettings" xml:space="preserve"><value>Personal details</value></data>
+  <data name="ProfileSettingsIntro" xml:space="preserve"><value>Update the name your family sees or the email address you use to sign in.</value></data>
+  <data name="EmailSignInHint" xml:space="preserve"><value>Use the new address the next time you sign in after saving.</value></data>
+  <data name="PasswordAndAccess" xml:space="preserve"><value>Password and access</value></data>
+  <data name="PasswordSettingsIntro" xml:space="preserve"><value>For security, enter your current password before choosing a new one.</value></data>
+  <data name="CurrentPassword" xml:space="preserve"><value>Current password</value></data>
+  <data name="NewPassword" xml:space="preserve"><value>New password</value></data>
+  <data name="UpdatePassword" xml:space="preserve"><value>Update password</value></data>
+  <data name="CurrentPasswordIncorrect" xml:space="preserve"><value>The current password is incorrect.</value></data>
+  <data name="PasswordUpdateFailed" xml:space="preserve"><value>We could not change the password. Check the requirements and try again.</value></data>
+  <data name="PasswordUpdated" xml:space="preserve"><value>Your password was changed.</value></data>
+  <data name="TwoFactorShort" xml:space="preserve"><value>Two-step security</value></data>
+  <data name="AccountSecurity" xml:space="preserve"><value>Account security</value></data>
+  <data name="TwoFactorAuthentication" xml:space="preserve"><value>Two-step security</value></data>
+  <data name="TwoFactorIntro" xml:space="preserve"><value>Add a one-time code from an authenticator app when signing in on a new device.</value></data>
+  <data name="TwoFactorEnabled" xml:space="preserve"><value>Two-step security is on</value></data>
+  <data name="TwoFactorDisabled" xml:space="preserve"><value>Two-step security is off</value></data>
+  <data name="AuthenticatorConnected" xml:space="preserve"><value>An authenticator app is connected.</value></data>
+  <data name="AuthenticatorNotConnected" xml:space="preserve"><value>No authenticator app is connected yet.</value></data>
+  <data name="StatusActive" xml:space="preserve"><value>On</value></data>
+  <data name="StatusInactive" xml:space="preserve"><value>Off</value></data>
+  <data name="AddAuthenticator" xml:space="preserve"><value>Connect an app</value></data>
+  <data name="AddAuthenticatorHint" xml:space="preserve"><value>Use Microsoft Authenticator, Google Authenticator, or another app that supports one-time codes.</value></data>
+  <data name="SetUp" xml:space="preserve"><value>Set up</value></data>
+  <data name="FinishAuthenticatorSetup" xml:space="preserve"><value>Finish connecting</value></data>
+  <data name="FinishAuthenticatorHint" xml:space="preserve"><value>A key already exists. Confirm a code to turn protection on.</value></data>
+  <data name="Continue" xml:space="preserve"><value>Continue</value></data>
+  <data name="RecoveryCodes" xml:space="preserve"><value>Recovery codes</value></data>
+  <data name="RecoveryCodesRemaining" xml:space="preserve"><value>{0} codes remaining. Each code can be used only once.</value></data>
+  <data name="GenerateNewCodes" xml:space="preserve"><value>Generate new codes</value></data>
+  <data name="SaveRecoveryCodes" xml:space="preserve"><value>Save your new recovery codes</value></data>
+  <data name="RecoveryCodesWarning" xml:space="preserve"><value>Keep them somewhere safe. Without the app or a recovery code, access cannot be restored automatically.</value></data>
+  <data name="RememberedBrowser" xml:space="preserve"><value>Remembered browser</value></data>
+  <data name="RememberedBrowserHint" xml:space="preserve"><value>This device currently signs in without requesting a verification code.</value></data>
+  <data name="ForgetBrowser" xml:space="preserve"><value>Forget browser</value></data>
+  <data name="BrowserForgotten" xml:space="preserve"><value>This browser is no longer trusted.</value></data>
+  <data name="AdvancedSecurityActions" xml:space="preserve"><value>Advanced security actions</value></data>
+  <data name="ResetAuthenticator" xml:space="preserve"><value>Reset app key</value></data>
+  <data name="ResetAuthenticatorWarning" xml:space="preserve"><value>Existing app codes will stop working. You will need to connect the app again after resetting.</value></data>
+  <data name="AuthenticatorReset" xml:space="preserve"><value>The key was reset. Connect your app again.</value></data>
+  <data name="DisableTwoFactor" xml:space="preserve"><value>Turn off two-step security</value></data>
+  <data name="DisableTwoFactorWarning" xml:space="preserve"><value>Sign-in will only require a password. The connected app key is not removed.</value></data>
+  <data name="TwoFactorTurnedOff" xml:space="preserve"><value>Two-step security was turned off.</value></data>
+  <data name="AuthenticatorSetup" xml:space="preserve"><value>Connect an authenticator app</value></data>
+  <data name="AuthenticatorSetupIntro" xml:space="preserve"><value>This takes a few minutes and adds meaningful protection to the parent account.</value></data>
+  <data name="AuthenticatorStepOne" xml:space="preserve"><value>Open your authenticator app</value></data>
+  <data name="AuthenticatorStepOneHint" xml:space="preserve"><value>Choose the option to add a new account or setup key.</value></data>
+  <data name="AuthenticatorStepTwo" xml:space="preserve"><value>Add HamsterHub</value></data>
+  <data name="AuthenticatorStepTwoHint" xml:space="preserve"><value>Enter the key manually or open the link on your phone.</value></data>
+  <data name="OpenAuthenticatorApp" xml:space="preserve"><value>Open in authenticator</value></data>
+  <data name="AuthenticatorStepThree" xml:space="preserve"><value>Confirm the code</value></data>
+  <data name="AuthenticatorStepThreeHint" xml:space="preserve"><value>Enter the six-digit code displayed by the app.</value></data>
+  <data name="VerificationCode" xml:space="preserve"><value>Verification code</value></data>
+  <data name="AuthenticatorCodeLength" xml:space="preserve"><value>Enter the six-digit code from the app.</value></data>
+  <data name="InvalidAuthenticatorCode" xml:space="preserve"><value>That code did not work. Check it and try again.</value></data>
+  <data name="VerifyAndEnable" xml:space="preserve"><value>Verify and enable</value></data>
+  <data name="AuthenticatorEnabled" xml:space="preserve"><value>Two-step security is enabled</value></data>
+  <data name="Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Done" xml:space="preserve"><value>Done</value></data>
 </root>

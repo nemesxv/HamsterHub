@@ -1,0 +1,38 @@
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] ??= L["ManageAccount"];
+    ViewData["BodyClass"] = "identity-world";
+}
+
+<div class="account-manage-shell">
+    <a class="account-back-link" asp-area="" asp-controller="Dashboard" asp-action="Parent">
+        <span aria-hidden="true">←</span>
+        @L["BackToDashboard"]
+    </a>
+
+    <header class="account-manage-heading">
+        <p class="dashboard-kicker">@L["AccountSettings"]</p>
+        <h1>@L["ManageYourAccount"]</h1>
+        <p>@L["AccountSettingsIntro"]</p>
+    </header>
+
+    <div class="account-manage-grid">
+        <aside class="account-manage-sidebar">
+            <partial name="_ManageNav" />
+            <div class="account-safety-note">
+                <span aria-hidden="true">✦</span>
+                <p>@L["AccountSafetyNote"]</p>
+            </div>
+        </aside>
+
+        <section class="account-content-card">
+            @RenderBody()
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    @await RenderSectionAsync("Scripts", required: false)
+}

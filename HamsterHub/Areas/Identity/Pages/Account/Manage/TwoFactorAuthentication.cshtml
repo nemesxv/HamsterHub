@@ -1,0 +1,128 @@
+@page
+@model HamsterHub.Areas.Identity.Pages.Account.Manage.TwoFactorAuthenticationModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+@{
+    ViewData["Title"] = L["TwoFactorShort"];
+}
+
+<header class="account-section-heading">
+    <span class="account-section-icon" aria-hidden="true">✦</span>
+    <div>
+        <p class="dashboard-kicker">@L["AccountSecurity"]</p>
+        <h2>@L["TwoFactorAuthentication"]</h2>
+        <p>@L["TwoFactorIntro"]</p>
+    </div>
+</header>
+
+@if (!string.IsNullOrWhiteSpace(Model.StatusMessage))
+{
+    <div class="account-status is-success" role="status">
+        <span aria-hidden="true">✓</span>
+        @Model.StatusMessage
+    </div>
+}
+
+<div class="security-status-card">
+    <div>
+        <span class="security-status-dot @(Model.Is2faEnabled ? "is-active" : null)" aria-hidden="true"></span>
+        <div>
+            <strong>@(Model.Is2faEnabled ? L["TwoFactorEnabled"] : L["TwoFactorDisabled"])</strong>
+            <p>@(Model.HasAuthenticator ? L["AuthenticatorConnected"] : L["AuthenticatorNotConnected"])</p>
+        </div>
+    </div>
+    <span class="security-status-pill @(Model.Is2faEnabled ? "is-active" : null)">
+        @(Model.Is2faEnabled ? L["StatusActive"] : L["StatusInactive"])
+    </span>
+</div>
+
+@if (Model.NewRecoveryCodes is not null)
+{
+    <section class="recovery-code-panel" aria-labelledby="recovery-code-title">
+        <div class="account-warning-icon" aria-hidden="true">!</div>
+        <div>
+            <h3 id="recovery-code-title">@L["SaveRecoveryCodes"]</h3>
+            <p>@L["RecoveryCodesWarning"]</p>
+            <div class="recovery-code-grid">
+                @foreach (var code in Model.NewRecoveryCodes)
+                {
+                    <code>@code</code>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+<div class="security-action-list">
+    @if (!Model.HasAuthenticator)
+    {
+        <article>
+            <span class="security-action-icon" aria-hidden="true">＋</span>
+            <div>
+                <h3>@L["AddAuthenticator"]</h3>
+                <p>@L["AddAuthenticatorHint"]</p>
+            </div>
+            <a class="account-primary-button" asp-page="./EnableAuthenticator">@L["SetUp"]</a>
+        </article>
+    }
+    else if (!Model.Is2faEnabled)
+    {
+        <article>
+            <span class="security-action-icon" aria-hidden="true">→</span>
+            <div>
+                <h3>@L["FinishAuthenticatorSetup"]</h3>
+                <p>@L["FinishAuthenticatorHint"]</p>
+            </div>
+            <a class="account-primary-button" asp-page="./EnableAuthenticator">@L["Continue"]</a>
+        </article>
+    }
+
+    @if (Model.Is2faEnabled)
+    {
+        <article>
+            <span class="security-action-icon" aria-hidden="true">#</span>
+            <div>
+                <h3>@L["RecoveryCodes"]</h3>
+                <p>@L["RecoveryCodesRemaining", Model.RecoveryCodesLeft]</p>
+            </div>
+            <form method="post" asp-page-handler="GenerateRecoveryCodes">
+                <button type="submit" class="account-secondary-button">@L["GenerateNewCodes"]</button>
+            </form>
+        </article>
+    }
+
+    @if (Model.IsMachineRemembered)
+    {
+        <article>
+            <span class="security-action-icon" aria-hidden="true">◉</span>
+            <div>
+                <h3>@L["RememberedBrowser"]</h3>
+                <p>@L["RememberedBrowserHint"]</p>
+            </div>
+            <form method="post" asp-page-handler="ForgetBrowser">
+                <button type="submit" class="account-secondary-button">@L["ForgetBrowser"]</button>
+            </form>
+        </article>
+    }
+</div>
+
+@if (Model.HasAuthenticator)
+{
+    <details class="account-danger-zone">
+        <summary>@L["AdvancedSecurityActions"]</summary>
+        <div>
+            <form method="post" asp-page-handler="ResetAuthenticator">
+                <p>@L["ResetAuthenticatorWarning"]</p>
+                <button type="submit" class="account-danger-button">@L["ResetAuthenticator"]</button>
+            </form>
+
+            @if (Model.Is2faEnabled)
+            {
+                <form method="post" asp-page-handler="DisableTwoFactor">
+                    <p>@L["DisableTwoFactorWarning"]</p>
+                    <button type="submit" class="account-danger-button">@L["DisableTwoFactor"]</button>
+                </form>
+            }
+        </div>
+    </details>
+}
