@@ -17,17 +17,20 @@
             <h1>@L["KidWelcome", Model.ChildName]</h1>
             <p>@(string.IsNullOrWhiteSpace(Model.HouseholdName) ? L["WaitingForFamily"] : L["KidLetsCare"])</p>
         </div>
-        <div class="kid-star-jar" aria-label="@L["PointsLabel", Model.ApprovedPoints]">
+        <div class="kid-star-jar" aria-label="@L["PointsLabel", Model.CurrentPoints]">
             <span aria-hidden="true">★</span>
-            <strong>@Model.ApprovedPoints</strong>
+            <strong>@Model.CurrentPoints</strong>
         </div>
     </section>
 
     @if (TempData["StatusMessage"] is string statusMessage)
     {
-        <div class="kid-celebration" role="status">
+        <div class="kid-celebration dashboard-toast" role="status"
+             data-dashboard-notice>
             <span aria-hidden="true">🎉</span>
             <strong>@statusMessage</strong>
+            <button type="button" class="dashboard-toast-close"
+                    data-dashboard-notice-close aria-label="@L["Close"]">×</button>
         </div>
     }
 
@@ -110,6 +113,101 @@
         }
     </section>
 
+    <section class="kid-reward-section">
+        <header class="kid-section-title">
+            <span aria-hidden="true">🎁</span>
+            <h2>@L["KidRewards"]</h2>
+        </header>
+        @if (Model.Rewards.Count == 0)
+        {
+            <div class="kid-picture-empty">
+                <span aria-hidden="true">✨</span>
+                <p>@L["KidNoRewards"]</p>
+            </div>
+        }
+        else
+        {
+            <div class="kid-reward-grid">
+                @foreach (var reward in Model.Rewards)
+                {
+                    <article class="kid-reward-card">
+                        @if (reward.ImagePath is not null)
+                        {
+                            <img src="@reward.ImagePath" alt="@L["RewardImageAlt", reward.Name]" />
+                        }
+                        else
+                        {
+                            <div class="kid-reward-picture-placeholder" aria-hidden="true">🎁</div>
+                        }
+                        <div class="kid-reward-card-copy">
+                            <h3>@reward.Name</h3>
+                            <strong>−@reward.PointCost ★</strong>
+                        </div>
+                        <form asp-action="RequestReward" method="post">
+                            <input type="hidden" name="rewardId" value="@reward.Id" />
+                            <button type="submit"
+                                    disabled="@(!reward.CanAfford || reward.HasPendingRequest)">
+                                @(reward.HasPendingRequest
+                                    ? L["RewardWaiting"]
+                                    : reward.CanAfford
+                                        ? L["RequestReward"]
+                                        : L["NeedMorePoints"])
+                            </button>
+                        </form>
+                    </article>
+                }
+            </div>
+        }
+        @if (Model.RewardRedemptions.Count > 0)
+        {
+            <div class="kid-reward-history">
+                <h3>@L["MyRewardRequests"]</h3>
+                <div class="kid-reward-history-grid">
+                    @foreach (var request in Model.RewardRedemptions)
+                    {
+                        var statusIcon = request.Status switch
+                        {
+                            RewardRedemptionStatus.Approved => "✓",
+                            RewardRedemptionStatus.Rejected => "×",
+                            _ => "⏳"
+                        };
+                        <article class="kid-reward-history-card status-@request.Status.ToString().ToLowerInvariant()">
+                            <div class="kid-reward-history-art">
+                                @if (request.ImagePath is not null)
+                                {
+                                    <img src="@request.ImagePath"
+                                         alt="@L["RewardImageAlt", request.RewardName]" />
+                                }
+                                else
+                                {
+                                    <div class="kid-reward-history-picture" aria-hidden="true">🎁</div>
+                                }
+                                <span class="kid-reward-status-icon"
+                                      aria-label="@L[$"RewardStatus_{request.Status}"]">@statusIcon</span>
+                            </div>
+                            <div class="kid-reward-history-copy">
+                                <span>@L[$"RewardStatus_{request.Status}"]</span>
+                                <strong>@request.RewardName</strong>
+                                <small>@request.RequestedAt.ToLocalTime().ToString("dd.MM")</small>
+                                @if (request.PointsBalanceAfterApproval is not null)
+                                {
+                                    <small>@L["PointsLeftAfterReward", request.PointsBalanceAfterApproval]</small>
+                                }
+                            </div>
+                            <div class="kid-spend-star"
+                                 aria-label="@(request.Status == RewardRedemptionStatus.Approved
+                                     ? L["PointsDeductedCount", request.PointsCost]
+                                     : L["RewardCostCount", request.PointsCost])">
+                                <span aria-hidden="true">★</span>
+                                <strong>@(request.Status == RewardRedemptionStatus.Approved ? "−" : "")@request.PointsCost</strong>
+                            </div>
+                        </article>
+                    }
+                </div>
+            </div>
+        }
+    </section>
+
     <section class="kid-memory-section">
         <header class="kid-section-title">
             <span aria-hidden="true">🖍️</span>
@@ -129,8 +227,8 @@
                 {
                     var statusIcon = item.Status switch
                     {
-                        CareLogStatus.Approved => "⭐",
-                        CareLogStatus.Rejected => "↺",
+                        CareLogStatus.Approved => "✓",
+                        CareLogStatus.Rejected => "×",
                         _ => "⏳"
                     };
                     <button type="button"
@@ -204,7 +302,11 @@
                             <strong>@member.DisplayName</strong>
                             <small>@L[$"Role_{member.Role}"]</small>
                         </span>
-                        <span class="kid-friend-open" aria-hidden="true">›</span>
+                        <span class="kid-friend-points"
+                              aria-label="@L["PointsLabel", member.CurrentPoints]">
+                            <span aria-hidden="true">★</span>
+                            <strong>@member.CurrentPoints</strong>
+                        </span>
                     </a>
                 }
             </div>

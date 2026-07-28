@@ -17,6 +17,8 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<CareLogService>();
+builder.Services.AddScoped<PointBalanceService>();
+builder.Services.AddScoped<RewardService>();
 
 builder.Services.AddDefaultIdentity<ApplicationUser>(options =>
     {
@@ -62,6 +64,9 @@ app.UseRequestLocalization(new RequestLocalizationOptions
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
+    await using var scope = app.Services.CreateAsyncScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await dbContext.Database.MigrateAsync();
     app.UseMigrationsEndPoint();
 }
 else

@@ -5,8 +5,8 @@
 HamsterHub is a family web application that helps a child care for a real
 animal, initially focused on hamsters. The child records real actions such as
 feeding, refreshing water, cleaning, playing, and health checks. Completed
-actions earn care points. A later phase will define safe, parent-managed ways
-to spend those points.
+actions earn care points. Parents define safe household rewards that children
+can request with those points.
 
 The core product loop is:
 
@@ -14,7 +14,8 @@ The core product loop is:
 2. Record the completed task in HamsterHub.
 3. Optionally wait for parent approval.
 4. Receive the task's historical point value.
-5. Celebrate consistency and progress.
+5. Request a visible reward or ask a parent to record it directly.
+6. Spend points only after parent approval.
 
 ## Users and permissions
 
@@ -39,8 +40,17 @@ The core product loop is:
 - The page includes responsive phone, tablet, and desktop layouts.
 - Authenticated parents have a family dashboard for creating family accounts,
   pets, and care tasks and for approving or rejecting completed care.
+- The parent dashboard uses a guided, attention-first layout: urgent approvals
+  appear before management details, common actions use large visual cards, and
+  a simple household summary helps caregivers with varied technical confidence.
+- The default family name follows the current interface language. Parents may
+  replace it with a custom household name under Account → Personal details.
 - Authenticated children have a simplified dashboard for completing care tasks
-  and viewing their approved points and recent history.
+  and viewing their current points, recent history, and available rewards.
+- Parents manage a household reward catalog with a name, positive point cost,
+  optional validated image, and an explicit per-child audience.
+- Children may request rewards they can see and afford. A parent approves or
+  rejects each request, or directly records a reward purchase for a child.
 - Pet creation supports an optional birth date and validated photo upload.
 - Parents can use built-in localized care categories or create household-specific
   categories in Cyrillic or Latin text.
@@ -54,12 +64,15 @@ The core product loop is:
 - Parents can open any active family member's care history, including report
   time, approval time, awarded task points, and the member's point total
   immediately after that approval.
+- Parent-visible member history is a chronological point timeline that also
+  includes approved reward deductions and the balance after each redemption.
 - Child history sharing is private by default. Parents independently control
   whether a child may view other children's approved history and whether that
   child's approved history may be shared with other children.
 - The child's “Our friends” area shows active parents and privacy-permitted
-  children rather than scores or an activity feed. Tapping a person opens only
-  their approved care memories and completion photos.
+  children with their current point balances, but no ranking or competitive
+  scoreboard. Balances use large star badges for easy recognition. Tapping a
+  person opens only their approved care memories and completion photos.
 - Parents may complete tasks assigned to themselves. These records are approved
   automatically by that parent and receive the task's current point value.
 - Built-in care categories have dedicated hamster illustrations. Parents can
@@ -88,10 +101,17 @@ The core product loop is:
 - Care points reward real care and consistency. They are not purchased.
 - A care log stores `PointsAwarded` so later task-value changes never alter
   history.
-- An approved care log stores `PointsTotalAfterApproval` so the historical
-  running total remains stable and auditable.
-- The points balance is derived from approved history for now; do not add a
-  mutable balance column.
+- An approved care log stores `PointsTotalAfterApproval` so the historical net
+  balance after that approval remains stable and auditable.
+- An approved reward redemption snapshots its name, image path, point cost, and
+  `PointsBalanceAfterApproval`; later catalog changes never rewrite history.
+- The current points balance is derived from approved care awards minus approved
+  reward redemptions; do not add a mutable balance column.
+- Pending reward requests do not reserve points. Approval and direct purchase
+  re-check the current balance inside a serializable transaction.
+- Reward visibility is an explicit per-child allowlist. Parents may directly
+  purchase any active household reward for an active child even when that reward
+  is not visible in the child's catalog.
 - Parent approval states are `Pending`, `Approved`, and `Rejected`.
 - Email confirmation is temporarily disabled during early local development
   because no email provider is configured. Enable it before public deployment.

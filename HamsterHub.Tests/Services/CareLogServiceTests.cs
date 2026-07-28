@@ -178,7 +178,7 @@ public sealed class CareLogServiceTests
         var careLog = service.CreateParentCompletion(
             careTask,
             parent,
-            previousApprovedPoints: 21,
+            previousBalance: 21,
             FrozenUtcNow);
         careTask.PointValue = 100;
 
@@ -200,7 +200,7 @@ public sealed class CareLogServiceTests
             service.CreateParentCompletion(
                 careTask,
                 child,
-                previousApprovedPoints: 0,
+                previousBalance: 0,
                 FrozenUtcNow));
     }
 
@@ -216,7 +216,7 @@ public sealed class CareLogServiceTests
             careLog,
             parent,
             CareLogStatus.Approved,
-            previousApprovedPoints: 14,
+            previousBalance: 14,
             reviewedAt);
 
         Assert.Equal(CareLogStatus.Approved, careLog.Status);
@@ -236,7 +236,7 @@ public sealed class CareLogServiceTests
             careLog,
             parent,
             CareLogStatus.Rejected,
-            previousApprovedPoints: 14,
+            previousBalance: 14,
             reviewedAt);
 
         Assert.Equal(CareLogStatus.Rejected, careLog.Status);
@@ -255,7 +255,7 @@ public sealed class CareLogServiceTests
                 careLog,
                 parent,
                 CareLogStatus.Pending,
-                previousApprovedPoints: 10,
+                previousBalance: 10,
                 FrozenUtcNow));
 
         Assert.Equal("decision", exception.ParamName);
@@ -306,7 +306,7 @@ public sealed class CareLogServiceTests
                 careLog,
                 parent,
                 CareLogStatus.Approved,
-                previousApprovedPoints: 10,
+                previousBalance: 10,
                 FrozenUtcNow));
     }
 

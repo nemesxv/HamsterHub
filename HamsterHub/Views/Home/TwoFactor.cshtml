@@ -1,0 +1,48 @@
+@model TwoFactorLoginInputModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+@{
+    ViewData["Title"] = L["TwoFactorLoginTitle"];
+    ViewData["BodyClass"] = "account-page";
+}
+
+<section class="account-page-shell">
+    <div class="account-page-card two-factor-login-card">
+        <p class="dashboard-kicker">@L["TwoFactorShort"]</p>
+        <h1>@L["TwoFactorLoginTitle"]</h1>
+        <p>@L["TwoFactorLoginIntro"]</p>
+
+        <form asp-controller="Home" asp-action="TwoFactor" method="post"
+              class="account-settings-form compact-form">
+            <input asp-for="RememberMe" type="hidden" />
+            <div asp-validation-summary="ModelOnly" class="form-error"></div>
+
+            <div class="account-field">
+                <label asp-for="Code"></label>
+                <input asp-for="Code"
+                       autocomplete="one-time-code"
+                       inputmode="numeric"
+                       maxlength="7"
+                       autofocus />
+                <span asp-validation-for="Code" class="field-error"></span>
+            </div>
+
+            <label class="remember-row two-factor-remember">
+                <input asp-for="RememberMachine" />
+                <span>@L["RememberThisDevice"]</span>
+            </label>
+
+            <button class="modal-submit" type="submit">@L["VerifyAndLogin"]</button>
+        </form>
+
+        <div class="account-page-links">
+            <a asp-controller="Home" asp-action="Index" asp-route-dialog="login">
+                @L["BackToLogin"]
+            </a>
+        </div>
+    </div>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

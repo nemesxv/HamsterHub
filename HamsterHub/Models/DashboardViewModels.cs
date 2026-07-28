@@ -12,21 +12,28 @@ public class ParentDashboardViewModel
     public IReadOnlyList<CareCategoryOption> CareCategories { get; set; } = [];
     public IReadOnlyList<CareTaskSummary> CareTasks { get; set; } = [];
     public IReadOnlyList<PendingCareSummary> PendingCare { get; set; } = [];
+    public IReadOnlyList<ParentRewardSummary> Rewards { get; set; } = [];
+    public IReadOnlyList<PendingRewardSummary> PendingRewards { get; set; } = [];
+    public IReadOnlyList<RewardChildOption> RewardChildren { get; set; } = [];
     public AddMemberInput AddMember { get; set; } = new();
     public AddPetInput AddPet { get; set; } = new();
     public AddCareTaskInput AddCareTask { get; set; } = new();
+    public AddRewardInput AddReward { get; set; } = new();
+    public DirectRewardPurchaseInput DirectRewardPurchase { get; set; } = new();
 }
 
 public class KidDashboardViewModel
 {
     public string ChildName { get; set; } = string.Empty;
     public string HouseholdName { get; set; } = string.Empty;
-    public int ApprovedPoints { get; set; }
+    public int CurrentPoints { get; set; }
     public int PendingCount { get; set; }
     public IReadOnlyList<PetSummary> Pets { get; set; } = [];
     public IReadOnlyList<CareTaskSummary> CareTasks { get; set; } = [];
     public IReadOnlyList<KidCareHistorySummary> RecentCare { get; set; } = [];
     public IReadOnlyList<KidFamilyMemberSummary> FamilyMembers { get; set; } = [];
+    public IReadOnlyList<KidRewardSummary> Rewards { get; set; } = [];
+    public IReadOnlyList<KidRewardRedemptionSummary> RewardRedemptions { get; set; } = [];
 }
 
 public record FamilyMemberSummary(
@@ -81,7 +88,36 @@ public record KidFamilyMemberSummary(
     int Id,
     string DisplayName,
     HouseholdMemberRole Role,
-    string? PhotoPath);
+    string? PhotoPath,
+    int CurrentPoints);
+public record ParentRewardSummary(
+    int Id,
+    string Name,
+    int PointCost,
+    string? ImagePath,
+    IReadOnlyList<string> VisibleToChildren);
+public record PendingRewardSummary(
+    int Id,
+    string RewardName,
+    string? ImagePath,
+    string ChildName,
+    int PointsCost,
+    DateTimeOffset RequestedAt);
+public record RewardChildOption(int Id, string DisplayName, int CurrentPoints);
+public record KidRewardSummary(
+    int Id,
+    string Name,
+    int PointCost,
+    string? ImagePath,
+    bool CanAfford,
+    bool HasPendingRequest);
+public record KidRewardRedemptionSummary(
+    string RewardName,
+    string? ImagePath,
+    int PointsCost,
+    RewardRedemptionStatus Status,
+    DateTimeOffset RequestedAt,
+    int? PointsBalanceAfterApproval);
 
 public class FamilyMemberHistoryViewModel
 {
@@ -93,7 +129,7 @@ public class FamilyMemberHistoryViewModel
     public int CurrentPoints { get; set; }
     public bool CanViewOtherChildrenHistory { get; set; }
     public bool ShareHistoryWithChildren { get; set; }
-    public IReadOnlyList<MemberCareHistorySummary> History { get; set; } = [];
+    public IReadOnlyList<MemberPointHistorySummary> History { get; set; } = [];
 }
 
 public class KidFamilyMemberHistoryViewModel
@@ -102,6 +138,7 @@ public class KidFamilyMemberHistoryViewModel
     public string DisplayName { get; set; } = string.Empty;
     public HouseholdMemberRole Role { get; set; }
     public string? PhotoPath { get; set; }
+    public int CurrentPoints { get; set; }
     public IReadOnlyList<KidSharedCareHistorySummary> History { get; set; } = [];
 }
 
@@ -112,18 +149,21 @@ public record KidSharedCareHistorySummary(
     string ImagePath,
     IReadOnlyList<string> PhotoPaths);
 
-public record MemberCareHistorySummary(
-    string PetName,
-    string? PetPhotoPath,
-    string TaskName,
-    int Points,
-    int? PointsTotalAfterApproval,
-    CareLogStatus Status,
-    DateTimeOffset ReportedAt,
-    DateTimeOffset? ApprovedAt,
+public record MemberPointHistorySummary(
+    MemberPointHistoryKind Kind,
+    string Title,
+    string Subtitle,
+    int PointsChange,
+    int? PointsTotalAfter,
+    string StatusLocalizationKey,
+    string StatusCssClass,
+    DateTimeOffset RecordedAt,
+    DateTimeOffset? ReviewedAt,
     string? ApprovedByName,
-    string ImagePath,
+    string? ImagePath,
     IReadOnlyList<string> PhotoPaths);
+
+public enum MemberPointHistoryKind { Care = 1, Reward = 2 }
 
 public class AddMemberInput
 {
@@ -195,6 +235,34 @@ public class AddCareTaskInput
 
     [Display(Name = "TaskImage")]
     public IFormFile? Image { get; set; }
+}
+
+public class AddRewardInput
+{
+    [Required(ErrorMessage = "Required")]
+    [StringLength(100, MinimumLength = 2, ErrorMessage = "RewardNameLength")]
+    [Display(Name = "RewardName")]
+    public string Name { get; set; } = string.Empty;
+
+    [Range(1, 100000, ErrorMessage = "RewardPointRange")]
+    [Display(Name = "RewardPointCost")]
+    public int PointCost { get; set; } = 10;
+
+    [Display(Name = "RewardImage")]
+    public IFormFile? Image { get; set; }
+
+    [Display(Name = "RewardVisibleTo")]
+    [MinLength(1, ErrorMessage = "ChooseRewardAudience")]
+    public List<int> VisibleToMemberIds { get; set; } = [];
+}
+
+public class DirectRewardPurchaseInput
+{
+    [Range(1, int.MaxValue, ErrorMessage = "Required")]
+    public int RewardId { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "Required")]
+    public int HouseholdMemberId { get; set; }
 }
 
 public class UpdateMemberInput

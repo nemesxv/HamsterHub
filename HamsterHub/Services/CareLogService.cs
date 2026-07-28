@@ -58,7 +58,7 @@ public sealed class CareLogService(TimeProvider timeProvider)
     public CareLog CreateParentCompletion(
         CareTask careTask,
         HouseholdMember parent,
-        int previousApprovedPoints,
+        int previousBalance,
         DateTimeOffset completedAt)
     {
         if (parent.MemberRole != HouseholdMemberRole.Parent ||
@@ -73,7 +73,7 @@ public sealed class CareLogService(TimeProvider timeProvider)
         careLog.ApprovedByUserId = parent.UserId;
         careLog.ApprovedAt = completedAt;
         careLog.PointsTotalAfterApproval =
-            previousApprovedPoints + careLog.PointsAwarded;
+            previousBalance + careLog.PointsAwarded;
         return careLog;
     }
 
@@ -81,7 +81,7 @@ public sealed class CareLogService(TimeProvider timeProvider)
         CareLog careLog,
         HouseholdMember parent,
         CareLogStatus decision,
-        int previousApprovedPoints,
+        int previousBalance,
         DateTimeOffset reviewedAt)
     {
         if (decision is not (CareLogStatus.Approved or CareLogStatus.Rejected))
@@ -100,7 +100,7 @@ public sealed class CareLogService(TimeProvider timeProvider)
         careLog.ApprovedByUserId = parent.UserId;
         careLog.ApprovedAt = reviewedAt;
         careLog.PointsTotalAfterApproval = decision == CareLogStatus.Approved
-            ? previousApprovedPoints + careLog.PointsAwarded
+            ? previousBalance + careLog.PointsAwarded
             : null;
     }
 

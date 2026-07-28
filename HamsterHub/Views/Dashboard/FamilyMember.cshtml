@@ -42,14 +42,19 @@
 
     @if (TempData["StatusMessage"] is string statusMessage)
     {
-        <div class="dashboard-notice" role="status">@statusMessage</div>
+        <div class="dashboard-notice dashboard-toast" role="status"
+             data-dashboard-notice>
+            <span>@statusMessage</span>
+            <button type="button" class="dashboard-toast-close"
+                    data-dashboard-notice-close aria-label="@L["Close"]">×</button>
+        </div>
     }
 
     <section class="dashboard-panel dashboard-panel-wide">
         <div class="panel-heading">
             <div>
                 <p>@L["Activity"]</p>
-                <h2>@L["TaskHistory"]</h2>
+                <h2>@L["PointHistory"]</h2>
             </div>
             <span class="count-badge">@Model.History.Count</span>
         </div>
@@ -67,37 +72,49 @@
                 @foreach (var item in Model.History)
                 {
                     <article class="member-history-card">
-                        <img class="history-pet-photo" src="@item.ImagePath"
-                             alt="@L["TaskImageAlt", item.TaskName]" />
+                        @if (item.ImagePath is not null)
+                        {
+                            <img class="history-pet-photo" src="@item.ImagePath"
+                                 alt="@(item.Kind == MemberPointHistoryKind.Care
+                                     ? L["TaskImageAlt", item.Title]
+                                     : L["RewardImageAlt", item.Title])" />
+                        }
+                        else
+                        {
+                            <div class="history-pet-photo history-reward-placeholder"
+                                 aria-hidden="true">🎁</div>
+                        }
                         <div class="member-history-main">
-                            <span class="history-status status-text-@item.Status.ToString().ToLowerInvariant()">
-                                @L[$"Status_{item.Status}"]
+                            <span class="history-status status-text-@item.StatusCssClass">
+                                @L[item.StatusLocalizationKey]
                             </span>
-                            <h3>@item.TaskName</h3>
-                            <p>@item.PetName</p>
+                            <h3>@item.Title</h3>
+                            <p>@item.Subtitle</p>
                             @if (item.PhotoPaths.Count > 0)
                             {
                                 <div class="care-photo-strip" aria-label="@L["TaskPhotos"]">
                                     @foreach (var photoPath in item.PhotoPaths)
                                     {
                                         <button type="button" data-photo-viewer-src="@photoPath"
-                                                data-photo-viewer-alt="@L["TaskPhotoAlt", item.TaskName]">
-                                            <img src="@photoPath" alt="@L["TaskPhotoAlt", item.TaskName]" />
+                                                data-photo-viewer-alt="@L["TaskPhotoAlt", item.Title]">
+                                            <img src="@photoPath" alt="@L["TaskPhotoAlt", item.Title]" />
                                         </button>
                                     }
                                 </div>
                             }
                             <dl class="history-dates">
                                 <div>
-                                    <dt>@L["ReportedAt"]</dt>
-                                    <dd>@item.ReportedAt.ToLocalTime().ToString("g")</dd>
+                                    <dt>@(item.Kind == MemberPointHistoryKind.Care
+                                        ? L["ReportedAt"]
+                                        : L["RequestedAt"])</dt>
+                                    <dd>@item.RecordedAt.ToLocalTime().ToString("g")</dd>
                                 </div>
                                 <div>
                                     <dt>@L["ApprovedAt"]</dt>
                                     <dd>
-                                        @(item.ApprovedAt is null
+                                        @(item.ReviewedAt is null
                                             ? "—"
-                                            : item.ApprovedAt.Value.ToLocalTime().ToString("g"))
+                                            : item.ReviewedAt.Value.ToLocalTime().ToString("g"))
                                     </dd>
                                 </div>
                                 @if (item.ApprovedByName is not null)
@@ -109,11 +126,13 @@
                                 }
                             </dl>
                         </div>
-                        <div class="history-score-card">
-                            <span>@L["TaskPoints"]</span>
-                            <strong>+@item.Points</strong>
+                        <div class="history-score-card @(item.Kind == MemberPointHistoryKind.Reward ? "history-score-spent" : "")">
+                            <span>@(item.Kind == MemberPointHistoryKind.Care
+                                ? L["TaskPoints"]
+                                : L["PointsDeducted"])</span>
+                            <strong>@(item.PointsChange > 0 ? $"+{item.PointsChange}" : item.PointsChange)</strong>
                             <span>@L["TotalAtTheTime"]</span>
-                            <strong>@(item.PointsTotalAfterApproval?.ToString() ?? "—")</strong>
+                            <strong>@(item.PointsTotalAfter?.ToString() ?? "—")</strong>
                         </div>
                     </article>
                 }

@@ -10,8 +10,6 @@ its implementation and proportionate verification are complete.
 ## Later
 
 - Care streaks and history without unhealthy competitive pressure.
-- A points ledger when rewards and redemptions are designed.
-- Parent-managed rewards and spending rules.
 - Email delivery and mandatory email confirmation.
 - Accessibility review with children and parents.
 - Production hosting, database, secrets, monitoring, and backups.
@@ -28,6 +26,8 @@ its implementation and proportionate verification are complete.
 - Durable cross-chat project guidance and architecture documentation.
 - Automatic household onboarding for a new parent.
 - Parent dashboard for adding children, other parents, pets, and care tasks.
+- Guided, attention-first parent dashboard with large common-action cards, a
+  visual household summary, and a localized parent-editable family name.
 - Child dashboard for recording tasks and viewing points and history.
 - Parent approval queue for approving or rejecting care logs.
 - Parent-only account management; child account controls are restricted.
@@ -54,3 +54,9 @@ its implementation and proportionate verification are complete.
 - Privacy-filtered child family profiles with approved history and photo viewing.
 - Automated tests for household authorization, recurrence rules, relational
   constraints, and point-history invariants.
+- Parent-managed rewards with per-child visibility, optional validated images, point
+  costs, child requests, approval/rejection, and direct parent purchases.
+- Immutable reward-redemption debits and derived current point balances.
+- Privacy-permitted family point balances on the child dashboard without
+  rankings or a competitive scoreboard.
+- Automatic pending-migration application for the local development database.

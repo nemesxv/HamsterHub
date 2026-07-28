@@ -16,7 +16,9 @@ public class DashboardController(
     UserManager<ApplicationUser> userManager,
     IStringLocalizer<SharedResource> localizer,
     IWebHostEnvironment environment,
-    CareLogService careLogService) : Controller
+    CareLogService careLogService,
+    PointBalanceService pointBalanceService,
+    RewardService rewardService) : Controller
 {
     private const long MaximumPetPhotoBytes = 5 * 1024 * 1024;
     private const int MaximumCompletionPhotos = 8;
@@ -91,11 +93,40 @@ public class DashboardController(
             .OrderBy(category => category.HouseholdId)
             .ThenBy(category => category.CustomName)
             .ToListAsync();
+        var rewardEntities = await dbContext.Rewards
+            .AsNoTracking()
+            .Include(reward => reward.VisibleToMembers)
+                .ThenInclude(visibility => visibility.HouseholdMember)
+                    .ThenInclude(member => member.User)
+            .Where(reward => reward.HouseholdId == householdId && reward.IsActive)
+            .OrderBy(reward => reward.Name)
+            .ToListAsync();
+        var pendingRewardEntities = await dbContext.RewardRedemptions
+            .AsNoTracking()
+            .Include(redemption => redemption.HouseholdMember)
+                .ThenInclude(member => member.User)
+            .Where(redemption =>
+                redemption.HouseholdId == householdId &&
+                redemption.HouseholdMember.HouseholdId == householdId &&
+                redemption.Status == RewardRedemptionStatus.Pending)
+            .OrderByDescending(redemption => redemption.RequestedAt)
+            .ToListAsync();
+        var rewardChildren = await dbContext.HouseholdMembers
+            .AsNoTracking()
+            .Include(member => member.User)
+            .Where(member =>
+                member.HouseholdId == householdId &&
+                member.MemberRole == HouseholdMemberRole.Child &&
+                member.IsActive)
+            .OrderBy(member => member.User.DisplayName)
+            .ToListAsync();
+        var rewardChildBalances = await pointBalanceService.GetBalancesAsync(
+            householdId, rewardChildren.Select(member => member.UserId));
 
         var model = new ParentDashboardViewModel
         {
             ParentName = user.DisplayName,
-            HouseholdName = membership.Household.Name,
+            HouseholdName = GetHouseholdDisplayName(membership.Household),
             Members = await dbContext.HouseholdMembers
                 .AsNoTracking()
                 .Where(member => member.HouseholdId == householdId && member.IsActive)
@@ -145,6 +176,35 @@ public class DashboardController(
                     log.PointsAwarded,
                     log.CompletedAt,
                     log.Photos.Select(photo => photo.ImagePath).ToList()))
+                .ToList(),
+            Rewards = rewardEntities
+                .Select(reward => new ParentRewardSummary(
+                    reward.Id,
+                    reward.Name,
+                    reward.PointCost,
+                    reward.ImagePath,
+                    reward.VisibleToMembers
+                        .Where(item =>
+                            item.HouseholdMember.IsActive &&
+                            item.HouseholdMember.MemberRole == HouseholdMemberRole.Child)
+                        .Select(item => item.HouseholdMember.User.DisplayName)
+                        .OrderBy(name => name)
+                        .ToList()))
+                .ToList(),
+            PendingRewards = pendingRewardEntities
+                .Select(redemption => new PendingRewardSummary(
+                    redemption.Id,
+                    redemption.RewardName,
+                    redemption.RewardImagePath,
+                    redemption.HouseholdMember.User.DisplayName,
+                    redemption.PointsCost,
+                    redemption.RequestedAt))
+                .ToList(),
+            RewardChildren = rewardChildren
+                .Select(child => new RewardChildOption(
+                    child.Id,
+                    child.User.DisplayName,
+                    rewardChildBalances[child.UserId]))
                 .ToList()
         };
         model.AddCareTask.PetId = GetRememberedSelection(
@@ -205,8 +265,9 @@ public class DashboardController(
             .OrderByDescending(log => log.CompletedAt)
             .Take(8)
             .ToListAsync();
-        var visibleFamilyMembers = await dbContext.HouseholdMembers
+        var visibleFamilyMemberEntities = await dbContext.HouseholdMembers
             .AsNoTracking()
+            .Include(member => member.User)
             .Where(member =>
                 member.HouseholdId == householdId &&
                 member.Id != membership.Id &&
@@ -217,25 +278,43 @@ public class DashboardController(
                   member.ShareHistoryWithChildren)))
             .OrderBy(member => member.MemberRole)
             .ThenBy(member => member.User.DisplayName)
-            .Select(member => new KidFamilyMemberSummary(
-                member.Id,
-                member.User.DisplayName,
-                member.MemberRole,
-                member.User.ProfilePhotoPath))
             .ToListAsync();
+        var rewardEntities = await dbContext.Rewards
+            .AsNoTracking()
+            .Where(reward =>
+                reward.HouseholdId == householdId &&
+                reward.IsActive &&
+                reward.VisibleToMembers.Any(visibility =>
+                    visibility.HouseholdMemberId == membership.Id &&
+                    visibility.HouseholdMember.HouseholdId == householdId &&
+                    visibility.HouseholdMember.IsActive))
+            .OrderBy(reward => reward.Name)
+            .ToListAsync();
+        var rewardRedemptionEntities = await dbContext.RewardRedemptions
+            .AsNoTracking()
+            .Where(redemption =>
+                redemption.HouseholdId == householdId &&
+                redemption.HouseholdMemberId == membership.Id &&
+                redemption.HouseholdMember.HouseholdId == householdId)
+            .OrderByDescending(redemption => redemption.RequestedAt)
+            .Take(8)
+            .ToListAsync();
+        var visibleUserIds = visibleFamilyMemberEntities
+            .Select(member => member.UserId)
+            .Append(user.Id);
+        var visibleBalances = await pointBalanceService.GetBalancesAsync(
+            householdId, visibleUserIds);
+        var pendingRewardIds = rewardRedemptionEntities
+            .Where(redemption => redemption.Status == RewardRedemptionStatus.Pending)
+            .Select(redemption => redemption.RewardId)
+            .ToHashSet();
+        var currentBalance = visibleBalances[user.Id];
 
         return View(new KidDashboardViewModel
         {
             ChildName = user.DisplayName,
-            HouseholdName = membership.Household.Name,
-            ApprovedPoints = await dbContext.CareLogs
-                .Where(log =>
-                    log.CompletedByUserId == user.Id &&
-                    log.Pet.HouseholdId == householdId &&
-                    log.CareTask.HouseholdId == householdId &&
-                    log.CareTask.PetId == log.PetId &&
-                    log.Status == CareLogStatus.Approved)
-                .SumAsync(log => (int?)log.PointsAwarded) ?? 0,
+            HouseholdName = GetHouseholdDisplayName(membership.Household),
+            CurrentPoints = currentBalance,
             PendingCount = await dbContext.CareLogs.CountAsync(log =>
                 log.CompletedByUserId == user.Id &&
                 log.Pet.HouseholdId == householdId &&
@@ -281,7 +360,32 @@ public class DashboardController(
                         .Select(photo => photo.ImagePath)
                         .ToList()))
                 .ToList(),
-            FamilyMembers = visibleFamilyMembers
+            FamilyMembers = visibleFamilyMemberEntities
+                .Select(member => new KidFamilyMemberSummary(
+                    member.Id,
+                    member.User.DisplayName,
+                    member.MemberRole,
+                    member.User.ProfilePhotoPath,
+                    visibleBalances[member.UserId]))
+                .ToList(),
+            Rewards = rewardEntities
+                .Select(reward => new KidRewardSummary(
+                    reward.Id,
+                    reward.Name,
+                    reward.PointCost,
+                    reward.ImagePath,
+                    currentBalance >= reward.PointCost,
+                    pendingRewardIds.Contains(reward.Id)))
+                .ToList(),
+            RewardRedemptions = rewardRedemptionEntities
+                .Select(redemption => new KidRewardRedemptionSummary(
+                    redemption.RewardName,
+                    redemption.RewardImagePath,
+                    redemption.PointsCost,
+                    redemption.Status,
+                    redemption.RequestedAt,
+                    redemption.PointsBalanceAfterApproval))
+                .ToList()
         });
     }
 
@@ -318,8 +422,46 @@ public class DashboardController(
                 log.Pet.HouseholdId == membership.HouseholdId &&
                 log.CareTask.HouseholdId == membership.HouseholdId &&
                 log.CareTask.PetId == log.PetId)
-            .OrderByDescending(log => log.CompletedAt)
             .ToListAsync();
+        var rewardRedemptions = await dbContext.RewardRedemptions
+            .AsNoTracking()
+            .Include(redemption => redemption.ReviewedByUser)
+            .Where(redemption =>
+                redemption.HouseholdId == membership.HouseholdId &&
+                redemption.HouseholdMemberId == member.Id &&
+                redemption.HouseholdMember.HouseholdId == membership.HouseholdId &&
+                redemption.Status == RewardRedemptionStatus.Approved)
+            .ToListAsync();
+        var history = logs
+            .Select(log => new MemberPointHistorySummary(
+                MemberPointHistoryKind.Care,
+                GetCategoryName(log.CareTask.CareCategory),
+                log.Pet.Name,
+                log.Status == CareLogStatus.Approved ? log.PointsAwarded : 0,
+                log.PointsTotalAfterApproval,
+                $"Status_{log.Status}",
+                log.Status.ToString().ToLowerInvariant(),
+                log.CompletedAt,
+                log.ApprovedAt,
+                log.ApprovedByUser?.DisplayName,
+                GetCareLogImagePath(log),
+                log.Photos.Select(photo => photo.ImagePath).ToList()))
+            .Concat(rewardRedemptions.Select(redemption =>
+                new MemberPointHistorySummary(
+                    MemberPointHistoryKind.Reward,
+                    redemption.RewardName,
+                    localizer["RewardRedeemed"].Value,
+                    -redemption.PointsCost,
+                    redemption.PointsBalanceAfterApproval,
+                    $"RewardStatus_{redemption.Status}",
+                    redemption.Status.ToString().ToLowerInvariant(),
+                    redemption.RequestedAt,
+                    redemption.ReviewedAt,
+                    redemption.ReviewedByUser?.DisplayName,
+                    redemption.RewardImagePath,
+                    [])))
+            .OrderByDescending(item => item.ReviewedAt ?? item.RecordedAt)
+            .ToList();
 
         return View(new FamilyMemberHistoryViewModel
         {
@@ -328,23 +470,11 @@ public class DashboardController(
             Email = member.User.Email ?? string.Empty,
             PhotoPath = member.User.ProfilePhotoPath,
             Role = member.MemberRole,
-            CurrentPoints = logs
-                .Where(log => log.Status == CareLogStatus.Approved)
-                .Sum(log => log.PointsAwarded),
+            CurrentPoints = await pointBalanceService.GetBalanceAsync(
+                membership.HouseholdId, member.UserId),
             CanViewOtherChildrenHistory = member.CanViewOtherChildrenHistory,
             ShareHistoryWithChildren = member.ShareHistoryWithChildren,
-            History = logs.Select(log => new MemberCareHistorySummary(
-                log.Pet.Name,
-                log.Pet.PhotoPath,
-                GetCategoryName(log.CareTask.CareCategory),
-                log.PointsAwarded,
-                log.PointsTotalAfterApproval,
-                log.Status,
-                log.CompletedAt,
-                log.ApprovedAt,
-                log.ApprovedByUser?.DisplayName,
-                GetCareLogImagePath(log),
-                log.Photos.Select(photo => photo.ImagePath).ToList())).ToList()
+            History = history
         });
     }
 
@@ -401,6 +531,8 @@ public class DashboardController(
             DisplayName = member.User.DisplayName,
             Role = member.MemberRole,
             PhotoPath = member.User.ProfilePhotoPath,
+            CurrentPoints = await pointBalanceService.GetBalanceAsync(
+                viewer.HouseholdId, member.UserId),
             History = logs.Select(log => new KidSharedCareHistorySummary(
                 log.Pet.Name,
                 GetCategoryName(log.CareTask.CareCategory),
@@ -840,14 +972,8 @@ public class DashboardController(
             return RedirectToAction(nameof(Parent));
         }
 
-        var previousTotal = await dbContext.CareLogs
-            .Where(log =>
-                log.CompletedByUserId == parent.Id &&
-                log.Pet.HouseholdId == membership.HouseholdId &&
-                log.CareTask.HouseholdId == membership.HouseholdId &&
-                log.CareTask.PetId == log.PetId &&
-                log.Status == CareLogStatus.Approved)
-            .SumAsync(log => (int?)log.PointsAwarded) ?? 0;
+        var previousTotal = await pointBalanceService.GetBalanceAsync(
+            membership.HouseholdId, parent.Id);
         dbContext.CareLogs.Add(careLogService.CreateParentCompletion(
             careTask, membership, previousTotal, now));
         await dbContext.SaveChangesAsync();
@@ -891,14 +1017,8 @@ public class DashboardController(
         }
 
         var previousTotal = decision == CareLogStatus.Approved
-            ? await dbContext.CareLogs
-                .Where(log =>
-                    log.CompletedByUserId == careLog.CompletedByUserId &&
-                    log.Pet.HouseholdId == membership.HouseholdId &&
-                    log.CareTask.HouseholdId == membership.HouseholdId &&
-                    log.CareTask.PetId == log.PetId &&
-                    log.Status == CareLogStatus.Approved)
-                .SumAsync(log => (int?)log.PointsAwarded) ?? 0
+            ? await pointBalanceService.GetBalanceAsync(
+                membership.HouseholdId, careLog.CompletedByUserId)
             : 0;
         careLogService.ReviewCareLog(
             careLog,
@@ -911,6 +1031,226 @@ public class DashboardController(
 
         TempData["StatusMessage"] = localizer[
             decision == CareLogStatus.Approved ? "CareApproved" : "CareRejected"].Value;
+        return RedirectToAction(nameof(Parent));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Parent")]
+    public async Task<IActionResult> AddReward(
+        [Bind(Prefix = "AddReward")] AddRewardInput input)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["StatusMessage"] = localizer["CheckRewardFields"].Value;
+            return RedirectToAction(nameof(Parent));
+        }
+
+        var membership = await GetCurrentMembershipAsync(HouseholdMemberRole.Parent);
+        if (membership is null)
+        {
+            return Forbid();
+        }
+
+        var visibleMemberIds = input.VisibleToMemberIds.Distinct().ToList();
+        var children = await dbContext.HouseholdMembers
+            .Where(member =>
+                visibleMemberIds.Contains(member.Id) &&
+                member.HouseholdId == membership.HouseholdId &&
+                member.MemberRole == HouseholdMemberRole.Child &&
+                member.IsActive)
+            .ToListAsync();
+        if (children.Count != visibleMemberIds.Count || children.Count == 0)
+        {
+            return Forbid();
+        }
+
+        string? imagePath = null;
+        if (input.Image is not null)
+        {
+            var imageResult = await SaveUploadedImageAsync(
+                input.Image, "rewards", "InvalidRewardImage", "RewardImageTooLarge");
+            if (!imageResult.Success)
+            {
+                TempData["StatusMessage"] = localizer[imageResult.ErrorKey!].Value;
+                return RedirectToAction(nameof(Parent));
+            }
+
+            imagePath = imageResult.Path;
+        }
+
+        var reward = new Reward
+        {
+            HouseholdId = membership.HouseholdId,
+            Name = input.Name.Trim(),
+            PointCost = input.PointCost,
+            ImagePath = imagePath,
+            CreatedAt = rewardService.GetUtcNow(),
+            VisibleToMembers = children
+                .Select(child => new RewardVisibility { HouseholdMemberId = child.Id })
+                .ToList()
+        };
+        dbContext.Rewards.Add(reward);
+        try
+        {
+            await dbContext.SaveChangesAsync();
+        }
+        catch
+        {
+            DeleteUploadedImage(imagePath, "rewards");
+            throw;
+        }
+
+        TempData["StatusMessage"] = localizer["RewardAdded", reward.Name].Value;
+        return RedirectToAction(nameof(Parent));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Child")]
+    public async Task<IActionResult> RequestReward(int rewardId)
+    {
+        var child = await GetCurrentMembershipAsync(HouseholdMemberRole.Child);
+        if (child is null)
+        {
+            return Forbid();
+        }
+
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(
+            IsolationLevel.Serializable);
+        var reward = await dbContext.Rewards
+            .Include(item => item.VisibleToMembers)
+            .FirstOrDefaultAsync(item =>
+                item.Id == rewardId &&
+                item.HouseholdId == child.HouseholdId &&
+                item.IsActive &&
+                item.VisibleToMembers.Any(visibility =>
+                    visibility.HouseholdMemberId == child.Id));
+        if (reward is null)
+        {
+            return NotFound();
+        }
+
+        if (await dbContext.RewardRedemptions.AnyAsync(redemption =>
+                redemption.HouseholdId == child.HouseholdId &&
+                redemption.HouseholdMemberId == child.Id &&
+                redemption.RewardId == reward.Id &&
+                redemption.Status == RewardRedemptionStatus.Pending))
+        {
+            TempData["StatusMessage"] = localizer["RewardAlreadyRequested"].Value;
+            return RedirectToAction(nameof(Child));
+        }
+
+        var currentBalance = await pointBalanceService.GetBalanceAsync(
+            child.HouseholdId, child.UserId);
+        if (currentBalance < reward.PointCost)
+        {
+            TempData["StatusMessage"] = localizer["NotEnoughPointsForReward"].Value;
+            return RedirectToAction(nameof(Child));
+        }
+
+        dbContext.RewardRedemptions.Add(
+            rewardService.CreateRequest(reward, child, currentBalance));
+        await dbContext.SaveChangesAsync();
+        await transaction.CommitAsync();
+        TempData["StatusMessage"] = localizer["RewardRequested", reward.Name].Value;
+        return RedirectToAction(nameof(Child));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Parent")]
+    public async Task<IActionResult> ReviewRewardRequest(
+        int id,
+        RewardRedemptionStatus decision)
+    {
+        if (decision is not (
+            RewardRedemptionStatus.Approved or RewardRedemptionStatus.Rejected))
+        {
+            return BadRequest();
+        }
+
+        var parent = await GetCurrentMembershipAsync(HouseholdMemberRole.Parent);
+        if (parent is null)
+        {
+            return Forbid();
+        }
+
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(
+            IsolationLevel.Serializable);
+        var redemption = await dbContext.RewardRedemptions
+            .Include(item => item.HouseholdMember)
+            .FirstOrDefaultAsync(item =>
+                item.Id == id &&
+                item.HouseholdId == parent.HouseholdId &&
+                item.HouseholdMember.HouseholdId == parent.HouseholdId &&
+                item.Status == RewardRedemptionStatus.Pending);
+        if (redemption is null)
+        {
+            return NotFound();
+        }
+
+        var currentBalance = await pointBalanceService.GetBalanceAsync(
+            parent.HouseholdId, redemption.HouseholdMember.UserId);
+        if (decision == RewardRedemptionStatus.Approved &&
+            currentBalance < redemption.PointsCost)
+        {
+            TempData["StatusMessage"] = localizer["NotEnoughPointsForApproval"].Value;
+            return RedirectToAction(nameof(Parent));
+        }
+
+        rewardService.Review(redemption, parent, decision, currentBalance);
+        await dbContext.SaveChangesAsync();
+        await transaction.CommitAsync();
+        TempData["StatusMessage"] = localizer[
+            decision == RewardRedemptionStatus.Approved
+                ? "RewardApproved"
+                : "RewardRejected"].Value;
+        return RedirectToAction(nameof(Parent));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Parent")]
+    public async Task<IActionResult> PurchaseRewardForChild(
+        [Bind(Prefix = "DirectRewardPurchase")] DirectRewardPurchaseInput input)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["StatusMessage"] = localizer["CheckRewardPurchaseFields"].Value;
+            return RedirectToAction(nameof(Parent));
+        }
+
+        var parent = await GetCurrentMembershipAsync(HouseholdMemberRole.Parent);
+        if (parent is null)
+        {
+            return Forbid();
+        }
+
+        await using var transaction = await dbContext.Database.BeginTransactionAsync(
+            IsolationLevel.Serializable);
+        var reward = await dbContext.Rewards
+            .Include(item => item.VisibleToMembers)
+            .FirstOrDefaultAsync(item =>
+                item.Id == input.RewardId &&
+                item.HouseholdId == parent.HouseholdId &&
+                item.IsActive);
+        var child = await dbContext.HouseholdMembers.FirstOrDefaultAsync(member =>
+            member.Id == input.HouseholdMemberId &&
+            member.HouseholdId == parent.HouseholdId &&
+            member.MemberRole == HouseholdMemberRole.Child &&
+            member.IsActive);
+        if (reward is null || child is null)
+        {
+            return NotFound();
+        }
+
+        var currentBalance = await pointBalanceService.GetBalanceAsync(
+            parent.HouseholdId, child.UserId);
+        if (currentBalance < reward.PointCost)
+        {
+            TempData["StatusMessage"] = localizer["NotEnoughPointsForPurchase"].Value;
+            return RedirectToAction(nameof(Parent));
+        }
+
+        dbContext.RewardRedemptions.Add(
+            rewardService.CreateDirectPurchase(reward, child, parent, currentBalance));
+        await dbContext.SaveChangesAsync();
+        await transaction.CommitAsync();
+        TempData["StatusMessage"] = localizer[
+            "RewardPurchasedForChild", reward.Name].Value;
         return RedirectToAction(nameof(Parent));
     }
 
@@ -1272,7 +1612,7 @@ public class DashboardController(
 
         var household = new Household
         {
-            Name = localizer["DefaultHouseholdName", user.DisplayName]
+            Name = localizer["DefaultHouseholdName"].Value
         };
         membership = new HouseholdMember
         {
@@ -1284,6 +1624,11 @@ public class DashboardController(
         await dbContext.SaveChangesAsync();
         return membership;
     }
+
+    private string GetHouseholdDisplayName(Household household) =>
+        household.IsNameCustomized
+            ? household.Name
+            : localizer["DefaultHouseholdName"].Value;
 
     private string GetCategoryName(CareCategory category) =>
         category.Code is not null

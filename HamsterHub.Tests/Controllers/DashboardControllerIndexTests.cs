@@ -58,6 +58,8 @@ public sealed class DashboardControllerIndexTests
             null!,
             null!,
             null!,
+            null!,
+            null!,
             null!)
         {
             ControllerContext = new ControllerContext

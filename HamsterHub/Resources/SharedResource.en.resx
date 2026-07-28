@@ -78,15 +78,15 @@
   <data name="CareTasks" xml:space="preserve"><value>Care tasks</value></data>
   <data name="AwaitingApproval" xml:space="preserve"><value>Awaiting approval</value></data>
   <data name="Family" xml:space="preserve"><value>Family</value></data>
-  <data name="YourCareTeam" xml:space="preserve"><value>Your care team</value></data>
+  <data name="YourCareTeam" xml:space="preserve"><value>Family accounts</value></data>
   <data name="Add" xml:space="preserve"><value>Add</value></data>
   <data name="NoFamilyMembers" xml:space="preserve"><value>Add a child or another parent.</value></data>
   <data name="Role_Parent" xml:space="preserve"><value>Parent</value></data>
   <data name="Role_Child" xml:space="preserve"><value>Child</value></data>
-  <data name="FamilyPets" xml:space="preserve"><value>Family pets</value></data>
+  <data name="FamilyPets" xml:space="preserve"><value>Your pets</value></data>
   <data name="NoPetsYet" xml:space="preserve"><value>Your family's first pet will appear here.</value></data>
   <data name="Routine" xml:space="preserve"><value>Routine</value></data>
-  <data name="CareTaskSettings" xml:space="preserve"><value>Care tasks and points</value></data>
+  <data name="CareTaskSettings" xml:space="preserve"><value>Who does what</value></data>
   <data name="AddTask" xml:space="preserve"><value>Add task</value></data>
   <data name="NoCareTasksYet" xml:space="preserve"><value>Create the first task: food, water, cleaning, or play.</value></data>
   <data name="Category_Feeding" xml:space="preserve"><value>Feeding</value></data>
@@ -99,7 +99,7 @@
   <data name="Frequency_Weekly" xml:space="preserve"><value>Weekly</value></data>
   <data name="Frequency_AsNeeded" xml:space="preserve"><value>As needed</value></data>
   <data name="Review" xml:space="preserve"><value>Review</value></data>
-  <data name="PendingCare" xml:space="preserve"><value>Pending care</value></data>
+  <data name="PendingCare" xml:space="preserve"><value>Care tasks to check</value></data>
   <data name="NothingToApprove" xml:space="preserve"><value>Everything is reviewed—nothing new yet.</value></data>
   <data name="Approve" xml:space="preserve"><value>Approve</value></data>
   <data name="Reject" xml:space="preserve"><value>Reject</value></data>
@@ -128,7 +128,7 @@
   <data name="TaskSentForApproval" xml:space="preserve"><value>Great work! The task was sent to a parent for approval.</value></data>
   <data name="CareApproved" xml:space="preserve"><value>Care approved and points awarded.</value></data>
   <data name="CareRejected" xml:space="preserve"><value>The care record was rejected.</value></data>
-  <data name="DefaultHouseholdName" xml:space="preserve"><value>{0}'s family</value></data>
+  <data name="DefaultHouseholdName" xml:space="preserve"><value>Our family</value></data>
   <data name="KidDashboardTitle" xml:space="preserve"><value>My care tasks</value></data>
   <data name="KidSpace" xml:space="preserve"><value>My care corner</value></data>
   <data name="KidWelcome" xml:space="preserve"><value>Hi, {0}!</value></data>
@@ -334,4 +334,100 @@
   <data name="BackToKidDashboard" xml:space="preserve"><value>Back to my tasks</value></data>
   <data name="SharedCareMemories" xml:space="preserve"><value>Care memories</value></data>
   <data name="NoSharedCareMemories" xml:space="preserve"><value>No shared care memories yet.</value></data>
+  <data name="Rewards" xml:space="preserve"><value>Rewards</value></data>
+  <data name="RewardCatalog" xml:space="preserve"><value>Family reward catalog</value></data>
+  <data name="AddReward" xml:space="preserve"><value>Add reward</value></data>
+  <data name="NoRewardsYet" xml:space="preserve"><value>Add the first reward your children can earn.</value></data>
+  <data name="RewardImageAlt" xml:space="preserve"><value>Reward: {0}</value></data>
+  <data name="VisibleTo" xml:space="preserve"><value>Visible to</value></data>
+  <data name="Nobody" xml:space="preserve"><value>no children</value></data>
+  <data name="LogRewardPurchase" xml:space="preserve"><value>Give a reward now</value></data>
+  <data name="ChooseReward" xml:space="preserve"><value>Choose a reward</value></data>
+  <data name="ChooseChild" xml:space="preserve"><value>Choose a child</value></data>
+  <data name="PointsCount" xml:space="preserve"><value>{0} points</value></data>
+  <data name="PurchaseReward" xml:space="preserve"><value>Give reward and deduct stars</value></data>
+  <data name="DirectPurchaseHint" xml:space="preserve"><value>Use this when a child asks you in person. Their stars are deducted immediately.</value></data>
+  <data name="PendingRewardRequests" xml:space="preserve"><value>Reward requests</value></data>
+  <data name="NoPendingRewardRequests" xml:space="preserve"><value>No reward requests need approval.</value></data>
+  <data name="RewardFormIntro" xml:space="preserve"><value>Set a point cost, optionally add a picture, and choose exactly which children can see it.</value></data>
+  <data name="RewardName" xml:space="preserve"><value>Reward name</value></data>
+  <data name="RewardPointCost" xml:space="preserve"><value>Point cost</value></data>
+  <data name="RewardImage" xml:space="preserve"><value>Reward picture</value></data>
+  <data name="RewardImageHint" xml:space="preserve"><value>Optional. JPG, PNG, or WebP, up to 5 MB.</value></data>
+  <data name="RewardVisibleTo" xml:space="preserve"><value>Children who can see this reward</value></data>
+  <data name="AddChildBeforeReward" xml:space="preserve"><value>Add a child account before creating a reward.</value></data>
+  <data name="SaveReward" xml:space="preserve"><value>Save reward</value></data>
+  <data name="KidRewards" xml:space="preserve"><value>My rewards</value></data>
+  <data name="KidNoRewards" xml:space="preserve"><value>New rewards will appear here when your grown-up adds them.</value></data>
+  <data name="RewardWaiting" xml:space="preserve"><value>Waiting for approval</value></data>
+  <data name="RequestReward" xml:space="preserve"><value>Ask for this reward</value></data>
+  <data name="NeedMorePoints" xml:space="preserve"><value>Earn more stars</value></data>
+  <data name="MyRewardRequests" xml:space="preserve"><value>My recent requests</value></data>
+  <data name="RewardStatus_Pending" xml:space="preserve"><value>Waiting</value></data>
+  <data name="RewardStatus_Approved" xml:space="preserve"><value>Approved</value></data>
+  <data name="RewardStatus_Rejected" xml:space="preserve"><value>Not approved</value></data>
+  <data name="CheckRewardFields" xml:space="preserve"><value>Check the reward name, cost, and audience.</value></data>
+  <data name="RewardNameLength" xml:space="preserve"><value>Use 2 to 100 characters for the reward name.</value></data>
+  <data name="RewardPointRange" xml:space="preserve"><value>The reward must cost between 1 and 100,000 points.</value></data>
+  <data name="ChooseRewardAudience" xml:space="preserve"><value>Choose at least one child who can see the reward.</value></data>
+  <data name="InvalidRewardImage" xml:space="preserve"><value>Choose a valid JPG, PNG, or WebP reward picture.</value></data>
+  <data name="RewardImageTooLarge" xml:space="preserve"><value>The reward picture must be 5 MB or smaller.</value></data>
+  <data name="RewardAdded" xml:space="preserve"><value>Reward “{0}” added.</value></data>
+  <data name="RewardAlreadyRequested" xml:space="preserve"><value>This reward is already waiting for approval.</value></data>
+  <data name="NotEnoughPointsForReward" xml:space="preserve"><value>You do not have enough points for this reward yet.</value></data>
+  <data name="RewardRequested" xml:space="preserve"><value>“{0}” was sent to your grown-up for approval.</value></data>
+  <data name="NotEnoughPointsForApproval" xml:space="preserve"><value>This child no longer has enough points to approve the reward.</value></data>
+  <data name="RewardApproved" xml:space="preserve"><value>Reward approved and points deducted.</value></data>
+  <data name="RewardRejected" xml:space="preserve"><value>Reward request declined; no points were deducted.</value></data>
+  <data name="CheckRewardPurchaseFields" xml:space="preserve"><value>Choose both a reward and a child.</value></data>
+  <data name="NotEnoughPointsForPurchase" xml:space="preserve"><value>This child does not have enough points for that reward.</value></data>
+  <data name="RewardPurchasedForChild" xml:space="preserve"><value>“{0}” was logged and the points were deducted.</value></data>
+  <data name="PointHistory" xml:space="preserve"><value>Point history</value></data>
+  <data name="RewardRedeemed" xml:space="preserve"><value>Reward redeemed</value></data>
+  <data name="RequestedAt" xml:space="preserve"><value>Requested at</value></data>
+  <data name="PointsDeducted" xml:space="preserve"><value>Points deducted</value></data>
+  <data name="PointsLeftAfterReward" xml:space="preserve"><value>{0} stars left after this reward</value></data>
+  <data name="PointsDeductedCount" xml:space="preserve"><value>{0} points deducted</value></data>
+  <data name="RewardCostCount" xml:space="preserve"><value>Reward costs {0} points</value></data>
+  <data name="ParentHomeIntro" xml:space="preserve"><value>Everything your family needs for pet care, all in one simple place.</value></data>
+  <data name="FamilyHome" xml:space="preserve"><value>Your family</value></data>
+  <data name="ItemsNeedAttention" xml:space="preserve"><value>{0} waiting for your decision</value></data>
+  <data name="EverythingUpToDate" xml:space="preserve"><value>Everything is up to date</value></data>
+  <data name="StartHere" xml:space="preserve"><value>Start here</value></data>
+  <data name="WhatWouldYouLikeToDo" xml:space="preserve"><value>What would you like to do?</value></data>
+  <data name="QuickActionHint" xml:space="preserve"><value>Choose one of the common actions below.</value></data>
+  <data name="ActionAddMemberHint" xml:space="preserve"><value>Create an account for a child or another adult</value></data>
+  <data name="ActionAddPetHint" xml:space="preserve"><value>Add a pet and its photo</value></data>
+  <data name="ActionAddTaskHint" xml:space="preserve"><value>Choose who cares for which pet</value></data>
+  <data name="ActionAddRewardHint" xml:space="preserve"><value>Add something a child can earn</value></data>
+  <data name="NeedsYourAttention" xml:space="preserve"><value>Needs your attention</value></data>
+  <data name="AttentionHint" xml:space="preserve"><value>Approve or decline requests from your family.</value></data>
+  <data name="AllCaughtUp" xml:space="preserve"><value>You're all caught up</value></data>
+  <data name="AllCaughtUpHint" xml:space="preserve"><value>There is nothing waiting for your approval.</value></data>
+  <data name="CareWaitingHint" xml:space="preserve"><value>Completed care tasks to review</value></data>
+  <data name="RewardWaitingHint" xml:space="preserve"><value>Rewards children have asked for</value></data>
+  <data name="FamilyAtAGlance" xml:space="preserve"><value>Your family at a glance</value></data>
+  <data name="PeopleInFamily" xml:space="preserve"><value>people</value></data>
+  <data name="PetsAtHome" xml:space="preserve"><value>pets</value></data>
+  <data name="ActiveCareTasks" xml:space="preserve"><value>care tasks</value></data>
+  <data name="AvailableRewards" xml:space="preserve"><value>rewards</value></data>
+  <data name="FamilyPointsAtAGlance" xml:space="preserve"><value>Children's stars</value></data>
+  <data name="FamilyPointsHint" xml:space="preserve"><value>See each child's balance and open their point history.</value></data>
+  <data name="DailyManagement" xml:space="preserve"><value>Everyday care and rewards</value></data>
+  <data name="DailyManagementHint" xml:space="preserve"><value>Manage care tasks and give rewards from one place.</value></data>
+  <data name="CareTaskSettingsHint" xml:space="preserve"><value>See who does each task and how many stars it earns.</value></data>
+  <data name="RewardCatalogHint" xml:space="preserve"><value>See what children can earn and who can view each reward.</value></data>
+  <data name="FamilySetup" xml:space="preserve"><value>Family and pet settings</value></data>
+  <data name="FamilySetupHint" xml:space="preserve"><value>Manage accounts and pets here whenever something changes.</value></data>
+  <data name="YourCareTeamHint" xml:space="preserve"><value>Open a person's history or update their account.</value></data>
+  <data name="FamilyPetsHint" xml:space="preserve"><value>Add pets and keep their details up to date.</value></data>
+  <data name="StarsAfterReward" xml:space="preserve"><value>Stars after reward</value></data>
+  <data name="FamilyName" xml:space="preserve"><value>Family name</value></data>
+  <data name="FamilyNameHint" xml:space="preserve"><value>Choose a short name everyone in your family will recognize.</value></data>
+  <data name="HouseholdNameLength" xml:space="preserve"><value>The family name must contain 2 to 100 characters.</value></data>
+  <data name="TwoFactorLoginTitle" xml:space="preserve"><value>Enter your security code</value></data>
+  <data name="TwoFactorLoginIntro" xml:space="preserve"><value>Open your authenticator app and enter the six-digit code shown for HamsterHub.</value></data>
+  <data name="RememberThisDevice" xml:space="preserve"><value>Trust this device</value></data>
+  <data name="VerifyAndLogin" xml:space="preserve"><value>Verify and log in</value></data>
+  <data name="BackToLogin" xml:space="preserve"><value>Back to login</value></data>
 </root>

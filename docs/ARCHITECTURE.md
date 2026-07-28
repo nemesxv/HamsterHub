@@ -20,8 +20,10 @@ by ASP.NET Identity.
 
 ### Household
 
-The security and ownership boundary for a family. It owns members, pets, and
-care tasks.
+The security and ownership boundary for a family. It owns members, pets, care
+tasks, rewards, and reward redemptions. `IsNameCustomized` distinguishes a
+parent-chosen household name from the localized default shown in the current
+interface language.
 
 ### HouseholdMember
 
@@ -61,6 +63,25 @@ An optional, append-only completion image linked to one care log. A care log
 may have zero to eight uploaded photos in the current UI. Paths are stored in
 the database while files remain under the web root in local development.
 
+### Reward
+
+A parent-configured household reward with a name, positive point cost, optional
+uploaded image, active state, and creation time. Presentation uses a localized
+gift placeholder when no image was supplied.
+
+### RewardVisibility
+
+An explicit many-to-many allowlist between a reward and the active child
+members who may see and request it. Household ownership and child role are
+validated in application logic.
+
+### RewardRedemption
+
+An immutable point debit linked to a household reward and recipient membership.
+It snapshots the reward name, image path, and point cost, records the requester,
+review decision, and historical net balance after approval. A child request is
+pending; a parent-direct purchase is approved immediately.
+
 ## Important invariants
 
 - A care task, its selected pet, and any custom category must belong to the
@@ -74,6 +95,15 @@ the database while files remain under the web root in local development.
 - Historical `PointsAwarded` values are not recalculated.
 - `PointsTotalAfterApproval` is assigned inside a serializable approval
   transaction and is not recalculated later.
+- Current balance is approved `CareLog.PointsAwarded` minus approved
+  `RewardRedemption.PointsCost`; pending and rejected records do not affect it.
+- Reward request approval and parent-direct purchase re-check affordability in
+  a serializable transaction and persist `PointsBalanceAfterApproval`.
+- A child can request only an active reward explicitly visible to their active
+  membership in the same household. Parents may directly purchase an active
+  household reward for any active child in that household.
+- Reward names, image paths, and costs are snapshotted on redemption and are not
+  recalculated from the live catalog.
 - Child-to-child history requires both viewer permission and owner sharing
   permission. Active parents remain visible to children in the same household.
   Child-facing history exposes only approved records; parents retain full access.
@@ -93,6 +123,10 @@ totals, and centralizes daily and weekly recurrence cutoffs. It uses the
 framework `TimeProvider` so time-sensitive behavior can be tested with a fixed
 clock. The dashboard controller remains responsible for HTTP behavior,
 household-scoped database queries, transactions, and file handling.
+
+`PointBalanceService` derives live balances from immutable award and redemption
+history. `RewardService` enforces visibility, role, household, affordability,
+snapshot, and review rules using the framework `TimeProvider`.
 
 The authenticated dashboard checks both the global Identity role and the active
 household membership. Task submissions verify that the completing user is the
@@ -123,6 +157,11 @@ art-book presentation remains isolated from the denser parent-management UI.
 Meaningful controls retain localized accessible names even when their visible
 presentation is primarily photographic or symbolic.
 
+Approved reward deductions are shown as prominent star badges in the child's
+reward history. Privacy-permitted family balances use the same large star
+language on the right side of friend cards. Parent member history combines care
+awards and approved reward deductions into one chronological point timeline.
+
 Pet and care photos open in a shared, keyboard-accessible overlay owned by the
 layout. Child camera capture uses `getUserMedia` where available and falls back
 to a mobile file input with environment-camera capture. Selected images remain
@@ -142,13 +181,17 @@ Apply committed migrations with:
 dotnet ef database update --project .\HamsterHub\HamsterHub.csproj
 ```
 
+Development startup also applies committed pending migrations automatically so
+an existing LocalDB remains compatible after pulling a schema change. Non-
+development deployments must run migrations as an explicit release step.
+
 ## Automated testing
 
-`HamsterHub.Tests` contains fast unit tests for care-log policy and controller
-role routing plus SQLite-backed component tests for dashboard care-log flows
-and relational tests for the EF Core model. SQLite tests use a fresh, kept-open
-in-memory database per test so foreign keys, unique indexes, check constraints,
-transactions, and cascades are exercised.
+`HamsterHub.Tests` contains fast unit tests for care-log and reward policy and
+controller role routing plus SQLite-backed component tests for dashboard
+care-log flows, derived point balances, and relational EF Core behavior. SQLite
+tests use a fresh, kept-open in-memory database per test so foreign keys, unique
+indexes, check constraints, transactions, and cascades are exercised.
 
 SQLite is not treated as proof of SQL Server-specific behavior. Provider
 differences such as collations, `DateTimeOffset` translation, and concurrent

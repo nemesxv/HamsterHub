@@ -18,3 +18,11 @@ To collect Cobertura coverage under `TestResults`, run:
 ```powershell
 dotnet test .\HamsterHub.slnx --configuration Release --no-restore --results-directory .\TestResults --coverlet --coverlet-output-format cobertura
 ```
+
+The development app applies committed Entity Framework migrations to the local
+`HamsterHub` LocalDB automatically at startup. They can also be applied
+explicitly with:
+
+```powershell
+dotnet ef database update --project .\HamsterHub\HamsterHub.csproj
+```

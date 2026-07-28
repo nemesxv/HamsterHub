@@ -42,12 +42,69 @@ public class HomeController(
             return RedirectToAction("Index", "Dashboard");
         }
 
+        if (result.RequiresTwoFactor)
+        {
+            return RedirectToAction(nameof(TwoFactor), new { rememberMe = input.RememberMe });
+        }
+
         ModelState.AddModelError(string.Empty,
             result.IsLockedOut
                 ? localizer["LockedOut"]
                 : localizer["InvalidLogin"]);
 
         return View("Index", new HomeViewModel { Login = input, ActiveDialog = "login" });
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> TwoFactor(bool rememberMe = false)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            return RedirectToAction("Index", "Dashboard");
+        }
+
+        var user = await signInManager.GetTwoFactorAuthenticationUserAsync();
+        if (user is null)
+        {
+            return RedirectToAction(nameof(Index), new { dialog = "login" });
+        }
+
+        return View(new TwoFactorLoginInputModel { RememberMe = rememberMe });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> TwoFactor(TwoFactorLoginInputModel input)
+    {
+        var user = await signInManager.GetTwoFactorAuthenticationUserAsync();
+        if (user is null)
+        {
+            return RedirectToAction(nameof(Index), new { dialog = "login" });
+        }
+
+        if (!ModelState.IsValid)
+        {
+            return View(input);
+        }
+
+        var code = input.Code.Replace(" ", string.Empty).Replace("-", string.Empty);
+        var result = await signInManager.TwoFactorAuthenticatorSignInAsync(
+            code,
+            input.RememberMe,
+            input.RememberMachine);
+
+        if (result.Succeeded)
+        {
+            return RedirectToAction("Index", "Dashboard");
+        }
+
+        ModelState.AddModelError(
+            nameof(input.Code),
+            result.IsLockedOut
+                ? localizer["LockedOut"]
+                : localizer["InvalidAuthenticatorCode"]);
+
+        return View(input);
     }
 
     [HttpPost]

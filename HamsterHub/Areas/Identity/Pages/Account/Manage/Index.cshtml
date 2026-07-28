@@ -26,6 +26,13 @@
 <form method="post" class="account-settings-form">
     <div asp-validation-summary="ModelOnly" class="validation-message"></div>
     <div class="account-field">
+        <label asp-for="Input.FamilyName"></label>
+        <input asp-for="Input.FamilyName" autocomplete="organization" />
+        <span asp-validation-for="Input.FamilyName" class="validation-message"></span>
+        <small>@L["FamilyNameHint"]</small>
+    </div>
+
+    <div class="account-field">
         <label asp-for="Input.DisplayName"></label>
         <input asp-for="Input.DisplayName" autocomplete="name" />
         <span asp-validation-for="Input.DisplayName" class="validation-message"></span>

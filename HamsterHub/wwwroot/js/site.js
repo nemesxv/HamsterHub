@@ -45,6 +45,88 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  const dashboardPage = document.querySelector(".dashboard-shell, .kid-canvas");
+  const dashboardScrollKey = "hamsterHub.dashboardScroll";
+
+  if (dashboardPage) {
+    try {
+      const savedScroll = JSON.parse(sessionStorage.getItem(dashboardScrollKey));
+      sessionStorage.removeItem(dashboardScrollKey);
+
+      if (savedScroll?.path === window.location.pathname &&
+          Number.isFinite(savedScroll.top) &&
+          Date.now() - savedScroll.savedAt < 60000) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            window.scrollTo({ top: savedScroll.top, left: 0, behavior: "auto" });
+          });
+        });
+      }
+    } catch {
+      // Continue normally when browser storage is unavailable or malformed.
+    }
+
+    document.querySelectorAll("form").forEach((form) => {
+      form.addEventListener("submit", (event) => {
+        if (event.defaultPrevented) {
+          return;
+        }
+
+        try {
+          sessionStorage.setItem(dashboardScrollKey, JSON.stringify({
+            path: window.location.pathname,
+            top: window.scrollY,
+            savedAt: Date.now()
+          }));
+        } catch {
+          // The action should still submit if browser storage is unavailable.
+        }
+      });
+    });
+  } else {
+    try {
+      sessionStorage.removeItem(dashboardScrollKey);
+    } catch {
+      // Browser storage may be unavailable in a restricted context.
+    }
+  }
+
+  document.querySelectorAll("[data-dashboard-notice]").forEach((notice) => {
+    let dismissTimer;
+    let isDismissed = false;
+
+    const dismissNotice = () => {
+      if (isDismissed) {
+        return;
+      }
+
+      isDismissed = true;
+      window.clearTimeout(dismissTimer);
+      notice.classList.add("is-leaving");
+      window.setTimeout(() => notice.remove(), 220);
+    };
+    const scheduleDismissal = () => {
+      if (isDismissed) {
+        return;
+      }
+
+      window.clearTimeout(dismissTimer);
+      dismissTimer = window.setTimeout(dismissNotice, 6000);
+    };
+
+    notice.addEventListener("click", dismissNotice);
+    notice.querySelector("[data-dashboard-notice-close]")
+      ?.addEventListener("click", (event) => {
+        event.stopPropagation();
+        dismissNotice();
+      });
+    notice.addEventListener("pointerenter", () => window.clearTimeout(dismissTimer));
+    notice.addEventListener("pointerleave", scheduleDismissal);
+    notice.addEventListener("focusin", () => window.clearTimeout(dismissTimer));
+    notice.addEventListener("focusout", scheduleDismissal);
+    scheduleDismissal();
+  });
+
   const photoViewer = document.querySelector("[data-photo-viewer]");
   const photoViewerImage = photoViewer?.querySelector("[data-photo-viewer-image]");
   const photoViewerCaption = photoViewer?.querySelector("[data-photo-viewer-caption]");
@@ -252,5 +334,48 @@ document.addEventListener("DOMContentLoaded", () => {
       form?.reset();
       renderSelectedPhotos();
     });
+  });
+
+  document.querySelectorAll("[data-direct-reward-form]").forEach((form) => {
+    const rewardSelect = form.querySelector("[data-direct-reward-reward]");
+    const childSelect = form.querySelector("[data-direct-reward-child]");
+    const costOutput = form.querySelector("[data-direct-reward-cost]");
+    const balanceOutput = form.querySelector("[data-direct-reward-balance]");
+    const remainingOutput = form.querySelector("[data-direct-reward-remaining]");
+    const summary = form.querySelector("[data-direct-reward-summary]");
+    const warning = form.querySelector("[data-direct-reward-warning]");
+    const submitButton = form.querySelector("[data-direct-reward-submit]");
+
+    const renderRewardSummary = () => {
+      const rewardOption = rewardSelect?.selectedOptions[0];
+      const childOption = childSelect?.selectedOptions[0];
+      const hasReward = Boolean(rewardSelect?.value && rewardOption?.dataset.pointsCost);
+      const hasChild = Boolean(childSelect?.value && childOption?.dataset.currentPoints);
+      const cost = hasReward ? Number(rewardOption.dataset.pointsCost) : null;
+      const balance = hasChild ? Number(childOption.dataset.currentPoints) : null;
+      const remaining = cost !== null && balance !== null ? balance - cost : null;
+      const isInsufficient = remaining !== null && remaining < 0;
+
+      if (costOutput) {
+        costOutput.textContent = cost ?? "—";
+      }
+      if (balanceOutput) {
+        balanceOutput.textContent = balance ?? "—";
+      }
+      if (remainingOutput) {
+        remainingOutput.textContent = remaining ?? "—";
+      }
+      summary?.classList.toggle("is-insufficient", isInsufficient);
+      if (warning) {
+        warning.hidden = !isInsufficient;
+      }
+      if (submitButton) {
+        submitButton.disabled = !hasReward || !hasChild || isInsufficient;
+      }
+    };
+
+    rewardSelect?.addEventListener("change", renderRewardSummary);
+    childSelect?.addEventListener("change", renderRewardSummary);
+    renderRewardSummary();
   });
 });

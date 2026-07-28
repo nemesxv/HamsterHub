@@ -78,15 +78,15 @@
   <data name="CareTasks" xml:space="preserve"><value>Дела по уходу</value></data>
   <data name="AwaitingApproval" xml:space="preserve"><value>Ждут проверки</value></data>
   <data name="Family" xml:space="preserve"><value>Семья</value></data>
-  <data name="YourCareTeam" xml:space="preserve"><value>Команда заботы</value></data>
+  <data name="YourCareTeam" xml:space="preserve"><value>Аккаунты семьи</value></data>
   <data name="Add" xml:space="preserve"><value>Добавить</value></data>
   <data name="NoFamilyMembers" xml:space="preserve"><value>Добавьте ребёнка или другого родителя.</value></data>
   <data name="Role_Parent" xml:space="preserve"><value>Родитель</value></data>
   <data name="Role_Child" xml:space="preserve"><value>Ребёнок</value></data>
-  <data name="FamilyPets" xml:space="preserve"><value>Питомцы семьи</value></data>
+  <data name="FamilyPets" xml:space="preserve"><value>Ваши питомцы</value></data>
   <data name="NoPetsYet" xml:space="preserve"><value>Здесь появится первый питомец вашей семьи.</value></data>
   <data name="Routine" xml:space="preserve"><value>Распорядок</value></data>
-  <data name="CareTaskSettings" xml:space="preserve"><value>Дела и баллы</value></data>
+  <data name="CareTaskSettings" xml:space="preserve"><value>Кто и что делает</value></data>
   <data name="AddTask" xml:space="preserve"><value>Добавить дело</value></data>
   <data name="NoCareTasksYet" xml:space="preserve"><value>Создайте первое дело: кормление, воду, уборку или игру.</value></data>
   <data name="Category_Feeding" xml:space="preserve"><value>Кормление</value></data>
@@ -99,7 +99,7 @@
   <data name="Frequency_Weekly" xml:space="preserve"><value>Раз в неделю</value></data>
   <data name="Frequency_AsNeeded" xml:space="preserve"><value>По необходимости</value></data>
   <data name="Review" xml:space="preserve"><value>Проверка</value></data>
-  <data name="PendingCare" xml:space="preserve"><value>Ожидают подтверждения</value></data>
+  <data name="PendingCare" xml:space="preserve"><value>Дела на проверку</value></data>
   <data name="NothingToApprove" xml:space="preserve"><value>Всё проверено — новых дел пока нет.</value></data>
   <data name="Approve" xml:space="preserve"><value>Подтвердить</value></data>
   <data name="Reject" xml:space="preserve"><value>Отклонить</value></data>
@@ -128,7 +128,7 @@
   <data name="TaskSentForApproval" xml:space="preserve"><value>Отличная работа! Дело отправлено родителю на проверку.</value></data>
   <data name="CareApproved" xml:space="preserve"><value>Дело подтверждено, баллы начислены.</value></data>
   <data name="CareRejected" xml:space="preserve"><value>Дело отклонено.</value></data>
-  <data name="DefaultHouseholdName" xml:space="preserve"><value>Семья {0}</value></data>
+  <data name="DefaultHouseholdName" xml:space="preserve"><value>Наша семья</value></data>
   <data name="KidDashboardTitle" xml:space="preserve"><value>Мои дела</value></data>
   <data name="KidSpace" xml:space="preserve"><value>Мой уголок заботы</value></data>
   <data name="KidWelcome" xml:space="preserve"><value>Привет, {0}!</value></data>
@@ -334,4 +334,100 @@
   <data name="BackToKidDashboard" xml:space="preserve"><value>Назад к моим делам</value></data>
   <data name="SharedCareMemories" xml:space="preserve"><value>Воспоминания о заботе</value></data>
   <data name="NoSharedCareMemories" xml:space="preserve"><value>Здесь скоро появятся добрые дела.</value></data>
+  <data name="Rewards" xml:space="preserve"><value>Награды</value></data>
+  <data name="RewardCatalog" xml:space="preserve"><value>Семейный каталог наград</value></data>
+  <data name="AddReward" xml:space="preserve"><value>Добавить награду</value></data>
+  <data name="NoRewardsYet" xml:space="preserve"><value>Добавьте первую награду, которую смогут получить дети.</value></data>
+  <data name="RewardImageAlt" xml:space="preserve"><value>Награда: {0}</value></data>
+  <data name="VisibleTo" xml:space="preserve"><value>Видят</value></data>
+  <data name="Nobody" xml:space="preserve"><value>никто из детей</value></data>
+  <data name="LogRewardPurchase" xml:space="preserve"><value>Выдать награду сейчас</value></data>
+  <data name="ChooseReward" xml:space="preserve"><value>Выберите награду</value></data>
+  <data name="ChooseChild" xml:space="preserve"><value>Выберите ребёнка</value></data>
+  <data name="PointsCount" xml:space="preserve"><value>{0} баллов</value></data>
+  <data name="PurchaseReward" xml:space="preserve"><value>Выдать награду и списать звёзды</value></data>
+  <data name="DirectPurchaseHint" xml:space="preserve"><value>Используйте, если ребёнок попросил вас лично. Звёзды спишутся сразу.</value></data>
+  <data name="PendingRewardRequests" xml:space="preserve"><value>Запросы наград</value></data>
+  <data name="NoPendingRewardRequests" xml:space="preserve"><value>Нет запросов наград, ожидающих решения.</value></data>
+  <data name="RewardFormIntro" xml:space="preserve"><value>Укажите стоимость, при желании добавьте картинку и выберите, какие дети увидят награду.</value></data>
+  <data name="RewardName" xml:space="preserve"><value>Название награды</value></data>
+  <data name="RewardPointCost" xml:space="preserve"><value>Стоимость в баллах</value></data>
+  <data name="RewardImage" xml:space="preserve"><value>Картинка награды</value></data>
+  <data name="RewardImageHint" xml:space="preserve"><value>Необязательно. JPG, PNG или WebP до 5 МБ.</value></data>
+  <data name="RewardVisibleTo" xml:space="preserve"><value>Дети, которые увидят награду</value></data>
+  <data name="AddChildBeforeReward" xml:space="preserve"><value>Сначала добавьте аккаунт ребёнка.</value></data>
+  <data name="SaveReward" xml:space="preserve"><value>Сохранить награду</value></data>
+  <data name="KidRewards" xml:space="preserve"><value>Мои награды</value></data>
+  <data name="KidNoRewards" xml:space="preserve"><value>Новые награды появятся здесь, когда взрослый их добавит.</value></data>
+  <data name="RewardWaiting" xml:space="preserve"><value>Ждёт решения</value></data>
+  <data name="RequestReward" xml:space="preserve"><value>Попросить награду</value></data>
+  <data name="NeedMorePoints" xml:space="preserve"><value>Нужно больше звёзд</value></data>
+  <data name="MyRewardRequests" xml:space="preserve"><value>Мои недавние запросы</value></data>
+  <data name="RewardStatus_Pending" xml:space="preserve"><value>Ожидает</value></data>
+  <data name="RewardStatus_Approved" xml:space="preserve"><value>Одобрено</value></data>
+  <data name="RewardStatus_Rejected" xml:space="preserve"><value>Не одобрено</value></data>
+  <data name="CheckRewardFields" xml:space="preserve"><value>Проверьте название, стоимость и список детей.</value></data>
+  <data name="RewardNameLength" xml:space="preserve"><value>Название награды должно содержать от 2 до 100 символов.</value></data>
+  <data name="RewardPointRange" xml:space="preserve"><value>Награда должна стоить от 1 до 100 000 баллов.</value></data>
+  <data name="ChooseRewardAudience" xml:space="preserve"><value>Выберите хотя бы одного ребёнка, который увидит награду.</value></data>
+  <data name="InvalidRewardImage" xml:space="preserve"><value>Выберите корректную картинку JPG, PNG или WebP.</value></data>
+  <data name="RewardImageTooLarge" xml:space="preserve"><value>Картинка награды должна быть не больше 5 МБ.</value></data>
+  <data name="RewardAdded" xml:space="preserve"><value>Награда «{0}» добавлена.</value></data>
+  <data name="RewardAlreadyRequested" xml:space="preserve"><value>Эта награда уже ждёт решения взрослого.</value></data>
+  <data name="NotEnoughPointsForReward" xml:space="preserve"><value>Для этой награды пока не хватает баллов.</value></data>
+  <data name="RewardRequested" xml:space="preserve"><value>Запрос на «{0}» отправлен взрослому.</value></data>
+  <data name="NotEnoughPointsForApproval" xml:space="preserve"><value>У ребёнка уже недостаточно баллов для этой награды.</value></data>
+  <data name="RewardApproved" xml:space="preserve"><value>Награда одобрена, баллы списаны.</value></data>
+  <data name="RewardRejected" xml:space="preserve"><value>Запрос отклонён, баллы не списаны.</value></data>
+  <data name="CheckRewardPurchaseFields" xml:space="preserve"><value>Выберите награду и ребёнка.</value></data>
+  <data name="NotEnoughPointsForPurchase" xml:space="preserve"><value>У ребёнка недостаточно баллов для этой награды.</value></data>
+  <data name="RewardPurchasedForChild" xml:space="preserve"><value>Награда «{0}» записана, баллы списаны.</value></data>
+  <data name="PointHistory" xml:space="preserve"><value>История баллов</value></data>
+  <data name="RewardRedeemed" xml:space="preserve"><value>Получена награда</value></data>
+  <data name="RequestedAt" xml:space="preserve"><value>Запрошено</value></data>
+  <data name="PointsDeducted" xml:space="preserve"><value>Списано баллов</value></data>
+  <data name="PointsLeftAfterReward" xml:space="preserve"><value>После награды осталось звёзд: {0}</value></data>
+  <data name="PointsDeductedCount" xml:space="preserve"><value>Списано баллов: {0}</value></data>
+  <data name="RewardCostCount" xml:space="preserve"><value>Награда стоит баллов: {0}</value></data>
+  <data name="ParentHomeIntro" xml:space="preserve"><value>Всё для заботы о питомцах — в одном простом месте.</value></data>
+  <data name="FamilyHome" xml:space="preserve"><value>Ваша семья</value></data>
+  <data name="ItemsNeedAttention" xml:space="preserve"><value>Ждут вашего решения: {0}</value></data>
+  <data name="EverythingUpToDate" xml:space="preserve"><value>Всё в порядке</value></data>
+  <data name="StartHere" xml:space="preserve"><value>Начните здесь</value></data>
+  <data name="WhatWouldYouLikeToDo" xml:space="preserve"><value>Что вы хотите сделать?</value></data>
+  <data name="QuickActionHint" xml:space="preserve"><value>Выберите одно из частых действий.</value></data>
+  <data name="ActionAddMemberHint" xml:space="preserve"><value>Создать аккаунт ребёнку или другому взрослому</value></data>
+  <data name="ActionAddPetHint" xml:space="preserve"><value>Добавить питомца и его фото</value></data>
+  <data name="ActionAddTaskHint" xml:space="preserve"><value>Указать, кто и как заботится о питомце</value></data>
+  <data name="ActionAddRewardHint" xml:space="preserve"><value>Добавить то, что ребёнок сможет получить</value></data>
+  <data name="NeedsYourAttention" xml:space="preserve"><value>Нужно ваше решение</value></data>
+  <data name="AttentionHint" xml:space="preserve"><value>Одобрите или отклоните запросы семьи.</value></data>
+  <data name="AllCaughtUp" xml:space="preserve"><value>Всё готово</value></data>
+  <data name="AllCaughtUpHint" xml:space="preserve"><value>Сейчас ничто не ждёт вашего одобрения.</value></data>
+  <data name="CareWaitingHint" xml:space="preserve"><value>Выполненные дела на проверку</value></data>
+  <data name="RewardWaitingHint" xml:space="preserve"><value>Награды, которые попросили дети</value></data>
+  <data name="FamilyAtAGlance" xml:space="preserve"><value>Ваша семья сегодня</value></data>
+  <data name="PeopleInFamily" xml:space="preserve"><value>членов семьи</value></data>
+  <data name="PetsAtHome" xml:space="preserve"><value>питомцев</value></data>
+  <data name="ActiveCareTasks" xml:space="preserve"><value>дел по уходу</value></data>
+  <data name="AvailableRewards" xml:space="preserve"><value>наград</value></data>
+  <data name="FamilyPointsAtAGlance" xml:space="preserve"><value>Звёзды детей</value></data>
+  <data name="FamilyPointsHint" xml:space="preserve"><value>Смотрите баланс каждого ребёнка и открывайте историю его баллов.</value></data>
+  <data name="DailyManagement" xml:space="preserve"><value>Повседневные дела и награды</value></data>
+  <data name="DailyManagementHint" xml:space="preserve"><value>Здесь можно распределить дела и выдать награду.</value></data>
+  <data name="CareTaskSettingsHint" xml:space="preserve"><value>Смотрите, кто выполняет дело и сколько звёзд оно приносит.</value></data>
+  <data name="RewardCatalogHint" xml:space="preserve"><value>Смотрите, что могут получить дети и кто видит каждую награду.</value></data>
+  <data name="FamilySetup" xml:space="preserve"><value>Семья и питомцы</value></data>
+  <data name="FamilySetupHint" xml:space="preserve"><value>Меняйте аккаунты и данные питомцев, когда это понадобится.</value></data>
+  <data name="YourCareTeamHint" xml:space="preserve"><value>Открывайте историю человека или меняйте его аккаунт.</value></data>
+  <data name="FamilyPetsHint" xml:space="preserve"><value>Добавляйте питомцев и обновляйте информацию о них.</value></data>
+  <data name="StarsAfterReward" xml:space="preserve"><value>Звёзды после награды</value></data>
+  <data name="FamilyName" xml:space="preserve"><value>Название семьи</value></data>
+  <data name="FamilyNameHint" xml:space="preserve"><value>Выберите короткое название, которое узнают все члены семьи.</value></data>
+  <data name="HouseholdNameLength" xml:space="preserve"><value>Название семьи должно содержать от 2 до 100 символов.</value></data>
+  <data name="TwoFactorLoginTitle" xml:space="preserve"><value>Введите код безопасности</value></data>
+  <data name="TwoFactorLoginIntro" xml:space="preserve"><value>Откройте приложение-аутентификатор и введите шестизначный код для HamsterHub.</value></data>
+  <data name="RememberThisDevice" xml:space="preserve"><value>Доверять этому устройству</value></data>
+  <data name="VerifyAndLogin" xml:space="preserve"><value>Подтвердить и войти</value></data>
+  <data name="BackToLogin" xml:space="preserve"><value>Вернуться ко входу</value></data>
 </root>

@@ -13,6 +13,8 @@ public class HouseholdMember
     public Household Household { get; set; } = null!;
     public ApplicationUser User { get; set; } = null!;
     public ICollection<CareTask> AssignedCareTasks { get; set; } = [];
+    public ICollection<RewardVisibility> VisibleRewards { get; set; } = [];
+    public ICollection<RewardRedemption> RewardRedemptions { get; set; } = [];
 }
 
 public enum HouseholdMemberRole { Parent = 1, Child = 2 }

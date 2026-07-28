@@ -15,6 +15,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<CareTask> CareTasks => Set<CareTask>();
     public DbSet<CareLog> CareLogs => Set<CareLog>();
     public DbSet<CareLogPhoto> CareLogPhotos => Set<CareLogPhoto>();
+    public DbSet<Reward> Rewards => Set<Reward>();
+    public DbSet<RewardVisibility> RewardVisibilities => Set<RewardVisibility>();
+    public DbSet<RewardRedemption> RewardRedemptions => Set<RewardRedemption>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -117,6 +120,69 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
                 .WithMany(log => log.Photos)
                 .HasForeignKey(photo => photo.CareLogId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<Reward>(entity =>
+        {
+            entity.Property(reward => reward.Name).HasMaxLength(100).IsRequired();
+            entity.Property(reward => reward.ImagePath).HasMaxLength(500);
+            entity.HasIndex(reward => new { reward.HouseholdId, reward.IsActive });
+            entity.ToTable(table =>
+                table.HasCheckConstraint("CK_Rewards_PointCost_Positive", "[PointCost] > 0"));
+            entity.HasOne(reward => reward.Household)
+                .WithMany(household => household.Rewards)
+                .HasForeignKey(reward => reward.HouseholdId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<RewardVisibility>(entity =>
+        {
+            entity.HasKey(visibility =>
+                new { visibility.RewardId, visibility.HouseholdMemberId });
+            entity.HasOne(visibility => visibility.Reward)
+                .WithMany(reward => reward.VisibleToMembers)
+                .HasForeignKey(visibility => visibility.RewardId)
+                .OnDelete(DeleteBehavior.Cascade);
+            entity.HasOne(visibility => visibility.HouseholdMember)
+                .WithMany(member => member.VisibleRewards)
+                .HasForeignKey(visibility => visibility.HouseholdMemberId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        builder.Entity<RewardRedemption>(entity =>
+        {
+            entity.Property(redemption => redemption.RewardName)
+                .HasMaxLength(100)
+                .IsRequired();
+            entity.Property(redemption => redemption.RewardImagePath).HasMaxLength(500);
+            entity.HasIndex(redemption =>
+                new { redemption.HouseholdId, redemption.Status, redemption.RequestedAt });
+            entity.HasIndex(redemption =>
+                new { redemption.HouseholdMemberId, redemption.Status });
+            entity.ToTable(table =>
+                table.HasCheckConstraint(
+                    "CK_RewardRedemptions_PointsCost_Positive",
+                    "[PointsCost] > 0"));
+            entity.HasOne(redemption => redemption.Household)
+                .WithMany(household => household.RewardRedemptions)
+                .HasForeignKey(redemption => redemption.HouseholdId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(redemption => redemption.Reward)
+                .WithMany(reward => reward.Redemptions)
+                .HasForeignKey(redemption => redemption.RewardId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(redemption => redemption.HouseholdMember)
+                .WithMany(member => member.RewardRedemptions)
+                .HasForeignKey(redemption => redemption.HouseholdMemberId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(redemption => redemption.RequestedByUser)
+                .WithMany(user => user.RequestedRewardRedemptions)
+                .HasForeignKey(redemption => redemption.RequestedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne(redemption => redemption.ReviewedByUser)
+                .WithMany(user => user.ReviewedRewardRedemptions)
+                .HasForeignKey(redemption => redemption.ReviewedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         builder.Entity<IdentityRole>().HasData(

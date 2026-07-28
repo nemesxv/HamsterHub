@@ -23,6 +23,20 @@ public class LoginInputModel
     public bool RememberMe { get; set; }
 }
 
+public class TwoFactorLoginInputModel
+{
+    [Required(ErrorMessage = "Required")]
+    [StringLength(7, MinimumLength = 6, ErrorMessage = "AuthenticatorCodeLength")]
+    [DataType(DataType.Text)]
+    [Display(Name = "VerificationCode")]
+    public string Code { get; set; } = string.Empty;
+
+    public bool RememberMe { get; set; }
+
+    [Display(Name = "RememberThisDevice")]
+    public bool RememberMachine { get; set; }
+}
+
 public class RegisterInputModel
 {
     [Required(ErrorMessage = "Required")]
