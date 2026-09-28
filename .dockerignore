@@ -1,0 +1,10 @@
+.git
+.vs
+**/bin
+**/obj
+artifacts
+HamsterHub/Downloads
+HamsterHub.Client
+HamsterHub.Mobile
+HamsterHub.Tests
+HamsterHub.Mobile.slnx

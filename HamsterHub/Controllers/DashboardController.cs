@@ -15,12 +15,11 @@ public class DashboardController(
     ApplicationDbContext dbContext,
     UserManager<ApplicationUser> userManager,
     IStringLocalizer<SharedResource> localizer,
-    IWebHostEnvironment environment,
-    CareLogService careLogService,
     PointBalanceService pointBalanceService,
-    RewardService rewardService) : Controller
+    RewardService rewardService,
+    UploadedImageService images,
+    CareWorkflowService workflow) : Controller
 {
-    private const long MaximumPetPhotoBytes = 5 * 1024 * 1024;
     private const int MaximumCompletionPhotos = 8;
     private static readonly IReadOnlyDictionary<string, string> DefaultTaskImages =
         new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
@@ -31,11 +30,6 @@ public class DashboardController(
             ["Playing"] = "/images/tasks/playing.webp",
             ["Health"] = "/images/tasks/health.webp"
         };
-    private static readonly HashSet<string> AllowedPhotoExtensions =
-        new(StringComparer.OrdinalIgnoreCase) { ".jpg", ".jpeg", ".png", ".webp" };
-    private static readonly HashSet<string> AllowedPhotoContentTypes =
-        new(StringComparer.OrdinalIgnoreCase) { "image/jpeg", "image/png", "image/webp" };
-
     public IActionResult Index()
     {
         if (User.IsInRole("Parent"))
@@ -678,27 +672,13 @@ public class DashboardController(
         string? photoPath = null;
         if (input.Photo is not null)
         {
-            var extension = Path.GetExtension(input.Photo.FileName);
-            if (input.Photo.Length == 0 ||
-                !AllowedPhotoExtensions.Contains(extension) ||
-                !AllowedPhotoContentTypes.Contains(input.Photo.ContentType))
+            var result = await SavePetPhotoAsync(input.Photo);
+            if (!result.Success)
             {
-                TempData["StatusMessage"] = localizer["InvalidPetImage"].Value;
+                TempData["StatusMessage"] = localizer[result.ErrorKey!].Value;
                 return RedirectToAction(nameof(Parent));
             }
-
-            if (input.Photo.Length > MaximumPetPhotoBytes)
-            {
-                TempData["StatusMessage"] = localizer["PetImageTooLarge"].Value;
-                return RedirectToAction(nameof(Parent));
-            }
-
-            var uploadDirectory = Path.Combine(environment.WebRootPath, "uploads", "pets");
-            Directory.CreateDirectory(uploadDirectory);
-            var fileName = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
-            await using var stream = System.IO.File.Create(Path.Combine(uploadDirectory, fileName));
-            await input.Photo.CopyToAsync(stream);
-            photoPath = $"/uploads/pets/{fileName}";
+            photoPath = result.Path;
         }
 
         dbContext.Pets.Add(new Pet
@@ -717,9 +697,7 @@ public class DashboardController(
         {
             if (photoPath is not null)
             {
-                System.IO.File.Delete(Path.Combine(
-                    environment.WebRootPath,
-                    photoPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar)));
+                DeletePetPhoto(photoPath);
             }
 
             throw;
@@ -837,198 +815,38 @@ public class DashboardController(
     }
 
     [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Child")]
+    [RequestSizeLimit(45 * 1024 * 1024)]
     public async Task<IActionResult> CompleteTask(int careTaskId, List<IFormFile>? photos)
     {
-        var user = await userManager.GetUserAsync(User);
         var membership = await GetCurrentMembershipAsync(HouseholdMemberRole.Child);
-        if (user is null || membership is null)
-        {
-            return Forbid();
-        }
-
-        var careTask = await dbContext.CareTasks
-            .Include(item => item.Pet)
-            .Include(item => item.AssignedMember)
-            .FirstOrDefaultAsync(item =>
-            item.Id == careTaskId &&
-            item.HouseholdId == membership.HouseholdId &&
-            item.AssignedMemberId == membership.Id &&
-            item.IsActive &&
-            item.Pet.IsActive &&
-            item.AssignedMember.IsActive);
-
-        if (careTask is null ||
-            !careLogService.CanCompleteTask(careTask, membership))
-        {
-            return Forbid();
-        }
-
-        var now = careLogService.GetUtcNow();
-        var earliestAllowed = careLogService.GetEarliestAllowed(
-            careTask.Frequency, now);
-
-        if (earliestAllowed is not null &&
-            await dbContext.CareLogs.AnyAsync(log =>
-                log.PetId == careTask.PetId &&
-                log.CareTaskId == careTaskId &&
-                log.CompletedByUserId == user.Id &&
-                log.Status != CareLogStatus.Rejected &&
-                log.CompletedAt >= earliestAllowed))
-        {
-            TempData["StatusMessage"] = localizer["TaskAlreadyRecorded"].Value;
-            return RedirectToAction(nameof(Child));
-        }
-
-        photos ??= [];
-        if (photos.Count > MaximumCompletionPhotos)
-        {
-            TempData["StatusMessage"] = localizer["TooManyTaskPhotos", MaximumCompletionPhotos].Value;
-            return RedirectToAction(nameof(Child));
-        }
-
-        var savedPhotoPaths = new List<string>();
-        foreach (var photo in photos)
-        {
-            var photoResult = await SaveUploadedImageAsync(
-                photo, "care-logs", "InvalidTaskPhoto", "TaskPhotoTooLarge");
-            if (!photoResult.Success)
-            {
-                foreach (var savedPath in savedPhotoPaths)
-                {
-                    DeleteUploadedImage(savedPath, "care-logs");
-                }
-
-                TempData["StatusMessage"] = localizer[photoResult.ErrorKey!].Value;
-                return RedirectToAction(nameof(Child));
-            }
-
-            savedPhotoPaths.Add(photoResult.Path!);
-        }
-
-        var careLog = careLogService.CreateChildCompletion(
-            careTask, membership, now);
-        careLog.Photos = savedPhotoPaths
-            .Select(path => new CareLogPhoto { ImagePath = path })
-            .ToList();
-        dbContext.CareLogs.Add(careLog);
-        try
-        {
-            await dbContext.SaveChangesAsync();
-        }
-        catch
-        {
-            foreach (var savedPath in savedPhotoPaths)
-            {
-                DeleteUploadedImage(savedPath, "care-logs");
-            }
-
-            throw;
-        }
-
-        TempData["StatusMessage"] = localizer["TaskSentForApproval"].Value;
+        if (membership is null) return Forbid();
+        var result = await workflow.CompleteAsync(membership, careTaskId, photos);
+        if (result.Error == "Forbidden") return Forbid();
+        TempData["StatusMessage"] = result.Error == "TooManyTaskPhotos"
+            ? localizer[result.Error, MaximumCompletionPhotos].Value
+            : localizer[result.Error ?? "TaskSentForApproval"].Value;
         return RedirectToAction(nameof(Child));
     }
 
     [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Parent")]
     public async Task<IActionResult> CompleteTaskAsParent(int careTaskId)
     {
-        var parent = await userManager.GetUserAsync(User);
         var membership = await GetCurrentMembershipAsync(HouseholdMemberRole.Parent);
-        if (parent is null || membership is null)
-        {
-            return Forbid();
-        }
-
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable);
-        var careTask = await dbContext.CareTasks
-            .Include(item => item.Pet)
-            .Include(item => item.AssignedMember)
-            .FirstOrDefaultAsync(item =>
-                item.Id == careTaskId &&
-                item.HouseholdId == membership.HouseholdId &&
-                item.AssignedMemberId == membership.Id &&
-                item.IsActive &&
-                item.Pet.IsActive &&
-                item.AssignedMember.IsActive);
-        if (careTask is null ||
-            !careLogService.CanCompleteTask(careTask, membership))
-        {
-            return Forbid();
-        }
-
-        var now = careLogService.GetUtcNow();
-        var earliestAllowed = careLogService.GetEarliestAllowed(
-            careTask.Frequency, now);
-        if (earliestAllowed is not null &&
-            await dbContext.CareLogs.AnyAsync(log =>
-                log.PetId == careTask.PetId &&
-                log.CareTaskId == careTask.Id &&
-                log.CompletedByUserId == parent.Id &&
-                log.Status != CareLogStatus.Rejected &&
-                log.CompletedAt >= earliestAllowed))
-        {
-            TempData["StatusMessage"] = localizer["TaskAlreadyRecorded"].Value;
-            return RedirectToAction(nameof(Parent));
-        }
-
-        var previousTotal = await pointBalanceService.GetBalanceAsync(
-            membership.HouseholdId, parent.Id);
-        dbContext.CareLogs.Add(careLogService.CreateParentCompletion(
-            careTask, membership, previousTotal, now));
-        await dbContext.SaveChangesAsync();
-        await transaction.CommitAsync();
-
-        TempData["StatusMessage"] = localizer["ParentTaskCompleted"].Value;
+        if (membership is null) return Forbid();
+        var result = await workflow.CompleteAsync(membership, careTaskId);
+        if (result.Error == "Forbidden") return Forbid();
+        TempData["StatusMessage"] = localizer[result.Error ?? "ParentTaskCompleted"].Value;
         return RedirectToAction(nameof(Parent));
     }
 
     [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Parent")]
     public async Task<IActionResult> ReviewCareLog(int id, CareLogStatus decision)
     {
-        if (decision is not (CareLogStatus.Approved or CareLogStatus.Rejected))
-        {
-            return BadRequest();
-        }
-
-        var parent = await userManager.GetUserAsync(User);
+        if (decision is not (CareLogStatus.Approved or CareLogStatus.Rejected)) return BadRequest();
         var membership = await GetCurrentMembershipAsync(HouseholdMemberRole.Parent);
-        if (parent is null || membership is null)
-        {
-            return Forbid();
-        }
-
-        await using var transaction = await dbContext.Database.BeginTransactionAsync(
-            IsolationLevel.Serializable);
-        var careLog = await dbContext.CareLogs
-            .Include(log => log.Pet)
-            .Include(log => log.CareTask)
-            .FirstOrDefaultAsync(log =>
-                log.Id == id &&
-                log.Pet.HouseholdId == membership.HouseholdId &&
-                log.CareTask.HouseholdId == membership.HouseholdId &&
-                log.CareTask.PetId == log.PetId &&
-                log.Status == CareLogStatus.Pending);
-
-        if (careLog is null ||
-            !careLogService.CanReviewCareLog(careLog, membership))
-        {
-            return NotFound();
-        }
-
-        var previousTotal = decision == CareLogStatus.Approved
-            ? await pointBalanceService.GetBalanceAsync(
-                membership.HouseholdId, careLog.CompletedByUserId)
-            : 0;
-        careLogService.ReviewCareLog(
-            careLog,
-            membership,
-            decision,
-            previousTotal,
-            careLogService.GetUtcNow());
-        await dbContext.SaveChangesAsync();
-        await transaction.CommitAsync();
-
+        if (membership is null) return Forbid();
+        var result = await workflow.ReviewAsync(membership, id, decision);
+        if (!result.Success) return NotFound();
         TempData["StatusMessage"] = localizer[
             decision == CareLogStatus.Approved ? "CareApproved" : "CareRejected"].Value;
         return RedirectToAction(nameof(Parent));
@@ -1593,7 +1411,7 @@ public class DashboardController(
         return await dbContext.HouseholdMembers.FirstOrDefaultAsync(member =>
             member.UserId == userId &&
             member.MemberRole == role &&
-            member.IsActive);
+            member.User.IsActive && member.IsActive);
     }
 
     private async Task<HouseholdMember> GetOrCreateParentMembershipAsync(ApplicationUser user)
@@ -1695,80 +1513,12 @@ public class DashboardController(
         => await SaveUploadedImageAsync(
             photo, "pets", "InvalidPetImage", "PetImageTooLarge");
 
-    private async Task<(bool Success, string? Path, string? ErrorKey)> SaveUploadedImageAsync(
-        IFormFile photo,
-        string folder,
-        string invalidImageKey,
-        string tooLargeKey)
-    {
-        var extension = Path.GetExtension(photo.FileName);
-        if (photo.Length == 0 ||
-            !AllowedPhotoExtensions.Contains(extension) ||
-            !AllowedPhotoContentTypes.Contains(photo.ContentType) ||
-            !await HasValidImageSignatureAsync(photo, extension))
-        {
-            return (false, null, invalidImageKey);
-        }
+    private Task<(bool Success, string? Path, string? ErrorKey)> SaveUploadedImageAsync(
+        IFormFile photo, string folder, string invalidImageKey, string tooLargeKey)
+        => images.SaveAsync(photo, folder, invalidImageKey, tooLargeKey);
 
-        if (photo.Length > MaximumPetPhotoBytes)
-        {
-            return (false, null, tooLargeKey);
-        }
-
-        var uploadDirectory = Path.Combine(environment.WebRootPath, "uploads", folder);
-        Directory.CreateDirectory(uploadDirectory);
-        var fileName = $"{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
-        var path = Path.Combine(uploadDirectory, fileName);
-        await using var stream = System.IO.File.Create(path);
-        await photo.CopyToAsync(stream);
-        return (true, $"/uploads/{folder}/{fileName}", null);
-    }
-
-    private static async Task<bool> HasValidImageSignatureAsync(IFormFile photo, string extension)
-    {
-        var header = new byte[12];
-        await using var stream = photo.OpenReadStream();
-        var bytesRead = await stream.ReadAsync(header);
-        if (extension.Equals(".jpg", StringComparison.OrdinalIgnoreCase) ||
-            extension.Equals(".jpeg", StringComparison.OrdinalIgnoreCase))
-        {
-            return bytesRead >= 3 &&
-                   header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF;
-        }
-
-        if (extension.Equals(".png", StringComparison.OrdinalIgnoreCase))
-        {
-            byte[] pngSignature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
-            return bytesRead >= pngSignature.Length &&
-                   header.AsSpan(0, pngSignature.Length).SequenceEqual(pngSignature);
-        }
-
-        return bytesRead >= 12 &&
-               header.AsSpan(0, 4).SequenceEqual("RIFF"u8) &&
-               header.AsSpan(8, 4).SequenceEqual("WEBP"u8);
-    }
-
-    private void DeletePetPhoto(string photoPath)
-        => DeleteUploadedImage(photoPath, "pets");
-
-    private void DeleteUploadedImage(string? photoPath, string folder)
-    {
-        if (string.IsNullOrWhiteSpace(photoPath))
-        {
-            return;
-        }
-
-        var relativePath = photoPath.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
-        var fullPath = Path.GetFullPath(Path.Combine(environment.WebRootPath, relativePath));
-        var uploadRoot = Path.GetFullPath(
-            Path.Combine(environment.WebRootPath, "uploads", folder)) +
-            Path.DirectorySeparatorChar;
-        if (fullPath.StartsWith(uploadRoot, StringComparison.OrdinalIgnoreCase) &&
-            System.IO.File.Exists(fullPath))
-        {
-            System.IO.File.Delete(fullPath);
-        }
-    }
+    private void DeletePetPhoto(string photoPath) => images.Delete(photoPath, "pets");
+    private void DeleteUploadedImage(string? photoPath, string folder) => images.Delete(photoPath, folder);
 
     private int GetRememberedSelection(string key, IEnumerable<int> allowedIds)
     {

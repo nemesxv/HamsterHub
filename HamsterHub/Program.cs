@@ -1,3 +1,6 @@
+using HamsterHub.Security;
+using Microsoft.AspNetCore.RateLimiting;
+using System.Threading.RateLimiting;
 using HamsterHub;
 using HamsterHub.Data;
 using HamsterHub.Models;
@@ -17,6 +20,19 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<CareLogService>();
+builder.Services.AddScoped<UploadedImageService>();
+builder.Services.AddScoped<CareWorkflowService>();
+builder.Services.AddMobileAuthentication();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.AddPolicy("MobileAuth", context => RateLimitPartition.GetFixedWindowLimiter(
+        context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+        _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = 30, Window = TimeSpan.FromMinutes(1), QueueLimit = 0
+        }));
+});
 builder.Services.AddScoped<PointBalanceService>();
 builder.Services.AddScoped<RewardService>();
 
@@ -75,6 +91,7 @@ else
 }
 app.UseRouting();
 
+app.UseRateLimiter();
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
@@ -86,7 +103,11 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+app.MapControllers();
+
 app.MapRazorPages()
    .WithStaticAssets();
 
 app.Run();
+
+public partial class Program { }

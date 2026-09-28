@@ -1,6 +1,7 @@
 <Solution>
-  <Project Path="HamsterHub.Tests/HamsterHub.Tests.csproj" />
   <Project Path="HamsterHub/HamsterHub.csproj" />
   <Project Path="HamsterHub.Contracts/HamsterHub.Contracts.csproj" />
+  <Project Path="HamsterHub.Mobile/HamsterHub.Mobile.csproj" />
+  <Project Path="HamsterHub.Tests/HamsterHub.Tests.csproj" />
   <Project Path="HamsterHub.Client/HamsterHub.Client.csproj" />
 </Solution>

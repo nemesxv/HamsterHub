@@ -430,4 +430,43 @@
   <data name="RememberThisDevice" xml:space="preserve"><value>Доверять этому устройству</value></data>
   <data name="VerifyAndLogin" xml:space="preserve"><value>Подтвердить и войти</value></data>
   <data name="BackToLogin" xml:space="preserve"><value>Вернуться ко входу</value></data>
+  <data name="MobileStatus" xml:space="preserve"><value>Статус</value></data>
+  <data name="MobileLoginIntro" xml:space="preserve"><value>Войдите в семейный HamsterHub.</value></data>
+  <data name="MobileServer" xml:space="preserve"><value>Адрес сервера</value></data>
+  <data name="MobileTwoFactor" xml:space="preserve"><value>Код аутентификатора (если включён)</value></data>
+  <data name="MobileAccountHelp" xml:space="preserve"><value>Родители создают аккаунты и управляют семьёй на сайте.</value></data>
+  <data name="MobileNoHousehold" xml:space="preserve"><value>Откройте сайт, чтобы создать семью, или попросите родителя добавить вас.</value></data>
+  <data name="MobileHousehold" xml:space="preserve"><value>Семья</value></data>
+  <data name="MobileRefresh" xml:space="preserve"><value>Обновить</value></data>
+  <data name="MobileNoTasks" xml:space="preserve"><value>Пока нет заданий. Родитель может добавить их на сайте.</value></data>
+  <data name="MobileApprovals" xml:space="preserve"><value>Ждут проверки</value></data>
+  <data name="MobileNoApprovals" xml:space="preserve"><value>Всё проверено!</value></data>
+  <data name="MobileHistory" xml:space="preserve"><value>Моя забота</value></data>
+  <data name="MobileNoHistory" xml:space="preserve"><value>Здесь появятся выполненные задания.</value></data>
+  <data name="MobileStatusPending" xml:space="preserve"><value>Ждёт проверки</value></data>
+  <data name="MobileStatusApproved" xml:space="preserve"><value>Одобрено</value></data>
+  <data name="MobileStatusRejected" xml:space="preserve"><value>Отклонено</value></data>
+  <data name="MobileCarePhoto" xml:space="preserve"><value>Фото выполненного задания</value></data>
+  <data name="MobileApprove" xml:space="preserve"><value>Одобрить</value></data>
+  <data name="MobileReject" xml:space="preserve"><value>Отклонить</value></data>
+  <data name="MobileCompletionHelp" xml:space="preserve"><value>Уже позаботились о питомце? Можно добавить до 8 фото (JPG, PNG или WebP, до 5 МБ каждое) или отправить без фото.</value></data>
+  <data name="MobileRemovePhoto" xml:space="preserve"><value>Убрать фото</value></data>
+  <data name="MobilePickPhoto" xml:space="preserve"><value>Выбрать фото</value></data>
+  <data name="MobileTakePhoto" xml:space="preserve"><value>Сфотографировать</value></data>
+  <data name="MobileSendCompletion" xml:space="preserve"><value>Готово! Отправить</value></data>
+  <data name="MobileBack" xml:space="preserve"><value>Назад</value></data>
+  <data name="MobilePhotoLimit" xml:space="preserve"><value>Можно прикрепить не больше 8 фото.</value></data>
+  <data name="MobileCameraUnavailable" xml:space="preserve"><value>Камера недоступна. Можно выбрать фото из галереи.</value></data>
+  <data name="MobileCameraPermission" xml:space="preserve"><value>Разрешите доступ к камере или выберите фото из галереи.</value></data>
+  <data name="MobileConnectionError" xml:space="preserve"><value>Не удалось связаться с сервером. Проверьте подключение и обновите список перед повторной отправкой.</value></data>
+  <data name="MobileAccessDenied" xml:space="preserve"><value>Доступ изменился. Войдите снова или обратитесь к родителю.</value></data>
+  <data name="MobileTryLater" xml:space="preserve"><value>Слишком много попыток. Подождите минуту.</value></data>
+  <data name="MobileServerInvalid" xml:space="preserve"><value>Введите адрес сервера HTTPS без пути. В отладочной версии также доступны localhost и 10.0.2.2 по HTTP.</value></data>
+  <data name="SessionExpired" xml:space="preserve"><value>Сеанс завершён. Войдите снова.</value></data>
+  <data name="TwoFactorRequired" xml:space="preserve"><value>Введите код из приложения-аутентификатора.</value></data>
+  <data name="NotFound" xml:space="preserve"><value>Запись уже изменена. Обновите список.</value></data>
+  <data name="MobileAlreadyRecorded" xml:space="preserve"><value>Уже записано</value></data>
+  <data name="AndroidAppTitle" xml:space="preserve"><value>HamsterHub для Android</value></data>
+  <data name="AndroidAppHelp" xml:space="preserve"><value>Предварительная версия для телефонов и планшетов (Android 7+). Скачайте APK, откройте его и подтвердите установку. Для входа укажите адрес этого сайта.</value></data>
+  <data name="DownloadAndroidApp" xml:space="preserve"><value>Скачать приложение Android</value></data>
 </root>

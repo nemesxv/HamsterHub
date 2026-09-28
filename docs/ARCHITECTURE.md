@@ -9,6 +9,20 @@
 - SQL Server LocalDB for local development
 - Bootstrap utilities plus project-owned CSS and JavaScript
 - xUnit v3 tests with SQLite in-memory relational test databases
+- .NET MAUI Android app, shared transport contracts, and a platform-independent HTTP client
+
+## Website and mobile boundary
+
+The MVC website and `/api/v1` mobile controllers share one database and Identity
+user store. The website uses cookies and antiforgery; the app uses explicitly
+selected Identity bearer authentication and device SecureStorage. Mobile requests
+validate active users/security stamps and current role/membership ownership.
+No EF entities or database access are shipped to the device.
+
+`CareWorkflowService` is the common completion/review transaction boundary for
+the website and app. `UploadedImageService` centralizes image validation and file
+handling. Existing care, points, and reward policy services stay server-side.
+See [MOBILE.md](MOBILE.md) for projects, endpoints, setup, and limitations.
 
 ## Domain model
 
@@ -121,8 +135,10 @@ It validates task assignment and household ownership, snapshots the task's
 point value into new care logs, applies approval metadata and historical running
 totals, and centralizes daily and weekly recurrence cutoffs. It uses the
 framework `TimeProvider` so time-sensitive behavior can be tested with a fixed
-clock. The dashboard controller remains responsible for HTTP behavior,
-household-scoped database queries, transactions, and file handling.
+clock. The dashboard controller remains responsible for MVC behavior and
+household-scoped dashboard queries. Care submission/review transactions live in
+`CareWorkflowService` and image handling lives in `UploadedImageService`, shared
+with the mobile API.
 
 `PointBalanceService` derives live balances from immutable award and redemption
 history. `RewardService` enforces visibility, role, household, affordability,

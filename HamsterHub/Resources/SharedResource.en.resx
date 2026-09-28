@@ -430,4 +430,43 @@
   <data name="RememberThisDevice" xml:space="preserve"><value>Trust this device</value></data>
   <data name="VerifyAndLogin" xml:space="preserve"><value>Verify and log in</value></data>
   <data name="BackToLogin" xml:space="preserve"><value>Back to login</value></data>
+  <data name="MobileStatus" xml:space="preserve"><value>Status</value></data>
+  <data name="MobileLoginIntro" xml:space="preserve"><value>Sign in to your family’s HamsterHub.</value></data>
+  <data name="MobileServer" xml:space="preserve"><value>Server address</value></data>
+  <data name="MobileTwoFactor" xml:space="preserve"><value>Authenticator code (if enabled)</value></data>
+  <data name="MobileAccountHelp" xml:space="preserve"><value>Parents create accounts and manage the family on the website.</value></data>
+  <data name="MobileNoHousehold" xml:space="preserve"><value>Open the website to set up your household, or ask a parent to add you.</value></data>
+  <data name="MobileHousehold" xml:space="preserve"><value>Household</value></data>
+  <data name="MobileRefresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="MobileNoTasks" xml:space="preserve"><value>No tasks yet. A parent can add them on the website.</value></data>
+  <data name="MobileApprovals" xml:space="preserve"><value>Waiting for approval</value></data>
+  <data name="MobileNoApprovals" xml:space="preserve"><value>All caught up!</value></data>
+  <data name="MobileHistory" xml:space="preserve"><value>My care history</value></data>
+  <data name="MobileNoHistory" xml:space="preserve"><value>Completed tasks will appear here.</value></data>
+  <data name="MobileStatusPending" xml:space="preserve"><value>Waiting for approval</value></data>
+  <data name="MobileStatusApproved" xml:space="preserve"><value>Approved</value></data>
+  <data name="MobileStatusRejected" xml:space="preserve"><value>Rejected</value></data>
+  <data name="MobileCarePhoto" xml:space="preserve"><value>Task completion photo</value></data>
+  <data name="MobileApprove" xml:space="preserve"><value>Approve</value></data>
+  <data name="MobileReject" xml:space="preserve"><value>Reject</value></data>
+  <data name="MobileCompletionHelp" xml:space="preserve"><value>Finished caring for your pet? Add up to 8 photos (JPG, PNG or WebP, up to 5 MB each), or send without a photo.</value></data>
+  <data name="MobileRemovePhoto" xml:space="preserve"><value>Remove photo</value></data>
+  <data name="MobilePickPhoto" xml:space="preserve"><value>Choose photo</value></data>
+  <data name="MobileTakePhoto" xml:space="preserve"><value>Take photo</value></data>
+  <data name="MobileSendCompletion" xml:space="preserve"><value>All done! Send</value></data>
+  <data name="MobileBack" xml:space="preserve"><value>Back</value></data>
+  <data name="MobilePhotoLimit" xml:space="preserve"><value>You can attach up to 8 photos.</value></data>
+  <data name="MobileCameraUnavailable" xml:space="preserve"><value>Camera unavailable. You can choose a photo from your gallery.</value></data>
+  <data name="MobileCameraPermission" xml:space="preserve"><value>Allow camera access, or choose a photo from your gallery.</value></data>
+  <data name="MobileConnectionError" xml:space="preserve"><value>Could not reach the server. Check your connection and refresh before sending again.</value></data>
+  <data name="MobileAccessDenied" xml:space="preserve"><value>Your access has changed. Sign in again or ask a parent.</value></data>
+  <data name="MobileTryLater" xml:space="preserve"><value>Too many attempts. Please wait a minute.</value></data>
+  <data name="MobileServerInvalid" xml:space="preserve"><value>Enter an HTTPS server address without a path. Debug builds also allow HTTP for localhost and 10.0.2.2.</value></data>
+  <data name="SessionExpired" xml:space="preserve"><value>Your session has expired. Please sign in again.</value></data>
+  <data name="TwoFactorRequired" xml:space="preserve"><value>Enter the code from your authenticator app.</value></data>
+  <data name="NotFound" xml:space="preserve"><value>This record has changed. Refresh the list.</value></data>
+  <data name="MobileAlreadyRecorded" xml:space="preserve"><value>Already recorded</value></data>
+  <data name="AndroidAppTitle" xml:space="preserve"><value>HamsterHub for Android</value></data>
+  <data name="AndroidAppHelp" xml:space="preserve"><value>Preview app for phones and tablets (Android 7+). Download the APK, open it, and confirm installation. Use the same website address to sign in.</value></data>
+  <data name="DownloadAndroidApp" xml:space="preserve"><value>Download Android app</value></data>
 </root>

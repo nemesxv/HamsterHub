@@ -93,6 +93,15 @@ The core product loop is:
 
 ## Durable product decisions
 
+- The Android phone/tablet app uses .NET MAUI. It shares the existing ASP.NET
+  backend, Identity accounts, and database with the website through a versioned
+  API. Core business rules stay in common server services.
+- The first mobile increment covers login, assigned care tasks, optional photos,
+  parent care approvals, care history, and current points. Registration, family
+  management, rewards, and account management remain website features initially.
+- Mobile UI keeps Russian/English and light/dark parity. Production connections
+  require HTTPS; no offline write queue is implemented initially.
+
 - The design should feel warm, calm, playful, and trustworthy rather than
   competitive or overstimulating.
 - Child-facing screens may be substantially more expressive than parent tools,
@@ -126,3 +135,5 @@ The core product loop is:
 This file is the canonical product summary. `AGENTS.md` tells Codex to read it
 automatically for future work in this repository. Record new durable decisions
 here rather than relying only on conversational memory.
+
+- The website provides a direct Android preview APK download for phones and tablets when the deployment includes the signed app artifact.

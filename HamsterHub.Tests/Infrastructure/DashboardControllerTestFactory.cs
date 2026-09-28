@@ -61,10 +61,11 @@ internal sealed class DashboardControllerTestFactory : IDisposable
             dbContext,
             userManager,
             new PassThroughLocalizer(),
-            new TestWebHostEnvironment(),
-            new CareLogService(new FixedTimeProvider(utcNow)),
             new PointBalanceService(dbContext),
-            new RewardService(new FixedTimeProvider(utcNow)))
+            new RewardService(new FixedTimeProvider(utcNow)),
+            new UploadedImageService(new TestWebHostEnvironment()),
+            new CareWorkflowService(dbContext, new CareLogService(new FixedTimeProvider(utcNow)),
+                new PointBalanceService(dbContext), new UploadedImageService(new TestWebHostEnvironment())))
         {
             ControllerContext = new ControllerContext
             {

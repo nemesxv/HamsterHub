@@ -364,3 +364,6 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Android download is supplied as a deployment artifact
+/HamsterHub/Downloads/*.apk

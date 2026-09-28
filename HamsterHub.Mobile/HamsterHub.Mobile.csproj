@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>HamsterHub.Mobile</RootNamespace>
+    <UseMaui>true</UseMaui>
+    <SingleProject>true</SingleProject>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <ApplicationTitle>HamsterHub</ApplicationTitle>
+    <ApplicationId>com.nemesxv.hamsterhub</ApplicationId>
+    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
+    <ApplicationVersion>1</ApplicationVersion>
+    <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+    <SupportedOSPlatformVersion>24.0</SupportedOSPlatformVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <AndroidManifestOverlay Include="Platforms/Android/AndroidManifest.Debug.xml" Condition="'$(Configuration)' == 'Debug'" />
+    <MauiIcon Include="Resources/AppIcon/appicon.svg" Color="#F2AB68" />
+    <MauiSplashScreen Include="Resources/AppIcon/appicon.svg" Color="#FFF8ED" BaseSize="128,128" />
+    <MauiImage Include="../HamsterHub/wwwroot/images/tasks/*.webp" Link="Resources/Images/%(Filename)%(Extension)" />
+    <MauiFont Include="Resources/Fonts/*" />
+    <EmbeddedResource Include="../HamsterHub/Resources/SharedResource.ru.resx" Link="Resources/SharedResource.resx" WithCulture="false" LogicalName="HamsterHub.Mobile.Resources.SharedResource.resources" />
+    <EmbeddedResource Include="../HamsterHub/Resources/SharedResource.en.resx" Link="Resources/SharedResource.en.resx" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+    <ProjectReference Include="../HamsterHub.Client/HamsterHub.Client.csproj" />
+  </ItemGroup>
+</Project>
