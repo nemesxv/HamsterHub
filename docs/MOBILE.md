@@ -70,6 +70,11 @@ passwords, bearer tokens, and uploaded photos without transport encryption. Serv
 URLs with a subpath are not supported. Emulator installation requires the Android
 SDK license to be accepted separately if it has not already been accepted.
 
+New installs default to `http://95.165.103.141:5080/`. The server field is hidden
+under Advanced settings during normal login. The authenticator-code field is also
+hidden until a successful password check reports that two-factor authentication is
+required; the same login form then presents a dedicated code-verification step.
+
 ## API
 
 | Method | Route | Purpose |
@@ -143,6 +148,11 @@ signing key for subsequent app updates. APK binaries
 are ignored by Git: copy the signed APK to HamsterHub/Downloads/HamsterHub.apk
 before publishing the website. Android requires users to open the downloaded file
 and approve installation from their browser. This Android APK does not run on iOS.
+
+The Windows homelab deployment task builds the MAUI Release APK from the same Git
+commit as the website. It derives Android version code and display version from the
+commit count, backs up the previous APK with the SQL/uploads/key backup, deploys and
+health-checks the website, then atomically replaces and verifies the live download.
 
 ### Website download verification (2026-09-28)
 

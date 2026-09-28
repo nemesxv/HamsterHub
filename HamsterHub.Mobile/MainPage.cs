@@ -7,6 +7,7 @@ namespace HamsterHub.Mobile;
 
 public sealed class MainPage : ContentPage
 {
+    private const string DefaultServerAddress = "http://95.165.103.141:5080/";
     private HamsterHubClient? api;
     private HttpClient? http;
     private Uri? server;
@@ -137,22 +138,44 @@ public sealed class MainPage : ContentPage
         form.Add(Text(L("MobileLoginIntro")));
         var address = Field("MobileServer");
         address.Keyboard = Keyboard.Url;
-#if DEBUG
-        address.Text = Preferences.Default.Get("server", "http://10.0.2.2:5080");
-#else
-        address.Text = Preferences.Default.Get("server", "");
-#endif
+        address.Text = Preferences.Default.Get("server", DefaultServerAddress);
+        address.IsVisible = false;
+        Button? advanced = null;
+        advanced = Button("MobileAdvancedSettings", () =>
+        {
+            address.IsVisible = !address.IsVisible;
+            advanced!.Text = L(address.IsVisible ? "MobileHideAdvancedSettings" : "MobileAdvancedSettings");
+            SemanticProperties.SetDescription(advanced, advanced.Text);
+            return Task.CompletedTask;
+        });
+        form.Add(advanced);
+        form.Add(address);
         var email = Field("Email"); email.Keyboard = Keyboard.Email;
         var password = Field("Password", true);
         var code = Field("MobileTwoFactor"); code.Keyboard = Keyboard.Numeric;
-        foreach (var field in new[] { address, email, password, code }) form.Add(field);
-        form.Add(Button("LoginSubmit", async () =>
+        code.IsVisible = false;
+        foreach (var field in new[] { email, password, code }) form.Add(field);
+        Button? login = null;
+        login = Button("LoginSubmit", async () =>
         {
             Connect(address.Text ?? "");
-            await api!.LoginAsync(email.Text ?? "", password.Text ?? "", code.Text);
+            try
+            {
+                await api!.LoginAsync(email.Text ?? "", password.Text ?? "", code.IsVisible ? code.Text : null);
+            }
+            catch (MobileApiException exception) when (exception.Code == "TwoFactorRequired")
+            {
+                code.IsVisible = true;
+                login!.Text = L("MobileVerifyCode");
+                SemanticProperties.SetDescription(login, login.Text);
+                message.Text = L("TwoFactorRequired");
+                code.Focus();
+                return;
+            }
             password.Text = "";
             await LoadSessionAsync();
-        }));
+        });
+        form.Add(login);
         form.Add(Text(L("MobileAccountHelp"), 14));
         body.Add(Card(form));
     }

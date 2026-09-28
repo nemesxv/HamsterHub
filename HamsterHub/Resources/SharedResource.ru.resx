@@ -433,7 +433,10 @@
   <data name="MobileStatus" xml:space="preserve"><value>Статус</value></data>
   <data name="MobileLoginIntro" xml:space="preserve"><value>Войдите в семейный HamsterHub.</value></data>
   <data name="MobileServer" xml:space="preserve"><value>Адрес сервера</value></data>
-  <data name="MobileTwoFactor" xml:space="preserve"><value>Код аутентификатора (если включён)</value></data>
+  <data name="MobileTwoFactor" xml:space="preserve"><value>Код аутентификатора</value></data>
+  <data name="MobileAdvancedSettings" xml:space="preserve"><value>Расширенные настройки</value></data>
+  <data name="MobileHideAdvancedSettings" xml:space="preserve"><value>Скрыть расширенные настройки</value></data>
+  <data name="MobileVerifyCode" xml:space="preserve"><value>Проверить код</value></data>
   <data name="MobileAccountHelp" xml:space="preserve"><value>Родители создают аккаунты и управляют семьёй на сайте.</value></data>
   <data name="MobileNoHousehold" xml:space="preserve"><value>Откройте сайт, чтобы создать семью, или попросите родителя добавить вас.</value></data>
   <data name="MobileHousehold" xml:space="preserve"><value>Семья</value></data>
@@ -461,7 +464,7 @@
   <data name="MobileConnectionError" xml:space="preserve"><value>Не удалось связаться с сервером. Проверьте подключение и обновите список перед повторной отправкой.</value></data>
   <data name="MobileAccessDenied" xml:space="preserve"><value>Доступ изменился. Войдите снова или обратитесь к родителю.</value></data>
   <data name="MobileTryLater" xml:space="preserve"><value>Слишком много попыток. Подождите минуту.</value></data>
-  <data name="MobileServerInvalid" xml:space="preserve"><value>Введите адрес сервера HTTPS без пути. В отладочной версии также доступны localhost и 10.0.2.2 по HTTP.</value></data>
+  <data name="MobileServerInvalid" xml:space="preserve"><value>Введите адрес сервера HTTP или HTTPS без пути.</value></data>
   <data name="SessionExpired" xml:space="preserve"><value>Сеанс завершён. Войдите снова.</value></data>
   <data name="TwoFactorRequired" xml:space="preserve"><value>Введите код из приложения-аутентификатора.</value></data>
   <data name="NotFound" xml:space="preserve"><value>Запись уже изменена. Обновите список.</value></data>

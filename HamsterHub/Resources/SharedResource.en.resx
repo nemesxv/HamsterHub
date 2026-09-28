@@ -433,7 +433,10 @@
   <data name="MobileStatus" xml:space="preserve"><value>Status</value></data>
   <data name="MobileLoginIntro" xml:space="preserve"><value>Sign in to your family’s HamsterHub.</value></data>
   <data name="MobileServer" xml:space="preserve"><value>Server address</value></data>
-  <data name="MobileTwoFactor" xml:space="preserve"><value>Authenticator code (if enabled)</value></data>
+  <data name="MobileTwoFactor" xml:space="preserve"><value>Authenticator code</value></data>
+  <data name="MobileAdvancedSettings" xml:space="preserve"><value>Advanced settings</value></data>
+  <data name="MobileHideAdvancedSettings" xml:space="preserve"><value>Hide advanced settings</value></data>
+  <data name="MobileVerifyCode" xml:space="preserve"><value>Verify code</value></data>
   <data name="MobileAccountHelp" xml:space="preserve"><value>Parents create accounts and manage the family on the website.</value></data>
   <data name="MobileNoHousehold" xml:space="preserve"><value>Open the website to set up your household, or ask a parent to add you.</value></data>
   <data name="MobileHousehold" xml:space="preserve"><value>Household</value></data>
@@ -461,7 +464,7 @@
   <data name="MobileConnectionError" xml:space="preserve"><value>Could not reach the server. Check your connection and refresh before sending again.</value></data>
   <data name="MobileAccessDenied" xml:space="preserve"><value>Your access has changed. Sign in again or ask a parent.</value></data>
   <data name="MobileTryLater" xml:space="preserve"><value>Too many attempts. Please wait a minute.</value></data>
-  <data name="MobileServerInvalid" xml:space="preserve"><value>Enter an HTTPS server address without a path. Debug builds also allow HTTP for localhost and 10.0.2.2.</value></data>
+  <data name="MobileServerInvalid" xml:space="preserve"><value>Enter an HTTP or HTTPS server address without a path.</value></data>
   <data name="SessionExpired" xml:space="preserve"><value>Your session has expired. Please sign in again.</value></data>
   <data name="TwoFactorRequired" xml:space="preserve"><value>Enter the code from your authenticator app.</value></data>
   <data name="NotFound" xml:space="preserve"><value>This record has changed. Refresh the list.</value></data>

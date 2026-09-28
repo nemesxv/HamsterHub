@@ -138,3 +138,7 @@ automatically for future work in this repository. Record new durable decisions
 here rather than relying only on conversational memory.
 
 - The website provides a direct Android preview APK download for phones and tablets when the deployment includes the signed app artifact.
+- Mobile login defaults to the self-hosted HTTP address, keeps server selection in
+  Advanced settings, and asks for an authenticator code only when the API requires it.
+- The homelab deployment transaction builds, versions, backs up, and publishes the
+  Android APK from the same commit after the website passes its health check.
