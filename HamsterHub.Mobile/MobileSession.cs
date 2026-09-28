@@ -43,10 +43,7 @@ internal static class ServerAddress
             !string.IsNullOrEmpty(uri.UserInfo) || uri.AbsolutePath != "/" ||
             !string.IsNullOrEmpty(uri.Query) || !string.IsNullOrEmpty(uri.Fragment))
             throw new MobileApiException("MobileServerInvalid");
-        if (uri.Scheme == "https") return uri;
-#if DEBUG
-        if (uri.Scheme == "http" && uri.Host is "10.0.2.2" or "localhost" or "127.0.0.1") return uri;
-#endif
+        if (uri.Scheme is "https" or "http") return uri;
         throw new MobileApiException("MobileServerInvalid");
     }
 }

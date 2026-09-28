@@ -64,11 +64,11 @@ adb reverse tcp:5080 tcp:5080
 adb install -r .\HamsterHub.Mobile\bin\Debug\net10.0-android\com.nemesxv.hamsterhub-Signed.apk
 ```
 
-Enter `http://localhost:5080` on the phone. Debug builds allow HTTP only for
-loopback and `10.0.2.2`. Release builds require HTTPS. There is no certificate
-validation bypass. Wi-Fi/production use needs a trusted HTTPS origin; server URLs
-with a subpath are not supported. Emulator installation requires the Android SDK
-license to be accepted separately if it has not already been accepted.
+Enter `http://localhost:5080` on the phone. The current self-hosted preview accepts
+both HTTP and HTTPS server addresses, including a direct public IP. HTTP carries
+passwords, bearer tokens, and uploaded photos without transport encryption. Server
+URLs with a subpath are not supported. Emulator installation requires the Android
+SDK license to be accepted separately if it has not already been accepted.
 
 ## API
 
@@ -136,9 +136,10 @@ package MIME type and resumable range support. No sign-in is required. The APK i
 outside wwwroot and is included in web build/publish output. Without the artifact,
 the banner is hidden and the endpoint returns 404.
 
-The currently staged artifact is the signed development preview, not a production
-release. Replace it with a release APK signed with a durable signing key before
-public release. Keep the same signing key for subsequent app updates. APK binaries
+The currently staged artifact is a Release-configuration preview signed with the
+Android debug signing key, not a store-ready production release. Replace it with
+an APK signed with a durable release key before store publication. Keep the same
+signing key for subsequent app updates. APK binaries
 are ignored by Git: copy the signed APK to HamsterHub/Downloads/HamsterHub.apk
 before publishing the website. Android requires users to open the downloaded file
 and approve installation from their browser. This Android APK does not run on iOS.
@@ -146,11 +147,14 @@ and approve installation from their browser. This Android APK does not run on iO
 ### Website download verification (2026-09-28)
 
 - All 65 backend/client tests passed; website build and publish succeeded.
-- Full 85,009,476-byte HTTP download matched the staged APK SHA-256:
-  DB2EA63EE711079167E1DED52DF0F8E33E7F99C3E04413E83B11FE90671EE292.
+- The live Docker site serves the 29,574,042-byte Android 0.1.1 APK over HTTP.
+  Its downloaded SHA-256 matches the staged artifact:
+  4905AB3936042FAE56EFE23B4CC7480027935E4E73DF013C286C4E112649567C.
 - Attachment filename/MIME type, HEAD, and 206 byte-range responses verified.
 - Published output includes the identical APK; absent artifact returns 404 and
   hides the banner.
 - Browser checks passed at 320px phone and 800px tablet widths, Russian/English,
   light/dark themes, and keyboard focus/Enter-triggered download.
-- This verifies the local publish package, not a live public deployment.
+- The Release APK was installed on the emulator and reached the live Docker API
+  at `http://192.168.1.69:5080`; a disposable invalid login returned the expected
+  authentication response, proving cleartext HTTP works end to end.

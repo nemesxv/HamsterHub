@@ -99,8 +99,9 @@ The core product loop is:
 - The first mobile increment covers login, assigned care tasks, optional photos,
   parent care approvals, care history, and current points. Registration, family
   management, rewards, and account management remain website features initially.
-- Mobile UI keeps Russian/English and light/dark parity. Production connections
-  require HTTPS; no offline write queue is implemented initially.
+- Mobile UI keeps Russian/English and light/dark parity. The self-hosted preview
+  permits HTTP connections so it can use the current direct-IP Docker server;
+  no offline write queue is implemented initially.
 
 - The design should feel warm, calm, playful, and trustworthy rather than
   competitive or overstimulating.

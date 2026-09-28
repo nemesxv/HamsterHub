@@ -9,8 +9,8 @@
     <Nullable>enable</Nullable>
     <ApplicationTitle>HamsterHub</ApplicationTitle>
     <ApplicationId>com.nemesxv.hamsterhub</ApplicationId>
-    <ApplicationDisplayVersion>0.1.0</ApplicationDisplayVersion>
-    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>0.1.1</ApplicationDisplayVersion>
+    <ApplicationVersion>2</ApplicationVersion>
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
     <SupportedOSPlatformVersion>24.0</SupportedOSPlatformVersion>
   </PropertyGroup>
