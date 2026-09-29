@@ -142,3 +142,9 @@ here rather than relying only on conversational memory.
   Advanced settings, and asks for an authenticator code only when the API requires it.
 - The homelab deployment transaction builds, versions, backs up, and publishes the
   Android APK from the same commit after the website passes its health check.
+- The Android app presents separate role-specific dashboards: an attention-first
+  parent view for approvals and assigned care, and a picture-first child view for
+  tasks, points, waiting items, and recent care. Its palette and hierarchy follow
+  the corresponding website dashboards.
+- Mobile connections use `http://95.165.103.141:5080/` unless a user explicitly
+  saves a different server from Advanced settings.

@@ -445,6 +445,8 @@
   <data name="MobileApprovals" xml:space="preserve"><value>Waiting for approval</value></data>
   <data name="MobileNoApprovals" xml:space="preserve"><value>All caught up!</value></data>
   <data name="MobileHistory" xml:space="preserve"><value>My care history</value></data>
+  <data name="MobileParentTasks" xml:space="preserve"><value>My assigned care tasks</value></data>
+  <data name="MobileParentHistory" xml:space="preserve"><value>My care history</value></data>
   <data name="MobileNoHistory" xml:space="preserve"><value>Completed tasks will appear here.</value></data>
   <data name="MobileStatusPending" xml:space="preserve"><value>Waiting for approval</value></data>
   <data name="MobileStatusApproved" xml:space="preserve"><value>Approved</value></data>

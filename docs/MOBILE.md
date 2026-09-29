@@ -74,6 +74,10 @@ New installs default to `http://95.165.103.141:5080/`. The server field is hidde
 under Advanced settings during normal login. The authenticator-code field is also
 hidden until a successful password check reports that two-factor authentication is
 required; the same login form then presents a dedicated code-verification step.
+The default address remains active unless a different address is explicitly saved
+from Advanced settings. After login, parent and child memberships open separate
+dashboards modeled on their website experiences: parent approvals appear first,
+while the child view emphasizes pictures, available tasks, points, and recent care.
 
 ## API
 

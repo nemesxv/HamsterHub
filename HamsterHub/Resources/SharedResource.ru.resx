@@ -445,6 +445,8 @@
   <data name="MobileApprovals" xml:space="preserve"><value>Ждут проверки</value></data>
   <data name="MobileNoApprovals" xml:space="preserve"><value>Всё проверено!</value></data>
   <data name="MobileHistory" xml:space="preserve"><value>Моя забота</value></data>
+  <data name="MobileParentTasks" xml:space="preserve"><value>Мои задачи по уходу</value></data>
+  <data name="MobileParentHistory" xml:space="preserve"><value>Моя история ухода</value></data>
   <data name="MobileNoHistory" xml:space="preserve"><value>Здесь появятся выполненные задания.</value></data>
   <data name="MobileStatusPending" xml:space="preserve"><value>Ждёт проверки</value></data>
   <data name="MobileStatusApproved" xml:space="preserve"><value>Одобрено</value></data>
