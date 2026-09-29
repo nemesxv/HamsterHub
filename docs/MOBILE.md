@@ -15,13 +15,16 @@ backend-only so its CI does not require Android workloads.
 - Completion with zero to eight photos (camera or file selection).
 - Parent approval/rejection of care reports with their photos.
 - Latest 50 personal care reports and their review status.
+- Parent create/edit/archive flows for family members, pets, and care tasks,
+  including validated pictures.
+- Parent and child reward catalogs, requests, reviews, direct purchases, and history.
+- Privacy-filtered household member and pet summaries for children.
 - Russian/English, persistent light/dark choice, accessible names, and a
   two-column layout at 720 logical units for tablets.
 
-Registration, household/pet/task management, account security, rewards, and
-friend-history views still use the website. Accounts without a household finish
-onboarding there. Reward deductions affect the app's balance but are not yet
-shown in its care-only history. Offline writes and push notifications are future work.
+Initial parent registration, parent account security, detailed family point-history
+pages, and child history-sharing controls still use the website. Accounts without a
+household finish onboarding there. Offline writes and push notifications are future work.
 
 ## Build and run
 
@@ -78,8 +81,18 @@ The default address remains active unless a different address is explicitly save
 from Advanced settings. After login, parent and child memberships open separate
 dashboards modeled on their website experiences: parent approvals appear first,
 while the child view emphasizes pictures, available tasks, points, and recent care.
+Parents can also create, edit, and archive family members, pets, and care tasks;
+attach validated pictures; create and directly award rewards; and review child
+reward requests. Children can browse household members and pets, request visible
+rewards, and see their reward history. These operations use the same household,
+role, image, and point rules as the website.
 
 ## API
+
+In addition to authentication, dashboard, completion, and care-review routes, the
+app uses `GET /api/v1/memberships/{id}/household` plus household-scoped member,
+pet, task, media, reward, reward-request, and direct-purchase routes. Parent-only
+mutations reject child and foreign-household memberships.
 
 | Method | Route | Purpose |
 |---|---|---|
@@ -87,9 +100,15 @@ while the child view emphasizes pictures, available tasks, points, and recent ca
 | POST | `/api/v1/auth/refresh` | `refreshToken` |
 | GET | `/api/v1/me` | User display name and active memberships |
 | GET | `/api/v1/memberships/{id}/dashboard` | Tasks, balance, history, approvals |
+| GET | `/api/v1/memberships/{id}/household` | Role-filtered members, pets, tasks, rewards, and reward history |
+| POST/PUT/DELETE | `/api/v1/memberships/{id}/members/...` | Parent member management |
+| POST/PUT/DELETE | `/api/v1/memberships/{id}/pets/...` | Parent pet management |
+| POST/PUT/DELETE | `/api/v1/memberships/{id}/tasks/...` | Parent task management |
+| PUT | `/api/v1/memberships/{id}/media/{kind}/{itemId}` | Parent-managed member, pet, task, or reward picture |
+| POST | `/api/v1/memberships/{id}/rewards/...` | Create, request, review, or directly award a reward |
 | POST | `/api/v1/memberships/{id}/tasks/{taskId}/complete` | Multipart form; repeated optional `photos` files |
 | POST | `/api/v1/memberships/{id}/care-logs/{logId}/review` | JSON `{ "approve": true/false }` |
-| GET | `/api/v1/memberships/{id}/media?path=...` | Authorized care/task/pet photos |
+| GET | `/api/v1/memberships/{id}/media?path=...` | Authorized care/task/pet/member/reward photos |
 
 Website cookies and antiforgery stay intact. Mobile endpoints accept only Identity
 bearer tokens: protected opaque tokens, not JWTs. No public Identity registration
@@ -123,18 +142,20 @@ login/2FA, task images, photo selection/capture, completion, parent approval,
 updated balances, rotation, keyboard navigation/TalkBack, session restore,
 logout, and connection loss. An APK build and HTTP tests do not replace these checks.
 
-## Verification snapshot (2026-09-26)
+## Verification snapshot (2026-09-30)
 
-- 65 backend/client tests passed, including cookie/bearer separation, lockout/2FA
-  requirements, security-stamp invalidation, cross-household denial, photo access,
-  completion/approval point snapshots, refresh retries, and logout/refresh races.
-- Backend and standalone Debug Android APK builds passed with zero warnings/errors.
-- APK signatures verified; ARM64/x64 app assemblies and task images are embedded.
-- 462 Russian/English resource keys match, and compiled mobile resources were inspected.
-- Phone/tablet visual, camera, keyboard, and TalkBack checks have **not** run:
-  no device was attached and emulator installation awaits SDK-license acceptance.
-
-Debug APK SHA-256: `c056641667855f03adcc1142096c194ffc2c5d28562b58c5aff2676cc4ed03a9`.
+- 67 backend/client integration tests passed, including cookie/bearer separation,
+  lockout/2FA requirements, security-stamp invalidation, cross-household denial,
+  household management, protected media, task completion/approval, reward requests,
+  point snapshots, refresh retries, and logout/refresh races.
+- Backend and standalone Android 0.1.13 Release builds passed with zero warnings/errors;
+  the signed APK was installed and launched on the emulator.
+- The parent household-management flow was checked on phone and tablet emulator
+  layouts in Russian/light and English/dark modes. The native add-member form and
+  tablet management dashboard fit without horizontal clipping.
+- File upload authorization and image signatures are covered by integration tests.
+  Camera capture, keyboard/TalkBack navigation, rotation, and connection-loss
+  recovery still require a full physical-device acceptance pass before store release.
 
 ## Website APK download
 

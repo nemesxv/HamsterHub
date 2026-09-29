@@ -7,8 +7,6 @@ its implementation and proportionate verification are complete.
 
 - Verify the initial MAUI Android app on phone and tablet devices/emulators,
   including camera, keyboard/TalkBack, both languages, and both themes.
-- Add mobile rewards and family-management screens using shared server services.
-
 - Parent-managed password reset for family accounts.
 
 ## Later
@@ -22,6 +20,9 @@ its implementation and proportionate verification are complete.
 
 - Initial MAUI Android app and `/api/v1` backend for login, care tasks, completion
   photos, parent approvals, care history, and points; device acceptance remains Next.
+- Mobile household management for creating, editing, and archiving family members,
+  pets, and care tasks; optional validated pictures; reward catalogs, requests,
+  reviews, and direct parent purchases.
 - Shared MVC/API care workflow and image validation; bearer authentication with
   active-user, security-stamp, role, and household checks.
 

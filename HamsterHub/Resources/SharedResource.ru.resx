@@ -437,16 +437,18 @@
   <data name="MobileAdvancedSettings" xml:space="preserve"><value>Расширенные настройки</value></data>
   <data name="MobileHideAdvancedSettings" xml:space="preserve"><value>Скрыть расширенные настройки</value></data>
   <data name="MobileVerifyCode" xml:space="preserve"><value>Проверить код</value></data>
-  <data name="MobileAccountHelp" xml:space="preserve"><value>Родители создают аккаунты и управляют семьёй на сайте.</value></data>
+  <data name="MobileAccountHelp" xml:space="preserve"><value>После входа родители могут создавать аккаунты и управлять семьёй.</value></data>
   <data name="MobileNoHousehold" xml:space="preserve"><value>Откройте сайт, чтобы создать семью, или попросите родителя добавить вас.</value></data>
   <data name="MobileHousehold" xml:space="preserve"><value>Семья</value></data>
   <data name="MobileRefresh" xml:space="preserve"><value>Обновить</value></data>
-  <data name="MobileNoTasks" xml:space="preserve"><value>Пока нет заданий. Родитель может добавить их на сайте.</value></data>
+  <data name="MobileNoTasks" xml:space="preserve"><value>Пока нет заданий. Родитель может добавить их в настройках семьи.</value></data>
   <data name="MobileApprovals" xml:space="preserve"><value>Ждут проверки</value></data>
   <data name="MobileNoApprovals" xml:space="preserve"><value>Всё проверено!</value></data>
   <data name="MobileHistory" xml:space="preserve"><value>Моя забота</value></data>
   <data name="MobileParentTasks" xml:space="preserve"><value>Мои задачи по уходу</value></data>
   <data name="MobileParentHistory" xml:space="preserve"><value>Моя история ухода</value></data>
+  <data name="MobileGiveReward" xml:space="preserve"><value>Выдать эту награду</value></data>
+  <data name="MobileNoRewards" xml:space="preserve"><value>Пока нет доступных наград.</value></data>
   <data name="MobileNoHistory" xml:space="preserve"><value>Здесь появятся выполненные задания.</value></data>
   <data name="MobileStatusPending" xml:space="preserve"><value>Ждёт проверки</value></data>
   <data name="MobileStatusApproved" xml:space="preserve"><value>Одобрено</value></data>

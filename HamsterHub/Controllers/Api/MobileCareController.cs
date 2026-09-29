@@ -42,6 +42,11 @@ public sealed class MobileCareController(ApplicationDbContext db, UserManager<Ap
             "tasks" => await db.CareTasks.AnyAsync(t => t.ImagePath == path && t.HouseholdId == member.HouseholdId &&
                 t.Pet.HouseholdId == member.HouseholdId && (isParent || t.AssignedMemberId == member.Id), cancellationToken),
             "pets" => await db.Pets.AnyAsync(p => p.PhotoPath == path && p.HouseholdId == member.HouseholdId, cancellationToken),
+            "members" => await db.HouseholdMembers.AnyAsync(m => m.User.ProfilePhotoPath == path &&
+                m.HouseholdId == member.HouseholdId && m.IsActive && m.User.IsActive, cancellationToken),
+            "rewards" => await db.Rewards.AnyAsync(r => r.ImagePath == path &&
+                r.HouseholdId == member.HouseholdId && r.IsActive && (isParent ||
+                    r.VisibleToMembers.Any(v => v.HouseholdMemberId == member.Id)), cancellationToken),
             _ => false
         };
         if (!allowed) return NotFound();

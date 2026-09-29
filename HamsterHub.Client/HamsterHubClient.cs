@@ -57,6 +57,58 @@ public sealed class HamsterHubClient(HttpClient http, ISessionStore store)
     public Task<SessionDto> GetSessionAsync() => GetAsync<SessionDto>("api/v1/me");
     public Task<DashboardDto> GetDashboardAsync(int memberId) =>
         GetAsync<DashboardDto>($"api/v1/memberships/{memberId}/dashboard");
+    public Task<HouseholdHubDto> GetHouseholdAsync(int memberId) =>
+        GetAsync<HouseholdHubDto>($"api/v1/memberships/{memberId}/household");
+
+    public async Task<int> AddMemberAsync(int memberId, CreateMemberRequest request) =>
+        (await PostForAsync<CreatedItemDto, CreateMemberRequest>($"api/v1/memberships/{memberId}/members", request)).Id;
+    public async Task<int> AddPetAsync(int memberId, CreatePetRequest request) =>
+        (await PostForAsync<CreatedItemDto, CreatePetRequest>($"api/v1/memberships/{memberId}/pets", request)).Id;
+    public async Task<int> AddTaskAsync(int memberId, CreateTaskRequest request) =>
+        (await PostForAsync<CreatedItemDto, CreateTaskRequest>($"api/v1/memberships/{memberId}/tasks", request)).Id;
+    public async Task<int> AddRewardAsync(int memberId, CreateRewardRequest request) =>
+        (await PostForAsync<CreatedItemDto, CreateRewardRequest>($"api/v1/memberships/{memberId}/rewards", request)).Id;
+    public Task UpdateMemberAsync(int memberId, int id, UpdateMemberRequest request) =>
+        PutAsync($"api/v1/memberships/{memberId}/members/{id}", request);
+    public Task UpdatePetAsync(int memberId, int id, UpdatePetRequest request) =>
+        PutAsync($"api/v1/memberships/{memberId}/pets/{id}", request);
+    public Task UpdateTaskAsync(int memberId, int id, UpdateTaskRequest request) =>
+        PutAsync($"api/v1/memberships/{memberId}/tasks/{id}", request);
+    public Task ArchiveMemberAsync(int memberId, int id) =>
+        DeleteAsync($"api/v1/memberships/{memberId}/members/{id}");
+    public Task ArchivePetAsync(int memberId, int id) =>
+        DeleteAsync($"api/v1/memberships/{memberId}/pets/{id}");
+    public Task ArchiveTaskAsync(int memberId, int id) =>
+        DeleteAsync($"api/v1/memberships/{memberId}/tasks/{id}");
+    public Task RequestRewardAsync(int memberId, int rewardId) =>
+        PostAsync($"api/v1/memberships/{memberId}/rewards/{rewardId}/request", new { });
+    public Task ReviewRewardAsync(int memberId, int id, bool approve) =>
+        PostAsync($"api/v1/memberships/{memberId}/reward-requests/{id}/review",
+            new RewardDecisionRequest(approve));
+    public Task PurchaseRewardAsync(int memberId, int rewardId, int childMemberId) =>
+        PostAsync($"api/v1/memberships/{memberId}/rewards/purchase",
+            new DirectRewardRequest(rewardId, childMemberId));
+
+    public async Task UpdateMediaAsync(int memberId, string kind, int id, UploadPhoto? photo, bool remove = false)
+    {
+        using var response = await SendAsync(async () =>
+        {
+            var content = new MultipartFormDataContent();
+            try
+            {
+                content.Add(new StringContent(remove.ToString()), "remove");
+                if (photo is not null)
+                {
+                    var stream = new StreamContent(await photo.OpenReadAsync());
+                    stream.Headers.ContentType = new MediaTypeHeaderValue(photo.ContentType);
+                    content.Add(stream, "photo", photo.FileName);
+                }
+                return new HttpRequestMessage(HttpMethod.Put,
+                    $"api/v1/memberships/{memberId}/media/{kind}/{id}") { Content = content };
+            }
+            catch { content.Dispose(); throw; }
+        });
+    }
 
     public async Task<byte[]> GetPhotoAsync(int memberId, string path)
     {
@@ -98,6 +150,31 @@ public sealed class HamsterHubClient(HttpClient http, ISessionStore store)
     {
         using var response = await SendAsync(() => Task.FromResult(new HttpRequestMessage(HttpMethod.Get, path)));
         return await response.Content.ReadFromJsonAsync<T>() ?? throw new MobileApiException("MobileConnectionError");
+    }
+
+    private async Task PostAsync<T>(string path, T value)
+    {
+        using var response = await SendAsync(() => Task.FromResult(new HttpRequestMessage(HttpMethod.Post, path)
+            { Content = JsonContent.Create(value) }));
+    }
+
+    private async Task<TResponse> PostForAsync<TResponse, TValue>(string path, TValue value)
+    {
+        using var response = await SendAsync(() => Task.FromResult(new HttpRequestMessage(HttpMethod.Post, path)
+            { Content = JsonContent.Create(value) }));
+        return await response.Content.ReadFromJsonAsync<TResponse>() ??
+            throw new MobileApiException("MobileConnectionError");
+    }
+
+    private async Task DeleteAsync(string path)
+    {
+        using var response = await SendAsync(() => Task.FromResult(new HttpRequestMessage(HttpMethod.Delete, path)));
+    }
+
+    private async Task PutAsync<T>(string path, T value)
+    {
+        using var response = await SendAsync(() => Task.FromResult(new HttpRequestMessage(HttpMethod.Put, path)
+            { Content = JsonContent.Create(value) }));
     }
 
     private async Task<HttpResponseMessage> SendAsync(Func<Task<HttpRequestMessage>> create)

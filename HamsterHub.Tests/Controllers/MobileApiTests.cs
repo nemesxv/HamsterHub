@@ -17,6 +17,92 @@ namespace HamsterHub.Tests.Controllers;
 public sealed class MobileApiTests
 {
     [Fact]
+    public async Task ParentCanManageHouseholdFromMobileApi()
+    {
+        using var factory = new MobileApiFactory(); await factory.SeedAsync();
+        using var http = factory.CreateClient();
+        var parent = new HamsterHubClient(http, new MemorySessionStore());
+        await parent.LoginAsync("parent@test.local", MobileApiFactory.Password, null);
+
+        var initial = await parent.GetHouseholdAsync(factory.ParentMemberId);
+        Assert.Equal(2, initial.Members.Count);
+        Assert.Single(initial.Pets);
+        Assert.Single(initial.Tasks);
+
+        await parent.AddMemberAsync(factory.ParentMemberId,
+            new CreateMemberRequest("Second child", "second@test.local", MobileApiFactory.Password, "Child"));
+        var newPetId = await parent.AddPetAsync(factory.ParentMemberId, new CreatePetRequest("Pip", "Hamster", null));
+        byte[] petPhoto = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 0];
+        await parent.UpdateMediaAsync(factory.ParentMemberId, "pets", newPetId,
+            new UploadPhoto("pip.png", "image/png", () => Task.FromResult<Stream>(new MemoryStream(petPhoto))));
+        var expanded = await parent.GetHouseholdAsync(factory.ParentMemberId);
+        var newChild = Assert.Single(expanded.Members, item => item.Email == "second@test.local");
+        var newPet = Assert.Single(expanded.Pets, item => item.Name == "Pip");
+        Assert.NotNull(newPet.PhotoPath);
+        Assert.Equal(petPhoto, await parent.GetPhotoAsync(factory.ParentMemberId, newPet.PhotoPath));
+        await parent.AddTaskAsync(factory.ParentMemberId, new CreateTaskRequest(newPet.Id, newChild.Id,
+            expanded.Categories[0].Id, null, "Weekly", 12));
+        await parent.AddRewardAsync(factory.ParentMemberId,
+            new CreateRewardRequest("Movie night", 10, [newChild.Id]));
+
+        var managed = await parent.GetHouseholdAsync(factory.ParentMemberId);
+        Assert.Contains(managed.Tasks, item => item.PetId == newPet.Id && item.AssignedMemberId == newChild.Id);
+        Assert.Contains(managed.Rewards, item => item.Name == "Movie night" &&
+            item.VisibleToMemberIds.SequenceEqual([newChild.Id]));
+
+        var newTask = managed.Tasks.Single(item => item.PetId == newPet.Id);
+        await parent.UpdateMemberAsync(factory.ParentMemberId, newChild.Id,
+            new UpdateMemberRequest("Updated child", "Child"));
+        await parent.UpdatePetAsync(factory.ParentMemberId, newPet.Id,
+            new UpdatePetRequest("Pip updated", "Syrian hamster", new DateOnly(2025, 1, 2)));
+        await parent.UpdateTaskAsync(factory.ParentMemberId, newTask.Id,
+            new UpdateTaskRequest(newPet.Id, newChild.Id, expanded.Categories[1].Id, null, "AsNeeded", 15));
+        var updated = await parent.GetHouseholdAsync(factory.ParentMemberId);
+        Assert.Contains(updated.Members, item => item.Id == newChild.Id && item.DisplayName == "Updated child");
+        Assert.Contains(updated.Pets, item => item.Id == newPet.Id && item.Name == "Pip updated" &&
+            item.BirthDate == new DateOnly(2025, 1, 2));
+        Assert.Contains(updated.Tasks, item => item.Id == newTask.Id && item.Points == 15 &&
+            item.Frequency == "AsNeeded");
+        await parent.ArchiveTaskAsync(factory.ParentMemberId, newTask.Id);
+        await parent.ArchivePetAsync(factory.ParentMemberId, newPet.Id);
+        await parent.ArchiveMemberAsync(factory.ParentMemberId, newChild.Id);
+        var archived = await parent.GetHouseholdAsync(factory.ParentMemberId);
+        Assert.DoesNotContain(archived.Members, item => item.Id == newChild.Id);
+        Assert.DoesNotContain(archived.Pets, item => item.Id == newPet.Id);
+        Assert.DoesNotContain(archived.Tasks, item => item.Id == newTask.Id);
+    }
+
+    [Fact]
+    public async Task ChildRewardRequestAndParentReviewShareWebsitePointRules()
+    {
+        using var factory = new MobileApiFactory(); await factory.SeedAsync();
+        using var parentHttp = factory.CreateClient();
+        var parent = new HamsterHubClient(parentHttp, new MemorySessionStore());
+        await parent.LoginAsync("parent@test.local", MobileApiFactory.Password, null);
+        await parent.AddRewardAsync(factory.ParentMemberId,
+            new CreateRewardRequest("Tunnel", 7, [factory.ChildMemberId]));
+
+        using var childHttp = factory.CreateClient();
+        var child = new HamsterHubClient(childHttp, new MemorySessionStore());
+        await child.LoginAsync("child@test.local", MobileApiFactory.Password, null);
+        await child.CompleteAsync(factory.ChildMemberId, factory.TaskId, []);
+        var careRequest = Assert.Single((await parent.GetDashboardAsync(factory.ParentMemberId)).PendingApprovals);
+        await parent.ReviewAsync(factory.ParentMemberId, careRequest.Id, true);
+
+        var catalog = await child.GetHouseholdAsync(factory.ChildMemberId);
+        var reward = Assert.Single(catalog.Rewards);
+        Assert.True(reward.CanAfford);
+        await child.RequestRewardAsync(factory.ChildMemberId, reward.Id);
+        var pending = Assert.Single((await parent.GetHouseholdAsync(factory.ParentMemberId)).RewardRequests);
+        await parent.ReviewRewardAsync(factory.ParentMemberId, pending.Id, true);
+
+        Assert.Equal(0, (await child.GetDashboardAsync(factory.ChildMemberId)).Balance);
+        var history = Assert.Single((await child.GetHouseholdAsync(factory.ChildMemberId)).RewardHistory);
+        Assert.Equal("Approved", history.Status);
+        Assert.Equal(0, history.BalanceAfterApproval);
+    }
+
+    [Fact]
     public async Task ChildCompletion_ParentApproval_UsesSameWebsiteDataAndHistoricalPoints()
     {
         using var factory = new MobileApiFactory();
@@ -67,6 +153,10 @@ public sealed class MobileApiTests
         Assert.Equal(HttpStatusCode.Forbidden, (await http.GetAsync($"/api/v1/memberships/{factory.ForeignMemberId}/dashboard", cancellationToken: TestContext.Current.CancellationToken)).StatusCode);
         Assert.Equal(HttpStatusCode.Forbidden, (await http.PostAsJsonAsync(
             $"/api/v1/memberships/{factory.ChildMemberId}/care-logs/1/review", new ReviewRequest(true), cancellationToken: TestContext.Current.CancellationToken)).StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, (await http.PostAsJsonAsync(
+            $"/api/v1/memberships/{factory.ChildMemberId}/members",
+            new CreateMemberRequest("No", "blocked@test.local", MobileApiFactory.Password, "Child"),
+            cancellationToken: TestContext.Current.CancellationToken)).StatusCode);
         using var content = new MultipartFormDataContent { { new StringContent("true"), "submitted" } };
         Assert.Equal(HttpStatusCode.Forbidden, (await http.PostAsync(
             $"/api/v1/memberships/{factory.ParentMemberId}/tasks/{factory.TaskId}/complete", content, cancellationToken: TestContext.Current.CancellationToken)).StatusCode);

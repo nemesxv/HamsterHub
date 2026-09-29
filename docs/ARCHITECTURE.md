@@ -24,6 +24,12 @@ the website and app. `UploadedImageService` centralizes image validation and fil
 handling. Existing care, points, and reward policy services stay server-side.
 See [MOBILE.md](MOBILE.md) for projects, endpoints, setup, and limitations.
 
+The mobile household API also exposes the parent-managed family, pet, task, image,
+and reward operations used by the native management screens. Every operation first
+resolves the signed-in user's active membership and then scopes related records to
+that household. Reward requests and reviews continue to use `RewardService` and
+serializable transactions so website and app balances follow the same rules.
+
 ## Domain model
 
 ### ApplicationUser

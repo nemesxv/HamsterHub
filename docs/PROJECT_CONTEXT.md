@@ -148,3 +148,6 @@ here rather than relying only on conversational memory.
   the corresponding website dashboards.
 - Mobile connections use `http://95.165.103.141:5080/` unless a user explicitly
   saves a different server from Advanced settings.
+- The native Android app includes household management rather than requiring a
+  parent to return to the website: members, pets, tasks, their pictures, and rewards
+  are managed through bearer-authenticated, household-scoped API operations.
