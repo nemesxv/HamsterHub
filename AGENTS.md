@@ -1,7 +1,7 @@
 # HamsterHub agent guide
 
 HamsterHub is an ASP.NET Core MVC application that helps children build healthy
-real-world pet-care habits with parent-managed tasks and care points.
+real-world habits through homework, chores, pet care, parent-managed tasks and points.
 
 Before making product or architectural changes, read:
 

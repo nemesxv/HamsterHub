@@ -153,15 +153,25 @@ public sealed class MainPage : ContentPage
         return border;
     }
 
-    private void AddSettings()
+    private void AddSettings() => body.Add(SecondaryButton("MobileSettings", () =>
+    { ShowSettings(); return Task.CompletedTask; }));
+
+    private void ShowSettings()
     {
-        var settings = new FlexLayout { Wrap = FlexWrap.Wrap };
+        ResetScroll(); body.Clear();
+        var settings = new VerticalStackLayout { Spacing = 14, MaximumWidthRequest = 620 };
+        settings.Add(Text(L("MobileSettings"), 28));
         settings.Add(SecondaryButton("SwitchLanguage", async () =>
         {
             Strings.Culture = Strings.Culture == "ru" ? "en" : "ru";
             Preferences.Default.Set("language", Strings.Culture);
             if (api is not null) api.Culture = Strings.Culture;
-            if (session is null) ShowLogin(); else await LoadSessionAsync();
+            if (session is not null && member is not null)
+            {
+                dashboard = await api!.GetDashboardAsync(member.Id);
+                household = await api.GetHouseholdAsync(member.Id);
+            }
+            ShowSettings();
         }));
         settings.Add(SecondaryButton("ToggleTheme", () =>
         {
@@ -170,7 +180,11 @@ public sealed class MainPage : ContentPage
             Preferences.Default.Set("theme", app.UserAppTheme == AppTheme.Dark ? "dark" : "light");
             return Task.CompletedTask;
         }));
-        body.Add(settings);
+        if (session is not null)
+            settings.Add(SecondaryButton("Logout", async () => { await api!.LogoutAsync(); ShowLogin(); }));
+        settings.Add(SecondaryButton("MobileBack", () =>
+        { if (session is null) ShowLogin(); else ShowDashboard(); return Task.CompletedTask; }));
+        body.Add(Card(settings));
     }
 
     private Entry Field(string key, bool password = false)
@@ -273,7 +287,6 @@ public sealed class MainPage : ContentPage
             var accountRow = new Grid { ColumnDefinitions = new ColumnDefinitionCollection
                 { new(GridLength.Star), new(GridLength.Auto) }, ColumnSpacing = 12 };
             accountRow.Add(Text(session!.DisplayName, 24));
-            accountRow.Add(SecondaryButton("Logout", async () => { await api!.LogoutAsync(); ShowLogin(); }), 1);
             body.Add(accountRow);
             body.Add(Card(Text(L("MobileNoHousehold"))));
             return;
@@ -294,7 +307,6 @@ public sealed class MainPage : ContentPage
         role.FontAttributes = FontAttributes.Bold;
         identity.Add(role);
         accountRow.Add(identity);
-        accountRow.Add(SecondaryButton("Logout", async () => { await api!.LogoutAsync(); ShowLogin(); }), 1);
         body.Add(accountRow);
 
         if (session.Memberships.Count > 1)
@@ -729,7 +741,7 @@ public sealed class MainPage : ContentPage
             new Choice("Parent", L("Role_Parent")) };
         var role = ChoicePicker(L("FamilyRole"), roles, "Child");
         form.Add(name); form.Add(email); form.Add(password); form.Add(role);
-        form.Add(SecondaryButton("MemberPhoto", async () => photo = await PickSinglePhotoAsync()));
+        AddPhotoPicker(form, "MemberPhoto", file => photo = file);
         form.Add(Button("AddFamilyMember", async () =>
         {
             var id = await api!.AddMemberAsync(member!.Id, new CreateMemberRequest(name.Text ?? "", email.Text ?? "",
@@ -744,7 +756,7 @@ public sealed class MainPage : ContentPage
         var name = Field("PetName"); var species = Field("Species"); var birth = Field("BirthDate");
         FileResult? photo = null;
         birth.Keyboard = Keyboard.Numeric; form.Add(name); form.Add(species); form.Add(birth);
-        form.Add(SecondaryButton("PetPhoto", async () => photo = await PickSinglePhotoAsync()));
+        AddPhotoPicker(form, "PetPhoto", file => photo = file);
         form.Add(Button("SavePet", async () =>
         {
             DateOnly? date = DateOnly.TryParse(birth.Text, out var parsed) ? parsed : null;
@@ -757,16 +769,13 @@ public sealed class MainPage : ContentPage
     private void ShowAddTask() => ShowForm("AddCareTask", form =>
     {
         var pets = household!.Pets.ToList(); var members = household.Members.ToList();
-        if (pets.Count == 0)
-        {
-            form.Add(Card(Text(L("NoPetsYet")), Mint, Color.FromArgb("25443E"), 20, 1));
-            form.Add(Button("AddPet", () => { ShowAddPet(); return Task.CompletedTask; }));
-            return;
-        }
+        pets.Insert(0, new PetItemDto(0, L("NoPet"), "", null, null));
         var categories = household.Categories.ToList();
+        categories.Insert(0, new CategoryItemDto(0, L("NoCategory")));
         var pet = PickerFor(L("ChoosePet"), pets, nameof(PetItemDto.Name));
         var assignee = PickerFor(L("ChooseMember"), members, nameof(HouseholdMemberItemDto.DisplayName));
         var category = PickerFor(L("ChooseCategory"), categories, nameof(CategoryItemDto.Name));
+        var name = Field("TaskName");
         var custom = Field("NewCategory");
         FileResult? photo = null;
         var frequencies = new[] { new Choice("Daily", L("Frequency_Daily")),
@@ -774,16 +783,17 @@ public sealed class MainPage : ContentPage
             new Choice("AsNeeded", L("Frequency_AsNeeded")) };
         var frequency = ChoicePicker(L("TaskFrequency"), frequencies, "Daily");
         var points = Field("PointValue"); points.Text = "5"; points.Keyboard = Keyboard.Numeric;
-        form.Add(pet); form.Add(assignee); form.Add(category); form.Add(custom); form.Add(frequency); form.Add(points);
-        form.Add(SecondaryButton("TaskImage", async () => photo = await PickSinglePhotoAsync()));
+        form.Add(name); form.Add(pet); form.Add(assignee); form.Add(category); form.Add(custom); form.Add(frequency); form.Add(points);
+        AddPhotoPicker(form, "TaskImage", file => photo = file);
         form.Add(Button("SaveCareTask", async () =>
         {
-            if (pet.SelectedItem is not PetItemDto selectedPet ||
-                assignee.SelectedItem is not HouseholdMemberItemDto selectedMember) return;
+            if (string.IsNullOrWhiteSpace(name.Text)) throw new MobileApiException("TaskNameRequired");
+            var selectedPet = pet.SelectedItem as PetItemDto;
+            if (assignee.SelectedItem is not HouseholdMemberItemDto selectedMember) return;
             int.TryParse(points.Text, out var pointValue);
-            var categoryId = category.SelectedItem is CategoryItemDto selectedCategory ? selectedCategory.Id : (int?)null;
-            var id = await api!.AddTaskAsync(member!.Id, new CreateTaskRequest(selectedPet.Id, selectedMember.Id,
-                categoryId, custom.Text, (frequency.SelectedItem as Choice)?.Value ?? "Daily", pointValue));
+            var categoryId = category.SelectedItem is CategoryItemDto { Id: > 0 } selectedCategory ? selectedCategory.Id : (int?)null;
+            var id = await api!.AddTaskAsync(member!.Id, new CreateTaskRequest(selectedPet is { Id: > 0 } ? selectedPet.Id : null, selectedMember.Id,
+                categoryId, custom.Text, (frequency.SelectedItem as Choice)?.Value ?? "Daily", pointValue, name.Text.Trim()));
             if (photo is not null) await UploadManagementPhotoAsync("tasks", id, photo);
             await RefreshAsync();
         }));
@@ -794,7 +804,7 @@ public sealed class MainPage : ContentPage
         var name = Field("RewardName"); var cost = Field("RewardPointCost"); cost.Text = "10";
         FileResult? photo = null;
         cost.Keyboard = Keyboard.Numeric; form.Add(name); form.Add(cost);
-        form.Add(SecondaryButton("RewardImage", async () => photo = await PickSinglePhotoAsync()));
+        AddPhotoPicker(form, "RewardImage", file => photo = file);
         var choices = new List<(int Id, CheckBox Box)>();
         foreach (var child in household!.Members.Where(item => item.Role == "Child"))
         {
@@ -820,7 +830,7 @@ public sealed class MainPage : ContentPage
             new Choice("Parent", L("Role_Parent")) };
         var role = ChoicePicker(L("FamilyRole"), roles, item.Role);
         form.Add(name); form.Add(role);
-        form.Add(SecondaryButton("MemberPhoto", async () => photo = await PickSinglePhotoAsync()));
+        AddPhotoPicker(form, "MemberPhoto", file => photo = file);
         form.Add(Button("SaveChanges", async () =>
         {
             await api!.UpdateMemberAsync(member!.Id, item.Id, new UpdateMemberRequest(name.Text ?? "",
@@ -837,7 +847,7 @@ public sealed class MainPage : ContentPage
         FileResult? photo = null;
         var birth = Field("BirthDate"); birth.Text = item.BirthDate?.ToString("yyyy-MM-dd");
         birth.Keyboard = Keyboard.Numeric; form.Add(name); form.Add(species); form.Add(birth);
-        form.Add(SecondaryButton("PetPhoto", async () => photo = await PickSinglePhotoAsync()));
+        AddPhotoPicker(form, "PetPhoto", file => photo = file);
         form.Add(Button("SaveChanges", async () =>
         {
             DateOnly? date = DateOnly.TryParse(birth.Text, out var parsed) ? parsed : null;
@@ -851,13 +861,16 @@ public sealed class MainPage : ContentPage
     private void ShowEditTask(ManagedTaskItemDto item) => ShowForm("EditCareTask", form =>
     {
         var pets = household!.Pets.ToList(); var members = household.Members.ToList();
+        pets.Insert(0, new PetItemDto(0, L("NoPet"), "", null, null));
         var categories = household.Categories.ToList();
+        categories.Insert(0, new CategoryItemDto(0, L("NoCategory")));
         var pet = PickerFor(L("ChoosePet"), pets, nameof(PetItemDto.Name));
         pet.SelectedIndex = Math.Max(0, pets.FindIndex(value => value.Id == item.PetId));
         var assignee = PickerFor(L("ChooseMember"), members, nameof(HouseholdMemberItemDto.DisplayName));
         assignee.SelectedIndex = Math.Max(0, members.FindIndex(value => value.Id == item.AssignedMemberId));
         var category = PickerFor(L("ChooseCategory"), categories, nameof(CategoryItemDto.Name));
         category.SelectedIndex = Math.Max(0, categories.FindIndex(value => value.Id == item.CategoryId));
+        var name = Field("TaskName"); name.Text = item.Name;
         var custom = Field("NewCategory");
         FileResult? photo = null;
         var frequencies = new[] { new Choice("Daily", L("Frequency_Daily")),
@@ -865,27 +878,58 @@ public sealed class MainPage : ContentPage
             new Choice("AsNeeded", L("Frequency_AsNeeded")) };
         var frequency = ChoicePicker(L("TaskFrequency"), frequencies, item.Frequency);
         var points = Field("PointValue"); points.Text = item.Points.ToString(); points.Keyboard = Keyboard.Numeric;
-        form.Add(pet); form.Add(assignee); form.Add(category); form.Add(custom); form.Add(frequency); form.Add(points);
-        form.Add(SecondaryButton("TaskImage", async () => photo = await PickSinglePhotoAsync()));
+        form.Add(name); form.Add(pet); form.Add(assignee); form.Add(category); form.Add(custom); form.Add(frequency); form.Add(points);
+        AddPhotoPicker(form, "TaskImage", file => photo = file);
         form.Add(Button("SaveChanges", async () =>
         {
-            if (pet.SelectedItem is not PetItemDto selectedPet ||
-                assignee.SelectedItem is not HouseholdMemberItemDto selectedMember) return;
+            if (string.IsNullOrWhiteSpace(name.Text)) throw new MobileApiException("TaskNameRequired");
+            var selectedPet = pet.SelectedItem as PetItemDto;
+            if (assignee.SelectedItem is not HouseholdMemberItemDto selectedMember) return;
             int.TryParse(points.Text, out var pointValue);
-            var categoryId = category.SelectedItem is CategoryItemDto selectedCategory ? selectedCategory.Id : (int?)null;
-            await api!.UpdateTaskAsync(member!.Id, item.Id, new UpdateTaskRequest(selectedPet.Id,
+            var categoryId = category.SelectedItem is CategoryItemDto { Id: > 0 } selectedCategory ? selectedCategory.Id : (int?)null;
+            await api!.UpdateTaskAsync(member!.Id, item.Id, new UpdateTaskRequest(selectedPet is { Id: > 0 } ? selectedPet.Id : null,
                 selectedMember.Id, categoryId, custom.Text,
-                (frequency.SelectedItem as Choice)?.Value ?? item.Frequency, pointValue));
+                (frequency.SelectedItem as Choice)?.Value ?? item.Frequency, pointValue, name.Text.Trim()));
             if (photo is not null) await UploadManagementPhotoAsync("tasks", item.Id, photo);
             await RefreshAsync();
         }));
     });
 
-    private static async Task<FileResult?> PickSinglePhotoAsync()
+    private async Task<IReadOnlyList<FileResult>> ChoosePhotosAsync(int limit)
     {
-        var file = await FilePicker.Default.PickAsync(new PickOptions { FileTypes = FilePickerFileType.Images });
-        if (file is not null) ValidatePhoto(file);
-        return file;
+        var choice = await DisplayActionSheetAsync(L("MobileAddPhoto"), L("Cancel"), null,
+            L("MobileTakePhoto"), L("MobilePickPhoto"));
+        List<FileResult> files = [];
+        if (choice == L("MobileTakePhoto"))
+        {
+            if (!MediaPicker.Default.IsCaptureSupported) throw new MobileApiException("MobileCameraUnavailable");
+            var photo = await MediaPicker.Default.CapturePhotoAsync();
+            if (photo is not null) files.Add(photo);
+        }
+        else if (choice == L("MobilePickPhoto"))
+            files = await MediaPicker.Default.PickPhotosAsync(new MediaPickerOptions { SelectionLimit = limit });
+        if (files.Count > limit) throw new MobileApiException("MobilePhotoLimit");
+        foreach (var file in files) ValidatePhoto(file);
+        return files;
+    }
+
+    private void AddPhotoPicker(VerticalStackLayout form, string key, Action<FileResult?> setPhoto)
+    {
+        var preview = new Image { IsVisible = false, HeightRequest = 150, Aspect = Aspect.AspectFit };
+        var remove = SecondaryButton("MobileRemovePhoto", () =>
+        { setPhoto(null); preview.Source = null; preview.IsVisible = false; return Task.CompletedTask; });
+        remove.IsVisible = false;
+        form.Add(SecondaryButton(key, async () =>
+        {
+            var file = (await ChoosePhotosAsync(1)).FirstOrDefault();
+            if (file is null) return;
+            setPhoto(file);
+            preview.Source = ImageSource.FromStream(_ => file.OpenReadAsync());
+            preview.IsVisible = true; remove.IsVisible = true;
+        }));
+        preview.PropertyChanged += (_, args) =>
+        { if (args.PropertyName == nameof(IsVisible)) remove.IsVisible = preview.IsVisible; };
+        form.Add(preview); form.Add(remove);
     }
 
     private Task UploadManagementPhotoAsync(string kind, int id, FileResult file) =>
@@ -909,7 +953,7 @@ public sealed class MainPage : ContentPage
     private ImageSource PhotoSource(string path)
     {
         if (path.StartsWith("/images/tasks/", StringComparison.Ordinal))
-            return ImageSource.FromFile(System.IO.Path.GetFileName(path));
+            return ImageSource.FromFile(System.IO.Path.GetFileName(path).Replace(".svg", ".png"));
         var client = api!;
         var memberId = member!.Id;
         return ImageSource.FromStream(async _ =>
@@ -938,18 +982,12 @@ public sealed class MainPage : ContentPage
                 { selectedPhotos.Remove(file); RefreshPreviews(); return Task.CompletedTask; }));
             }
         }
-        body.Add(Button("MobilePickPhoto", async () =>
+        body.Add(Button("MobileAddPhoto", async () =>
         {
             if (selectedPhotos.Count >= 8) throw new MobileApiException("MobilePhotoLimit");
-            var file = await FilePicker.Default.PickAsync(new PickOptions { FileTypes = FilePickerFileType.Images });
-            if (file is not null) { ValidatePhoto(file); selectedPhotos.Add(file); RefreshPreviews(); }
-        }));
-        body.Add(Button("MobileTakePhoto", async () =>
-        {
-            if (selectedPhotos.Count >= 8) throw new MobileApiException("MobilePhotoLimit");
-            if (!MediaPicker.Default.IsCaptureSupported) throw new MobileApiException("MobileCameraUnavailable");
-            var file = await MediaPicker.Default.CapturePhotoAsync();
-            if (file is not null) { ValidatePhoto(file); selectedPhotos.Add(file); RefreshPreviews(); }
+            var files = await ChoosePhotosAsync(8 - selectedPhotos.Count);
+            selectedPhotos.AddRange(files);
+            RefreshPreviews();
         }));
         body.Add(previews);
         body.Add(Button("MobileSendCompletion", async () =>

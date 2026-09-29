@@ -2,15 +2,15 @@
 
 ## Product vision
 
-HamsterHub is a family web application that helps a child care for a real
-animal, initially focused on hamsters. The child records real actions such as
-feeding, refreshing water, cleaning, playing, and health checks. Completed
-actions earn care points. Parents define safe household rewards that children
-can request with those points.
+HamsterHub is a family website and Android app for real-world tasks: homework,
+cleaning a room, household chores, and pet care. Parents name and assign tasks,
+optionally select a reusable category or create one, and optionally link a pet.
+Completed tasks earn points toward parent-managed rewards. Existing pet-care
+tasks keep their categories, pets, images, and history.
 
 The core product loop is:
 
-1. Care for the pet in real life.
+1. Complete an assigned task in real life.
 2. Record the completed task in HamsterHub.
 3. Optionally wait for parent approval.
 4. Receive the task's historical point value.
@@ -24,8 +24,8 @@ The core product loop is:
   accounts from a protected parent area.
 - Parents and children belong to a household.
 - Pets, custom care categories, and care tasks belong to a household.
-- Every care task is assigned to one pet, one active family member, and one
-  reusable category.
+- Every task is assigned to one active family member. Its category and pet are
+  optional; the task title is independent of its category.
 - A user may only access records belonging to one of their active household
   memberships.
 
@@ -57,8 +57,8 @@ The core product loop is:
 - Parents can edit and remove family members, pets, and care tasks. Removal is
   archival so existing care history remains valid.
 - Family members can have an optional profile photo managed by a parent.
-- The task form remembers the last selected pet and family member for the
-  current browser session.
+- New task forms default to no pet and no category; the website remembers the
+  last task assignee.
 - Parents have a unified, localized account area for changing their display
   name, sign-in email, password, and authenticator-based two-step security.
 - Parents can open any active family member's care history, including report
@@ -77,7 +77,7 @@ The core product loop is:
   automatically by that parent and receive the task's current point value.
 - Built-in care categories have dedicated hamster illustrations. Parents can
   optionally replace the image for an individual task, and custom tasks fall
-  back to the pet image.
+  back to a pet image or a neutral checklist illustration.
 - Children can report a task without a photo or attach up to eight completion
   photos. Parents see those photos in the approval queue and family history.
 - The child dashboard includes a tappable pet gallery, live camera capture,
@@ -151,3 +151,12 @@ here rather than relying only on conversational memory.
 - The native Android app includes household management rather than requiring a
   parent to return to the website: members, pets, tasks, their pictures, and rewards
   are managed through bearer-authenticated, household-scoped API operations.
+
+## General tasks and media (2026-09-30)
+
+- Task titles support any household activity; pet selection and category selection
+  are independent optional fields. Categories can be reused or created inline.
+- The app groups language, theme, and logout under Settings.
+- Image controls offer Camera and Gallery. Reports accumulate up to eight photos,
+  support multi-selection from the gallery, and show removable previews.
+- Unit tests and emulator checks were explicitly skipped for this increment.

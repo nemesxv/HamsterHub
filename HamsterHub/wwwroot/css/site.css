@@ -5075,3 +5075,10 @@ html[data-theme="dark"] .parent-home .dashboard-panel {
   .app-download { margin: 12px; padding: 16px; }
   .app-download a { width: 100%; }
 }
+
+.image-source-controls, .image-source-preview { display: flex; flex-wrap: wrap; gap: .65rem; margin-block: .5rem; }
+.image-source-controls button, .image-source-preview button { border: 1px solid #72a99d; border-radius: 1rem; padding: .65rem .9rem; background: #dff4ea; color: #173d3a; min-height: 44px; }
+.image-source-preview > div { display: flex; flex-direction: column; gap: .3rem; max-width: 130px; }
+.image-source-preview img { width: 120px; height: 95px; object-fit: cover; border-radius: .8rem; }
+.kid-selected-photo-preview > div { display: flex; flex-direction: column; gap: .4rem; max-width: 140px; }
+.kid-selected-photo-preview button { min-height: 44px; border-radius: .8rem; }

@@ -14,9 +14,8 @@ public sealed class PointBalanceService(ApplicationDbContext dbContext)
         var earned = await dbContext.CareLogs
             .Where(log =>
                 log.CompletedByUserId == userId &&
-                log.Pet.HouseholdId == householdId &&
+                (log.PetId == null || log.Pet!.HouseholdId == householdId) &&
                 log.CareTask.HouseholdId == householdId &&
-                log.CareTask.PetId == log.PetId &&
                 log.Status == CareLogStatus.Approved)
             .SumAsync(log => (int?)log.PointsAwarded, cancellationToken) ?? 0;
         var spent = await dbContext.RewardRedemptions
@@ -45,9 +44,8 @@ public sealed class PointBalanceService(ApplicationDbContext dbContext)
         var earned = await dbContext.CareLogs
             .Where(log =>
                 ids.Contains(log.CompletedByUserId) &&
-                log.Pet.HouseholdId == householdId &&
+                (log.PetId == null || log.Pet!.HouseholdId == householdId) &&
                 log.CareTask.HouseholdId == householdId &&
-                log.CareTask.PetId == log.PetId &&
                 log.Status == CareLogStatus.Approved)
             .GroupBy(log => log.CompletedByUserId)
             .Select(group => new { UserId = group.Key, Points = group.Sum(log => log.PointsAwarded) })

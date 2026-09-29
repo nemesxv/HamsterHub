@@ -35,7 +35,7 @@ public sealed class CareWorkflowService(
         var cutoff = care.GetEarliestAllowed(task.Frequency, now);
         // Evaluate DateTimeOffset in memory for parity between SQL Server and SQLite tests.
         var previous = await db.CareLogs.Where(l => l.CareTaskId == task.Id &&
-                l.PetId == task.PetId && l.CompletedByUserId == member.UserId &&
+                l.CompletedByUserId == member.UserId &&
                 l.Status != CareLogStatus.Rejected)
             .Select(l => l.CompletedAt).ToListAsync(cancellationToken);
         if (cutoff is not null && previous.Any(time => time >= cutoff))
@@ -79,8 +79,8 @@ public sealed class CareWorkflowService(
         await using var transaction = await db.Database.BeginTransactionAsync(
             IsolationLevel.Serializable, cancellationToken);
         var log = await db.CareLogs.Include(l => l.Pet).Include(l => l.CareTask)
-            .FirstOrDefaultAsync(l => l.Id == logId && l.Pet.HouseholdId == parent.HouseholdId &&
-                l.CareTask.HouseholdId == parent.HouseholdId && l.CareTask.PetId == l.PetId,
+            .FirstOrDefaultAsync(l => l.Id == logId && (l.PetId == null || l.Pet!.HouseholdId == parent.HouseholdId) &&
+                l.CareTask.HouseholdId == parent.HouseholdId,
                 cancellationToken);
         if (log is null || !care.CanReviewCareLog(log, parent)) return new(Error: "NotFound");
         care.ReviewCareLog(log, parent, decision,

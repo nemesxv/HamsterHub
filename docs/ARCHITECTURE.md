@@ -65,15 +65,15 @@ custom name and belong to one household.
 
 ### CareTask
 
-A parent-configured care action linked to exactly one pet, one active household
-member, and one category, with a non-negative point value, frequency, and
-active state. It may store an optional custom image path. When absent,
+A named family task assigned to one active household member, with optional
+`PetId` and `CareCategoryId`, a non-negative point value, frequency, and active
+state. Legacy tasks without a stored title retain their localized category name. It may store an optional custom image path. When absent,
 presentation resolves a built-in category illustration or a pet-photo fallback
 without persisting the derived path.
 
 ### CareLog
 
-An immutable historical record connecting a pet, care task, completing user,
+An immutable historical record connecting an optional historical pet, task, completing user,
 completion time, awarded points, approval status, optional approving user, and
 the point total immediately after approval.
 
@@ -104,7 +104,7 @@ pending; a parent-direct purchase is approved immediately.
 
 ## Important invariants
 
-- A care task, its selected pet, and any custom category must belong to the
+- A task, its pet when selected, and any custom category must belong to the
   same household.
 - A care task's assigned member must be an active member of that household.
 - The completing user must be the active household member assigned to the task.
@@ -152,7 +152,7 @@ snapshot, and review rules using the framework `TimeProvider`.
 
 The authenticated dashboard checks both the global Identity role and the active
 household membership. Task submissions verify that the completing user is the
-task assignee and that the member, pet, and care task belong to the same
+task assignee and that the member, optional pet, and task belong to the same
 household. Daily tasks can be submitted once per UTC calendar day and weekly
 tasks once per rolling seven-day period; this should become household-time-zone
 aware when household settings are introduced.
@@ -161,7 +161,7 @@ The Identity account-management area requires the `Parent` role. Children can
 sign in, use their care dashboard, and sign out but cannot directly change
 account settings in the early product.
 
-The last selected pet and task assignee are convenience-only ASP.NET Session
+The last selected task assignee is a convenience-only ASP.NET Session
 values. They are validated against active household records on every dashboard
 load and are never treated as authoritative domain data.
 
@@ -219,3 +219,12 @@ SQLite is not treated as proof of SQL Server-specific behavior. Provider
 differences such as collations, `DateTimeOffset` translation, and concurrent
 serializable approvals should receive LocalDB or production-provider integration
 coverage when that test tier is introduced.
+
+
+`GeneralFamilyTasks` makes task pet/category links and report pet links nullable,
+and adds `CareTask.Name`. Existing rows are preserved. Reports are scoped by their
+task household and (when present) historical pet household. They are not filtered
+against the task's current pet, so later edits do not erase earned balances.
+Recurrence is checked by task and user regardless of pet changes. The down
+migration refuses to invent pet/category IDs for general tasks; use the backup
+when returning to the previous schema after general tasks have been created.

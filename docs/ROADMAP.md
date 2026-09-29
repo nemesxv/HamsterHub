@@ -70,3 +70,10 @@ its implementation and proportionate verification are complete.
 - Privacy-permitted family point balances on the child dashboard without
   rankings or a competitive scoreboard.
 - Automatic pending-migration application for the local development database.
+
+## General family tasks (2026-09-30)
+
+- Website and app: independent task titles, optional pet/category, inline custom categories.
+- Mobile Settings groups language, theme, and logout.
+- Camera/gallery source choices, multi-photo reports, removable previews.
+- Verification scope: builds and migration review; no unit tests or emulator per request.

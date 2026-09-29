@@ -35,12 +35,11 @@ public sealed class MobileCareController(ApplicationDbContext db, UserManager<Ap
         var allowed = segments[2] switch
         {
             "care-logs" => await db.CareLogPhotos.AnyAsync(p => p.ImagePath == path &&
-                p.CareLog.Pet.HouseholdId == member.HouseholdId &&
+                (p.CareLog.PetId == null || p.CareLog.Pet!.HouseholdId == member.HouseholdId) &&
                 p.CareLog.CareTask.HouseholdId == member.HouseholdId &&
-                p.CareLog.CareTask.PetId == p.CareLog.PetId &&
                 (isParent || p.CareLog.CompletedByUserId == member.UserId), cancellationToken),
             "tasks" => await db.CareTasks.AnyAsync(t => t.ImagePath == path && t.HouseholdId == member.HouseholdId &&
-                t.Pet.HouseholdId == member.HouseholdId && (isParent || t.AssignedMemberId == member.Id), cancellationToken),
+                (t.PetId == null || t.Pet!.HouseholdId == member.HouseholdId) && (isParent || t.AssignedMemberId == member.Id), cancellationToken),
             "pets" => await db.Pets.AnyAsync(p => p.PhotoPath == path && p.HouseholdId == member.HouseholdId, cancellationToken),
             "members" => await db.HouseholdMembers.AnyAsync(m => m.User.ProfilePhotoPath == path &&
                 m.HouseholdId == member.HouseholdId && m.IsActive && m.User.IsActive, cancellationToken),
@@ -76,7 +75,7 @@ public sealed class MobileCareController(ApplicationDbContext db, UserManager<Ap
         var tasks = await db.CareTasks.AsNoTracking().Include(t => t.Pet)
             .Include(t => t.CareCategory).Include(t => t.AssignedMember)
             .Where(t => t.HouseholdId == member.HouseholdId && t.AssignedMemberId == member.Id &&
-                t.IsActive && t.Pet.IsActive && t.Pet.HouseholdId == member.HouseholdId)
+                t.IsActive && (t.PetId == null || t.Pet!.IsActive) && (t.PetId == null || t.Pet!.HouseholdId == member.HouseholdId))
             .ToListAsync(cancellationToken);
         var ownLogs = await ScopedLogs(member.HouseholdId)
             .Where(l => l.CompletedByUserId == member.UserId).ToListAsync(cancellationToken);
@@ -85,10 +84,10 @@ public sealed class MobileCareController(ApplicationDbContext db, UserManager<Ap
                 .ToListAsync(cancellationToken) : [];
         var now = care.GetUtcNow();
         return new DashboardDto(await points.GetBalanceAsync(member.HouseholdId, member.UserId, cancellationToken),
-            tasks.OrderBy(t => t.Pet.Name).Select(t =>
+            tasks.OrderBy(t => t.Pet == null ? "" : t.Pet.Name).Select(t =>
             {
                 var cutoff = care.GetEarliestAllowed(t.Frequency, now);
-                return new TaskDto(t.Id, t.Pet.Name, CategoryName(t.CareCategory), ImagePath(t),
+                return new TaskDto(t.Id, t.Pet?.Name ?? CategoryName(t.CareCategory), t.Name ?? CategoryName(t.CareCategory), ImagePath(t),
                     t.PointValue, t.Frequency.ToString(), care.CanCompleteTask(t, member) &&
                     (cutoff is null || !ownLogs.Any(l => l.CareTaskId == t.Id &&
                         l.Status != CareLogStatus.Rejected && l.CompletedAt >= cutoff)));
@@ -139,16 +138,15 @@ public sealed class MobileCareController(ApplicationDbContext db, UserManager<Ap
     private IQueryable<CareLog> ScopedLogs(int householdId) => db.CareLogs.AsNoTracking()
         .Include(l => l.Photos).Include(l => l.CompletedByUser)
         .Include(l => l.Pet).Include(l => l.CareTask).ThenInclude(t => t.CareCategory)
-        .Where(l => l.Pet.HouseholdId == householdId && l.CareTask.HouseholdId == householdId &&
-            l.CareTask.PetId == l.PetId);
+        .Where(l => (l.PetId == null || l.Pet!.HouseholdId == householdId) && l.CareTask.HouseholdId == householdId);
 
-    private string CategoryName(CareCategory category) => category.Code is { } code
-        ? localizer[$"Category_{code}"].Value : category.CustomName ?? "";
-    private static string ImagePath(CareTask task) => task.ImagePath ?? (task.CareCategory.Code is
+    private string CategoryName(CareCategory? category) => category?.Code is { } code
+        ? localizer[$"Category_{code}"].Value : category?.CustomName ?? localizer["GeneralTask"].Value;
+    private static string ImagePath(CareTask task) => task.ImagePath ?? (task.CareCategory?.Code is
         "Feeding" or "Water" or "Cleaning" or "Playing" or "Health"
-            ? $"/images/tasks/{task.CareCategory.Code.ToLowerInvariant()}.webp"
-            : task.Pet.PhotoPath ?? "/images/tasks/playing.webp");
-    private CareLogDto ToDto(CareLog log) => new(log.Id, log.Pet.Name, CategoryName(log.CareTask.CareCategory),
+            ? $"/images/tasks/{task.CareCategory!.Code!.ToLowerInvariant()}.webp"
+            : task.Pet?.PhotoPath ?? "/images/tasks/general.svg");
+    private CareLogDto ToDto(CareLog log) => new(log.Id, log.Pet?.Name ?? CategoryName(log.CareTask.CareCategory), log.CareTask.Name ?? CategoryName(log.CareTask.CareCategory),
         log.CompletedByUser.DisplayName, log.Status.ToString(), log.PointsAwarded, log.CompletedAt,
         log.Photos.OrderBy(p => p.Id).Select(p => p.ImagePath).ToList());
 }

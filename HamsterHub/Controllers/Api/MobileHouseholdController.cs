@@ -54,11 +54,11 @@ public sealed class MobileHouseholdController(
 
         var taskQuery = db.CareTasks.AsNoTracking().Include(item => item.Pet)
             .Include(item => item.CareCategory).Include(item => item.AssignedMember).ThenInclude(item => item.User)
-            .Where(item => item.HouseholdId == viewer.HouseholdId && item.IsActive && item.Pet.IsActive);
+            .Where(item => item.HouseholdId == viewer.HouseholdId && item.IsActive && (item.PetId == null || item.Pet!.IsActive));
         if (!isParent) taskQuery = taskQuery.Where(item => item.AssignedMemberId == viewer.Id);
-        var tasks = await taskQuery.OrderBy(item => item.Pet.Name).ToListAsync(cancellationToken);
-        var taskItems = tasks.Select(item => new ManagedTaskItemDto(item.Id, item.PetId, item.Pet.Name,
-            item.CareCategoryId, CategoryName(item.CareCategory), item.AssignedMemberId,
+        var tasks = await taskQuery.OrderBy(item => item.Pet == null ? "" : item.Pet.Name).ToListAsync(cancellationToken);
+        var taskItems = tasks.Select(item => new ManagedTaskItemDto(item.Id, item.PetId, item.Pet?.Name ?? CategoryName(item.CareCategory),
+            item.CareCategoryId, item.Name ?? CategoryName(item.CareCategory), item.AssignedMemberId,
             item.AssignedMember.User.DisplayName, item.Frequency.ToString(), item.PointValue,
             TaskImage(item), false)).ToList();
 
@@ -148,13 +148,13 @@ public sealed class MobileHouseholdController(
         var parent = await GetParentAsync(memberId, cancellationToken);
         if (parent is null) return Forbid();
         if (!Enum.TryParse<CareTaskFrequency>(request.Frequency, true, out var frequency) ||
-            request.Points is < 0 or > 1000) return BadRequest(new ApiError("CheckFormFields"));
+            !Enum.IsDefined(frequency) || request.Points is < 0 or > 1000) return BadRequest(new ApiError("CheckFormFields"));
         var pet = await db.Pets.FirstOrDefaultAsync(item => item.Id == request.PetId &&
             item.HouseholdId == parent.HouseholdId && item.IsActive, cancellationToken);
         var assignee = await db.HouseholdMembers.FirstOrDefaultAsync(item =>
             item.Id == request.AssignedMemberId && item.HouseholdId == parent.HouseholdId && item.IsActive,
             cancellationToken);
-        if (pet is null || assignee is null) return NotFound(new ApiError("NotFound"));
+        if ((request.PetId is not null && pet is null) || assignee is null) return NotFound(new ApiError("NotFound"));
         CareCategory? category = null;
         var custom = request.NewCategoryName?.Trim();
         if (!string.IsNullOrWhiteSpace(custom))
@@ -170,8 +170,11 @@ public sealed class MobileHouseholdController(
         else if (request.CategoryId is { } categoryId)
             category = await db.CareCategories.FirstOrDefaultAsync(item => item.Id == categoryId && item.IsActive &&
                 (item.HouseholdId == null || item.HouseholdId == parent.HouseholdId), cancellationToken);
-        if (category is null) return BadRequest(new ApiError("ChooseOrAddCategory"));
-        var task = new CareTask { HouseholdId = parent.HouseholdId, PetId = pet.Id,
+        if (category is null && (request.CategoryId is not null || !string.IsNullOrWhiteSpace(custom)))
+            return BadRequest(new ApiError("ChooseOrAddCategory"));
+        if (string.IsNullOrWhiteSpace(request.Name) && category is null)
+            return BadRequest(new ApiError("TaskNameRequired"));
+        var task = new CareTask { HouseholdId = parent.HouseholdId, PetId = pet?.Id, Name = request.Name?.Trim(),
             AssignedMemberId = assignee.Id, CareCategory = category, Frequency = frequency,
             PointValue = request.Points };
         db.CareTasks.Add(task);
@@ -249,7 +252,7 @@ public sealed class MobileHouseholdController(
         var parent = await GetParentAsync(memberId, cancellationToken);
         if (parent is null) return Forbid();
         if (!Enum.TryParse<CareTaskFrequency>(request.Frequency, true, out var frequency) ||
-            request.Points is < 0 or > 1000) return BadRequest(new ApiError("CheckFormFields"));
+            !Enum.IsDefined(frequency) || request.Points is < 0 or > 1000) return BadRequest(new ApiError("CheckFormFields"));
         var task = await db.CareTasks.FirstOrDefaultAsync(item => item.Id == id &&
             item.HouseholdId == parent.HouseholdId && item.IsActive, cancellationToken);
         var pet = await db.Pets.FirstOrDefaultAsync(item => item.Id == request.PetId &&
@@ -257,7 +260,7 @@ public sealed class MobileHouseholdController(
         var assignee = await db.HouseholdMembers.FirstOrDefaultAsync(item =>
             item.Id == request.AssignedMemberId && item.HouseholdId == parent.HouseholdId && item.IsActive,
             cancellationToken);
-        if (task is null || pet is null || assignee is null) return NotFound();
+        if (task is null || (request.PetId is not null && pet is null) || assignee is null) return NotFound();
         CareCategory? category = null;
         var custom = request.NewCategoryName?.Trim();
         if (!string.IsNullOrWhiteSpace(custom))
@@ -273,8 +276,12 @@ public sealed class MobileHouseholdController(
         else if (request.CategoryId is { } categoryId)
             category = await db.CareCategories.FirstOrDefaultAsync(item => item.Id == categoryId && item.IsActive &&
                 (item.HouseholdId == null || item.HouseholdId == parent.HouseholdId), cancellationToken);
-        if (category is null) return BadRequest(new ApiError("ChooseOrAddCategory"));
-        task.PetId = pet.Id; task.AssignedMemberId = assignee.Id; task.CareCategory = category;
+        if (category is null && (request.CategoryId is not null || !string.IsNullOrWhiteSpace(custom)))
+            return BadRequest(new ApiError("ChooseOrAddCategory"));
+        if (string.IsNullOrWhiteSpace(request.Name) && category is null)
+            return BadRequest(new ApiError("TaskNameRequired"));
+        task.PetId = pet?.Id; task.Name = request.Name?.Trim(); task.AssignedMemberId = assignee.Id;
+        task.CareCategoryId = category?.Id; task.CareCategory = category;
         task.Frequency = frequency; task.PointValue = request.Points;
         await db.SaveChangesAsync(cancellationToken);
         return Ok();
@@ -466,10 +473,10 @@ public sealed class MobileHouseholdController(
         return member is not null && await users.IsInRoleAsync(user, member.MemberRole.ToString()) ? member : null;
     }
 
-    private string CategoryName(CareCategory category) => category.Code is { } code
-        ? localizer[$"Category_{code}"].Value : category.CustomName ?? "";
-    private static string TaskImage(CareTask task) => task.ImagePath ?? (task.CareCategory.Code is
+    private string CategoryName(CareCategory? category) => category?.Code is { } code
+        ? localizer[$"Category_{code}"].Value : category?.CustomName ?? localizer["GeneralTask"].Value;
+    private static string TaskImage(CareTask task) => task.ImagePath ?? (task.CareCategory?.Code is
         "Feeding" or "Water" or "Cleaning" or "Playing" or "Health"
-            ? $"/images/tasks/{task.CareCategory.Code.ToLowerInvariant()}.webp"
-            : task.Pet.PhotoPath ?? "/images/tasks/playing.webp");
+            ? $"/images/tasks/{task.CareCategory!.Code!.ToLowerInvariant()}.webp"
+            : task.Pet?.PhotoPath ?? "/images/tasks/general.svg");
 }

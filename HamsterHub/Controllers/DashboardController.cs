@@ -63,7 +63,7 @@ public class DashboardController(
             .Include(task => task.AssignedMember)
                 .ThenInclude(member => member.User)
             .Where(task => task.HouseholdId == householdId && task.IsActive)
-            .OrderBy(task => task.Pet.Name)
+            .OrderBy(task => task.Pet == null ? "" : task.Pet.Name)
             .ToListAsync();
         var pendingEntities = await dbContext.CareLogs
             .AsNoTracking()
@@ -73,9 +73,8 @@ public class DashboardController(
             .Include(log => log.CareTask)
                 .ThenInclude(task => task.CareCategory)
             .Where(log =>
-                log.Pet.HouseholdId == householdId &&
+                (log.PetId == null || log.Pet!.HouseholdId == householdId) &&
                 log.CareTask.HouseholdId == householdId &&
-                log.CareTask.PetId == log.PetId &&
                 log.Status == CareLogStatus.Pending)
             .OrderByDescending(log => log.CompletedAt)
             .ToListAsync();
@@ -149,10 +148,10 @@ public class DashboardController(
                 .Select(task => new CareTaskSummary(
                     task.Id,
                     task.PetId,
-                    task.Pet.Name,
-                    task.Pet.PhotoPath,
+                    task.Pet?.Name ?? GetCategoryName(task.CareCategory),
+                    task.Pet?.PhotoPath,
                     task.CareCategoryId,
-                    GetCategoryName(task.CareCategory),
+                    GetTaskName(task),
                     task.AssignedMemberId,
                     task.AssignedMember.User.DisplayName,
                     task.Frequency,
@@ -165,8 +164,8 @@ public class DashboardController(
                 .Select(log => new PendingCareSummary(
                     log.Id,
                     log.CompletedByUser.DisplayName,
-                    log.Pet.Name,
-                    GetCategoryName(log.CareTask.CareCategory),
+                    log.Pet?.Name ?? GetCategoryName(log.CareTask.CareCategory),
+                    GetTaskName(log.CareTask),
                     log.PointsAwarded,
                     log.CompletedAt,
                     log.Photos.Select(photo => photo.ImagePath).ToList()))
@@ -201,8 +200,7 @@ public class DashboardController(
                     rewardChildBalances[child.UserId]))
                 .ToList()
         };
-        model.AddCareTask.PetId = GetRememberedSelection(
-            "LastTaskPetId", model.Pets.Select(pet => pet.Id));
+        model.AddCareTask.PetId = null;
         model.AddCareTask.AssignedMemberId = GetRememberedSelection(
             "LastTaskMemberId", model.Members.Select(member => member.Id));
 
@@ -241,9 +239,9 @@ public class DashboardController(
                 task.HouseholdId == householdId &&
                 task.AssignedMemberId == membership.Id &&
                 task.IsActive &&
-                task.Pet.IsActive &&
+                (task.PetId == null || task.Pet!.IsActive) &&
                 task.AssignedMember.IsActive)
-            .OrderBy(task => task.Pet.Name)
+            .OrderBy(task => task.Pet == null ? "" : task.Pet.Name)
             .ToListAsync();
         var recentCareEntities = await dbContext.CareLogs
             .AsNoTracking()
@@ -253,9 +251,8 @@ public class DashboardController(
                 .ThenInclude(task => task.CareCategory)
             .Where(log =>
                 log.CompletedByUserId == user.Id &&
-                log.Pet.HouseholdId == householdId &&
-                log.CareTask.HouseholdId == householdId &&
-                log.CareTask.PetId == log.PetId)
+                (log.PetId == null || log.Pet!.HouseholdId == householdId) &&
+                log.CareTask.HouseholdId == householdId)
             .OrderByDescending(log => log.CompletedAt)
             .Take(8)
             .ToListAsync();
@@ -311,9 +308,8 @@ public class DashboardController(
             CurrentPoints = currentBalance,
             PendingCount = await dbContext.CareLogs.CountAsync(log =>
                 log.CompletedByUserId == user.Id &&
-                log.Pet.HouseholdId == householdId &&
+                (log.PetId == null || log.Pet!.HouseholdId == householdId) &&
                 log.CareTask.HouseholdId == householdId &&
-                log.CareTask.PetId == log.PetId &&
                 log.Status == CareLogStatus.Pending),
             Pets = await dbContext.Pets
                 .AsNoTracking()
@@ -326,10 +322,10 @@ public class DashboardController(
                 .Select(task => new CareTaskSummary(
                     task.Id,
                     task.PetId,
-                    task.Pet.Name,
-                    task.Pet.PhotoPath,
+                    task.Pet?.Name ?? GetCategoryName(task.CareCategory),
+                    task.Pet?.PhotoPath,
                     task.CareCategoryId,
-                    GetCategoryName(task.CareCategory),
+                    GetTaskName(task),
                     task.AssignedMemberId,
                     user.DisplayName,
                     task.Frequency,
@@ -340,9 +336,9 @@ public class DashboardController(
                 .ToList(),
             RecentCare = recentCareEntities
                 .Select(log => new KidCareHistorySummary(
-                    log.Pet.Name,
-                    log.Pet.PhotoPath,
-                    GetCategoryName(log.CareTask.CareCategory),
+                    log.Pet?.Name ?? GetCategoryName(log.CareTask.CareCategory),
+                    log.Pet?.PhotoPath,
+                    GetTaskName(log.CareTask),
                     log.PointsAwarded,
                     log.PointsTotalAfterApproval,
                     log.Status,
@@ -413,9 +409,8 @@ public class DashboardController(
             .Include(log => log.ApprovedByUser)
             .Where(log =>
                 log.CompletedByUserId == member.UserId &&
-                log.Pet.HouseholdId == membership.HouseholdId &&
-                log.CareTask.HouseholdId == membership.HouseholdId &&
-                log.CareTask.PetId == log.PetId)
+                (log.PetId == null || log.Pet!.HouseholdId == membership.HouseholdId) &&
+                log.CareTask.HouseholdId == membership.HouseholdId)
             .ToListAsync();
         var rewardRedemptions = await dbContext.RewardRedemptions
             .AsNoTracking()
@@ -429,8 +424,8 @@ public class DashboardController(
         var history = logs
             .Select(log => new MemberPointHistorySummary(
                 MemberPointHistoryKind.Care,
-                GetCategoryName(log.CareTask.CareCategory),
-                log.Pet.Name,
+                GetTaskName(log.CareTask),
+                log.Pet?.Name ?? GetCategoryName(log.CareTask.CareCategory),
                 log.Status == CareLogStatus.Approved ? log.PointsAwarded : 0,
                 log.PointsTotalAfterApproval,
                 $"Status_{log.Status}",
@@ -511,9 +506,8 @@ public class DashboardController(
                 .ThenInclude(task => task.CareCategory)
             .Where(log =>
                 log.CompletedByUserId == member.UserId &&
-                log.Pet.HouseholdId == viewer.HouseholdId &&
+                (log.PetId == null || log.Pet!.HouseholdId == viewer.HouseholdId) &&
                 log.CareTask.HouseholdId == viewer.HouseholdId &&
-                log.CareTask.PetId == log.PetId &&
                 log.Status == CareLogStatus.Approved)
             .OrderByDescending(log => log.CompletedAt)
             .Take(30)
@@ -528,8 +522,8 @@ public class DashboardController(
             CurrentPoints = await pointBalanceService.GetBalanceAsync(
                 viewer.HouseholdId, member.UserId),
             History = logs.Select(log => new KidSharedCareHistorySummary(
-                log.Pet.Name,
-                GetCategoryName(log.CareTask.CareCategory),
+                log.Pet?.Name ?? GetCategoryName(log.CareTask.CareCategory),
+                GetTaskName(log.CareTask),
                 log.CompletedAt,
                 GetCareLogImagePath(log),
                 log.Photos
@@ -710,7 +704,8 @@ public class DashboardController(
     [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Parent")]
     public async Task<IActionResult> AddCareTask([Bind(Prefix = "AddCareTask")] AddCareTaskInput input)
     {
-        if (!ModelState.IsValid || !Enum.IsDefined(input.Frequency))
+        if (!ModelState.IsValid || !Enum.IsDefined(input.Frequency) ||
+            (string.IsNullOrWhiteSpace(input.Name) && input.CategoryId is null && string.IsNullOrWhiteSpace(input.NewCategoryName)))
         {
             TempData["StatusMessage"] = localizer["CheckFormFields"].Value;
             return RedirectToAction(nameof(Parent));
@@ -726,7 +721,7 @@ public class DashboardController(
             item.Id == input.PetId &&
             item.HouseholdId == membership.HouseholdId &&
             item.IsActive);
-        if (pet is null)
+        if (input.PetId is not null && pet is null)
         {
             return Forbid();
         }
@@ -769,7 +764,7 @@ public class DashboardController(
             category = null;
         }
 
-        if (category is null)
+        if (category is null && (input.CategoryId is not null || !string.IsNullOrWhiteSpace(input.NewCategoryName)))
         {
             TempData["StatusMessage"] = localizer["ChooseOrAddCategory"].Value;
             return RedirectToAction(nameof(Parent));
@@ -792,7 +787,8 @@ public class DashboardController(
         dbContext.CareTasks.Add(new CareTask
         {
             HouseholdId = membership.HouseholdId,
-            PetId = pet.Id,
+            PetId = pet?.Id,
+            Name = input.Name?.Trim(),
             AssignedMemberId = assignedMember.Id,
             CareCategory = category,
             Frequency = input.Frequency,
@@ -808,9 +804,9 @@ public class DashboardController(
             DeleteUploadedImage(imagePath, "tasks");
             throw;
         }
-        RememberTaskSelections(pet.Id, assignedMember.Id);
+        RememberTaskSelections(pet?.Id, assignedMember.Id);
 
-        TempData["StatusMessage"] = localizer["CareTaskAdded", GetCategoryName(category)].Value;
+        TempData["StatusMessage"] = localizer["CareTaskAdded", input.Name?.Trim() ?? GetCategoryName(category)].Value;
         return RedirectToAction(nameof(Parent));
     }
 
@@ -829,11 +825,12 @@ public class DashboardController(
     }
 
     [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Parent")]
-    public async Task<IActionResult> CompleteTaskAsParent(int careTaskId)
+    [RequestSizeLimit(45 * 1024 * 1024)]
+    public async Task<IActionResult> CompleteTaskAsParent(int careTaskId, List<IFormFile>? photos = null)
     {
         var membership = await GetCurrentMembershipAsync(HouseholdMemberRole.Parent);
         if (membership is null) return Forbid();
-        var result = await workflow.CompleteAsync(membership, careTaskId);
+        var result = await workflow.CompleteAsync(membership, careTaskId, photos);
         if (result.Error == "Forbidden") return Forbid();
         TempData["StatusMessage"] = localizer[result.Error ?? "ParentTaskCompleted"].Value;
         return RedirectToAction(nameof(Parent));
@@ -1300,7 +1297,8 @@ public class DashboardController(
     public async Task<IActionResult> UpdateCareTask(
         [Bind(Prefix = "UpdateCareTask")] UpdateCareTaskInput input)
     {
-        if (!ModelState.IsValid || !Enum.IsDefined(input.Frequency))
+        if (!ModelState.IsValid || !Enum.IsDefined(input.Frequency) ||
+            (string.IsNullOrWhiteSpace(input.Name) && input.CategoryId is null && string.IsNullOrWhiteSpace(input.NewCategoryName)))
         {
             TempData["StatusMessage"] = localizer["CheckFormFields"].Value;
             return RedirectToAction(nameof(Parent));
@@ -1324,21 +1322,23 @@ public class DashboardController(
             item.Id == input.AssignedMemberId &&
             item.HouseholdId == membership.HouseholdId &&
             item.IsActive);
-        if (task is null || !petExists || !memberExists)
+        if (task is null || (input.PetId is not null && !petExists) || !memberExists)
         {
             return NotFound();
         }
 
         var category = await ResolveCategoryAsync(
             membership.HouseholdId, input.CategoryId, input.NewCategoryName);
-        if (category is null)
+        if (category is null && (input.CategoryId is not null || !string.IsNullOrWhiteSpace(input.NewCategoryName)))
         {
             TempData["StatusMessage"] = localizer["ChooseOrAddCategory"].Value;
             return RedirectToAction(nameof(Parent));
         }
 
         task.PetId = input.PetId;
+        task.Name = input.Name?.Trim();
         task.AssignedMemberId = input.AssignedMemberId;
+        task.CareCategoryId = category?.Id;
         task.CareCategory = category;
         task.Frequency = input.Frequency;
         task.PointValue = input.PointValue;
@@ -1448,10 +1448,12 @@ public class DashboardController(
             ? household.Name
             : localizer["DefaultHouseholdName"].Value;
 
-    private string GetCategoryName(CareCategory category) =>
-        category.Code is not null
+    private string GetTaskName(CareTask task) => task.Name ?? GetCategoryName(task.CareCategory);
+
+    private string GetCategoryName(CareCategory? category) =>
+        category?.Code is not null
             ? localizer[$"Category_{category.Code}"].Value
-            : category.CustomName ?? string.Empty;
+            : category?.CustomName ?? localizer["GeneralTask"].Value;
 
     private string GetTaskImagePath(CareTask task)
     {
@@ -1467,7 +1469,7 @@ public class DashboardController(
             return defaultPath;
         }
 
-        return task.Pet?.PhotoPath ?? "/images/tasks/playing.webp";
+        return task.Pet?.PhotoPath ?? "/images/tasks/general.svg";
     }
 
     private string GetCareLogImagePath(CareLog log) =>
@@ -1529,9 +1531,10 @@ public class DashboardController(
             : allowed.FirstOrDefault();
     }
 
-    private void RememberTaskSelections(int petId, int memberId)
+    private void RememberTaskSelections(int? petId, int memberId)
     {
-        HttpContext.Session.SetInt32("LastTaskPetId", petId);
+        if (petId is { } selectedPet) HttpContext.Session.SetInt32("LastTaskPetId", selectedPet);
+        else HttpContext.Session.Remove("LastTaskPetId");
         HttpContext.Session.SetInt32("LastTaskMemberId", memberId);
     }
 }

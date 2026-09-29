@@ -193,3 +193,21 @@ health-checks the website, then atomically replaces and verifies the live downlo
 - The Release APK was installed on the emulator and reached the live Docker API
   at `http://192.168.1.69:5080`; a disposable invalid login returned the expected
   authentication response, proving cleartext HTTP works end to end.
+
+## General-task update (0.1.14)
+
+Task creation/editing now sends `Name`, nullable `PetId`, and nullable `CategoryId`.
+The existing pet list and household-scoped custom categories remain available.
+Update the Android client before managing general tasks: older clients assumed
+non-null pet/category IDs. Settings contains language/theme/logout. Photo buttons
+open a camera/gallery source sheet; gallery supports selecting several report
+photos in one operation (eight total). New single-image selections show previews.
+
+Verification for this update excludes unit tests and emulator runs at the user's
+request. Prior version's test/device results above do not verify this increment.
+
+The migration applied successfully to local SQL Server. A disposable local HTTP
+check verified a task without a pet/category, creation and removal of its category,
+a two-photo report, authorized image retrieval, and the resulting points balance.
+The website and Android 0.1.14 Release builds completed with zero warnings/errors;
+JavaScript syntax and parity of all 480 Russian/English resource keys were checked.

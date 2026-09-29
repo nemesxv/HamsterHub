@@ -9,6 +9,7 @@
     var pendingTotal = Model.PendingCare.Count + Model.PendingRewards.Count;
 }
 
+<div hidden data-photo-labels data-camera="@L["MobileTakePhoto"]" data-gallery="@L["MobilePickPhoto"]" data-remove="@L["MobileRemovePhoto"]" data-limit="@L["MobilePhotoLimit"]"></div>
 <div class="dashboard-shell parent-home">
     <section class="parent-home-hero">
         <div class="parent-home-welcome">
@@ -310,8 +311,9 @@
                                 <div class="row-actions">
                                     @if (task.CanCurrentUserComplete)
                                     {
-                                        <form asp-action="CompleteTaskAsParent" method="post">
+                                        <form asp-action="CompleteTaskAsParent" method="post" enctype="multipart/form-data">
                                             <input type="hidden" name="careTaskId" value="@task.Id" />
+                                            <input type="file" name="photos" accept="image/jpeg,image/png,image/webp" multiple aria-label="@L["ChooseTaskPhotos"]" />
                                             <button type="submit" class="icon-action complete-action">
                                                 <span aria-hidden="true">✓</span> @L["CompleteTask"]
                                             </button>
@@ -659,9 +661,11 @@
             <h2 id="taskModalLabel">@L["AddCareTask"]</h2>
             <p>@L["TaskFormIntro"]</p>
             <form asp-action="AddCareTask" method="post" enctype="multipart/form-data">
+                <label asp-for="AddCareTask.Name"></label>
+                <input asp-for="AddCareTask.Name" required maxlength="100" placeholder="@L["TaskNamePlaceholder"]" />
                 <label asp-for="AddCareTask.PetId"></label>
                 <select asp-for="AddCareTask.PetId">
-                    <option value="">@L["ChoosePet"]</option>
+                    <option value="">@L["NoPet"]</option>
                     @foreach (var pet in Model.Pets)
                     {
                         <option value="@pet.Id">@pet.Name</option>
@@ -677,7 +681,7 @@
                 </select>
                 <label asp-for="AddCareTask.CategoryId"></label>
                 <select asp-for="AddCareTask.CategoryId">
-                    <option value="">@L["ChooseCategory"]</option>
+                    <option value="">@L["NoCategory"]</option>
                     @foreach (var category in Model.CareCategories)
                     {
                         <option value="@category.Id">@category.Name</option>
@@ -829,8 +833,11 @@
                 <h2 id="edit-task-label-@task.Id">@L["EditCareTask"]</h2>
                 <form asp-action="UpdateCareTask" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="UpdateCareTask.Id" value="@task.Id" />
+                    <label for="task-name-@task.Id">@L["TaskName"]</label>
+                    <input id="task-name-@task.Id" name="UpdateCareTask.Name" value="@task.CategoryName" required maxlength="100" />
                     <label for="task-pet-@task.Id">@L["TaskPet"]</label>
                     <select id="task-pet-@task.Id" name="UpdateCareTask.PetId">
+                        <option value="" selected="@(task.PetId is null)">@L["NoPet"]</option>
                         @foreach (var pet in Model.Pets)
                         {
                             <option value="@pet.Id" selected="@(pet.Id == task.PetId)">@pet.Name</option>
@@ -847,6 +854,7 @@
                     </select>
                     <label for="task-category-@task.Id">@L["TaskCategory"]</label>
                     <select id="task-category-@task.Id" name="UpdateCareTask.CategoryId">
+                        <option value="" selected="@(task.CategoryId is null)">@L["NoCategory"]</option>
                         @foreach (var category in Model.CareCategories)
                         {
                             <option value="@category.Id" selected="@(category.Id == task.CategoryId)">@category.Name</option>

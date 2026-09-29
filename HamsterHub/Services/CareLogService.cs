@@ -24,8 +24,8 @@ public sealed class CareLogService(TimeProvider timeProvider)
         careTask.IsActive &&
         careTask.HouseholdId == member.HouseholdId &&
         careTask.AssignedMemberId == member.Id &&
-        careTask.Pet is { IsActive: true } &&
-        careTask.Pet.HouseholdId == member.HouseholdId &&
+        (careTask.PetId == null || (careTask.Pet is { IsActive: true } &&
+        careTask.Pet.HouseholdId == member.HouseholdId)) &&
         careTask.AssignedMember is { IsActive: true } &&
         careTask.AssignedMember.Id == member.Id &&
         careTask.AssignedMember.HouseholdId == member.HouseholdId;
@@ -34,11 +34,10 @@ public sealed class CareLogService(TimeProvider timeProvider)
         parent.IsActive &&
         parent.MemberRole == HouseholdMemberRole.Parent &&
         careLog.Status == CareLogStatus.Pending &&
-        careLog.Pet is not null &&
-        careLog.Pet.HouseholdId == parent.HouseholdId &&
+        (careLog.PetId == null || (careLog.Pet is not null &&
+        careLog.Pet.HouseholdId == parent.HouseholdId)) &&
         careLog.CareTask is not null &&
-        careLog.CareTask.HouseholdId == parent.HouseholdId &&
-        careLog.CareTask.PetId == careLog.PetId;
+        careLog.CareTask.HouseholdId == parent.HouseholdId;
 
     public CareLog CreateChildCompletion(
         CareTask careTask,

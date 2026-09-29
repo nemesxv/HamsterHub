@@ -61,7 +61,7 @@
             <h2>@L["KidChooseTask"]</h2>
         </header>
 
-        @if (Model.Pets.Count == 0 || Model.CareTasks.Count == 0)
+        @if (Model.CareTasks.Count == 0)
         {
             <div class="kid-picture-empty">
                 <span aria-hidden="true">🐹</span>
@@ -351,7 +351,7 @@
 
 @foreach (var task in Model.CareTasks)
 {
-    <div class="modal fade kid-complete-modal" id="complete-task-@task.Id" tabindex="-1"
+    <div data-photo-limit="@L["MobilePhotoLimit"]" data-photo-remove="@L["MobileRemovePhoto"]" class="modal fade kid-complete-modal" id="complete-task-@task.Id" tabindex="-1"
          aria-labelledby="complete-task-title-@task.Id" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">

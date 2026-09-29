@@ -247,6 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const preview = modal.querySelector("[data-photo-preview]");
     let cameraStream = null;
     let previewUrls = [];
+    let selectedFiles = [];
 
     const stopCamera = () => {
       cameraStream?.getTracks().forEach((track) => track.stop());
@@ -267,18 +268,39 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       preview.replaceChildren();
-      const files = [
-        ...Array.from(cameraInput?.files || []),
-        ...Array.from(galleryInput?.files || [])
-      ];
-      files.slice(0, 8).forEach((file) => {
+      selectedFiles.forEach((file, index) => {
+        const item = document.createElement("div");
         const image = document.createElement("img");
         const url = URL.createObjectURL(file);
         previewUrls.push(url);
         image.src = url;
         image.alt = file.name;
-        preview.appendChild(image);
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.textContent = modal.dataset.photoRemove;
+        remove.addEventListener("click", () => {
+          selectedFiles.splice(index, 1);
+          syncPhotos();
+        });
+        item.append(image, remove);
+        preview.appendChild(item);
       });
+    };
+    const syncPhotos = () => {
+      const transfer = new DataTransfer();
+      selectedFiles.forEach(file => transfer.items.add(file));
+      galleryInput.files = transfer.files;
+      cameraInput.value = "";
+      renderSelectedPhotos();
+    };
+    const addPhotos = (files) => {
+      if (selectedFiles.length + files.length > 8) {
+        window.alert(modal.dataset.photoLimit);
+        syncPhotos();
+        return;
+      }
+      selectedFiles.push(...files);
+      syncPhotos();
     };
 
     cameraOpenButton?.addEventListener("click", async () => {
@@ -315,24 +337,22 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        const transfer = new DataTransfer();
-        transfer.items.add(new File(
-          [blob],
-          `hamsterhub-${Date.now()}.jpg`,
-          { type: "image/jpeg" }));
-        cameraInput.files = transfer.files;
-        renderSelectedPhotos();
+        addPhotos([new File([blob], `hamsterhub-${Date.now()}.jpg`, { type: "image/jpeg" })]);
         stopCamera();
       }, "image/jpeg", 0.9);
     });
 
     cameraCancelButton?.addEventListener("click", stopCamera);
-    cameraInput?.addEventListener("change", renderSelectedPhotos);
-    galleryInput?.addEventListener("change", renderSelectedPhotos);
+    cameraInput?.addEventListener("change", () => addPhotos(Array.from(cameraInput.files || [])));
+    galleryInput?.addEventListener("click", () => { galleryInput.value = ""; });
+    galleryInput?.addEventListener("change", () => addPhotos(Array.from(galleryInput.files || [])));
+    galleryInput?.addEventListener("cancel", syncPhotos);
+    form?.addEventListener("submit", syncPhotos);
     modal.addEventListener("hidden.bs.modal", () => {
       stopCamera();
       form?.reset();
-      renderSelectedPhotos();
+      selectedFiles = [];
+      syncPhotos();
     });
   });
 
@@ -379,3 +399,49 @@ document.addEventListener("DOMContentLoaded", () => {
     renderRewardSummary();
   });
 });
+
+(() => {
+  const labels = document.querySelector("[data-photo-labels]")?.dataset;
+  if (!labels) return;
+  document.querySelectorAll('input[type="file"][accept*="image"]').forEach(input => {
+    if (input.closest(".kid-complete-modal")) return;
+    const limit = input.multiple ? 8 : 1;
+    const picker = input.cloneNode();
+    picker.removeAttribute("name"); picker.removeAttribute("id");
+    picker.hidden = true;
+    const camera = document.createElement("input");
+    camera.type = "file"; camera.accept = input.accept;
+    camera.setAttribute("capture", "environment"); camera.hidden = true;
+    const controls = document.createElement("div"); controls.className = "image-source-controls";
+    const preview = document.createElement("div"); preview.className = "image-source-preview";
+    let files = [], urls = [];
+    function render() {
+      const transfer = new DataTransfer(); files.forEach(file => transfer.items.add(file));
+      input.files = transfer.files;
+      urls.forEach(url => URL.revokeObjectURL(url)); urls = [];
+      preview.replaceChildren();
+      files.forEach((file, index) => {
+        const item = document.createElement("div"), image = document.createElement("img");
+        image.src = URL.createObjectURL(file); urls.push(image.src); image.alt = file.name;
+        const remove = document.createElement("button"); remove.type = "button";
+        remove.textContent = labels.remove;
+        remove.addEventListener("click", () => { files.splice(index, 1); render(); });
+        item.append(image, remove); preview.append(item);
+      });
+    }
+    function accept(source) {
+      const chosen = Array.from(source.files || []); source.value = "";
+      if (!chosen.length) return;
+      const next = limit === 1 ? chosen : [...files, ...chosen];
+      if (next.length > limit) { window.alert(labels.limit); return; }
+      files = next; render();
+    }
+    [[labels.camera, camera], [labels.gallery, picker]].forEach(([label, source]) => {
+      const button = document.createElement("button"); button.type = "button";
+      button.textContent = label; button.addEventListener("click", () => source.click());
+      source.addEventListener("change", () => accept(source)); controls.append(button);
+    });
+    input.hidden = true; input.after(controls, picker, camera, preview);
+    input.form?.addEventListener("reset", () => { files = []; render(); });
+  });
+})();

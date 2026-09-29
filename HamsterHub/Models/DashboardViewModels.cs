@@ -53,10 +53,10 @@ public record PetSummary(
 public record CareCategoryOption(int Id, string Name);
 public record CareTaskSummary(
     int Id,
-    int PetId,
+    int? PetId,
     string PetName,
     string? PetPhotoPath,
-    int CategoryId,
+    int? CategoryId,
     string CategoryName,
     int AssignedMemberId,
     string AssignedMemberName,
@@ -211,9 +211,12 @@ public class AddPetInput
 
 public class AddCareTaskInput
 {
-    [Range(1, int.MaxValue, ErrorMessage = "Required")]
+    [StringLength(100, MinimumLength = 2)]
+    [Display(Name = "TaskName")]
+    public string? Name { get; set; }
+
     [Display(Name = "TaskPet")]
-    public int PetId { get; set; }
+    public int? PetId { get; set; }
 
     [Range(1, int.MaxValue, ErrorMessage = "Required")]
     [Display(Name = "AssignedMember")]

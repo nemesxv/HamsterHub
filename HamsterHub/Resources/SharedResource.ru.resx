@@ -4,8 +4,8 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
-  <data name="SiteTitle" xml:space="preserve"><value>Забота о питомце — вместе</value></data>
-  <data name="MetaDescription" xml:space="preserve"><value>Семейное пространство для добрых и полезных привычек по уходу за питомцем.</value></data>
+  <data name="SiteTitle" xml:space="preserve"><value>Ежедневные достижения — вместе</value></data>
+  <data name="MetaDescription" xml:space="preserve"><value>Семейное приложение для учёбы, домашних дел, заботы о питомцах и наград за достижения.</value></data>
   <data name="Login" xml:space="preserve"><value>Войти</value></data>
   <data name="SignUp" xml:space="preserve"><value>Регистрация</value></data>
   <data name="Logout" xml:space="preserve"><value>Выйти</value></data>
@@ -17,7 +17,7 @@
   <data name="Eyebrow" xml:space="preserve"><value>Маленькие дела — большая забота</value></data>
   <data name="HeroLine1" xml:space="preserve"><value>Учимся заботиться.</value></data>
   <data name="HeroLine2" xml:space="preserve"><value>Растём вместе.</value></data>
-  <data name="HeroLead" xml:space="preserve"><value>HamsterHub превращает ежедневный уход за питомцем в простые и радостные моменты, которыми может гордиться вся семья.</value></data>
+  <data name="HeroLead" xml:space="preserve"><value>HamsterHub превращает уроки, домашние дела и заботу о питомцах в понятные задания и радостные достижения всей семьи.</value></data>
   <data name="StartHub" xml:space="preserve"><value>Создать семейный уголок</value></data>
   <data name="ExistingAccount" xml:space="preserve"><value>У меня уже есть аккаунт</value></data>
   <data name="TrustNote" xml:space="preserve"><value>Для всей семьи. Под контролем родителей и удобно для детей.</value></data>
@@ -26,14 +26,14 @@
   <data name="FreshWater" xml:space="preserve"><value>Свежая вода</value></data>
   <data name="MorningFood" xml:space="preserve"><value>Утренний корм</value></data>
   <data name="PlayTime" xml:space="preserve"><value>Время игры</value></data>
-  <data name="CarePoints" xml:space="preserve"><value>баллов заботы!</value></data>
+  <data name="CarePoints" xml:space="preserve"><value>баллов!</value></data>
   <data name="RoutineKicker" xml:space="preserve"><value>Добрая ежедневная привычка</value></data>
   <data name="HowTitle" xml:space="preserve"><value>Позаботься, порадуйся, повтори.</value></data>
-  <data name="ChooseTask" xml:space="preserve"><value>Выбери дело</value></data>
+  <data name="ChooseTask" xml:space="preserve"><value>Выбери задание</value></data>
   <data name="ChooseDesc" xml:space="preserve"><value>Кормление, свежая вода, уборка или игра.</value></data>
   <data name="MarkComplete" xml:space="preserve"><value>Отметь выполнение</value></data>
   <data name="MarkDesc" xml:space="preserve"><value>Одно приятное нажатие после выполненного дела.</value></data>
-  <data name="EarnPoints" xml:space="preserve"><value>Получи баллы заботы</value></data>
+  <data name="EarnPoints" xml:space="preserve"><value>Получай баллы</value></data>
   <data name="EarnDesc" xml:space="preserve"><value>Радуйся успехам и формируй полезные привычки.</value></data>
   <data name="LoginTitle" xml:space="preserve"><value>С возвращением!</value></data>
   <data name="LoginIntro" xml:space="preserve"><value>Войдите, чтобы узнать, как дела у вашего маленького помощника.</value></data>
@@ -68,14 +68,14 @@
   <data name="ParentDashboardTitle" xml:space="preserve"><value>Семейный кабинет</value></data>
   <data name="ParentSpace" xml:space="preserve"><value>Кабинет родителя</value></data>
   <data name="ParentWelcome" xml:space="preserve"><value>Добро пожаловать, {0}</value></data>
-  <data name="HouseholdSubtitle" xml:space="preserve"><value>Управляйте заботой в семье «{0}».</value></data>
+  <data name="HouseholdSubtitle" xml:space="preserve"><value>Управляйте заданиями семьи «{0}».</value></data>
   <data name="AddFamilyMember" xml:space="preserve"><value>Добавить члена семьи</value></data>
   <data name="AddPet" xml:space="preserve"><value>Добавить питомца</value></data>
-  <data name="AddCareTask" xml:space="preserve"><value>Добавить дело</value></data>
+  <data name="AddCareTask" xml:space="preserve"><value>Добавить задание</value></data>
   <data name="FamilyOverview" xml:space="preserve"><value>Обзор семьи</value></data>
   <data name="FamilyMembers" xml:space="preserve"><value>Члены семьи</value></data>
   <data name="Pets" xml:space="preserve"><value>Питомцы</value></data>
-  <data name="CareTasks" xml:space="preserve"><value>Дела по уходу</value></data>
+  <data name="CareTasks" xml:space="preserve"><value>Задания</value></data>
   <data name="AwaitingApproval" xml:space="preserve"><value>Ждут проверки</value></data>
   <data name="Family" xml:space="preserve"><value>Семья</value></data>
   <data name="YourCareTeam" xml:space="preserve"><value>Аккаунты семьи</value></data>
@@ -113,13 +113,13 @@
   <data name="Species" xml:space="preserve"><value>Вид животного</value></data>
   <data name="BirthDate" xml:space="preserve"><value>Дата рождения</value></data>
   <data name="SavePet" xml:space="preserve"><value>Сохранить питомца</value></data>
-  <data name="TaskFormIntro" xml:space="preserve"><value>Настройте полезное дело и количество баллов.</value></data>
-  <data name="TaskName" xml:space="preserve"><value>Название дела</value></data>
-  <data name="TaskCategory" xml:space="preserve"><value>Категория</value></data>
+  <data name="TaskFormIntro" xml:space="preserve"><value>Укажите название и исполнителя. Категория и питомец необязательны.</value></data>
+  <data name="TaskName" xml:space="preserve"><value>Название задания</value></data>
+  <data name="TaskCategory" xml:space="preserve"><value>Категория (необязательно)</value></data>
   <data name="TaskFrequency" xml:space="preserve"><value>Периодичность</value></data>
   <data name="PointValue" xml:space="preserve"><value>Баллы</value></data>
   <data name="PointRange" xml:space="preserve"><value>Укажите от 0 до 1000 баллов.</value></data>
-  <data name="SaveCareTask" xml:space="preserve"><value>Сохранить дело</value></data>
+  <data name="SaveCareTask" xml:space="preserve"><value>Сохранить задание</value></data>
   <data name="CheckFormFields" xml:space="preserve"><value>Проверьте заполненные поля.</value></data>
   <data name="FamilyMemberAdded" xml:space="preserve"><value>{0} добавлен(а) в семью.</value></data>
   <data name="PetAdded" xml:space="preserve"><value>Питомец {0} добавлен.</value></data>
@@ -129,22 +129,22 @@
   <data name="CareApproved" xml:space="preserve"><value>Дело подтверждено, баллы начислены.</value></data>
   <data name="CareRejected" xml:space="preserve"><value>Дело отклонено.</value></data>
   <data name="DefaultHouseholdName" xml:space="preserve"><value>Наша семья</value></data>
-  <data name="KidDashboardTitle" xml:space="preserve"><value>Мои дела</value></data>
-  <data name="KidSpace" xml:space="preserve"><value>Мой уголок заботы</value></data>
+  <data name="KidDashboardTitle" xml:space="preserve"><value>Мои задания</value></data>
+  <data name="KidSpace" xml:space="preserve"><value>Мой уголок</value></data>
   <data name="KidWelcome" xml:space="preserve"><value>Привет, {0}!</value></data>
   <data name="WaitingForFamily" xml:space="preserve"><value>Родитель скоро добавит тебя в семейный уголок.</value></data>
-  <data name="ReadyToCare" xml:space="preserve"><value>Готов(а) позаботиться о питомце?</value></data>
-  <data name="ApprovedPoints" xml:space="preserve"><value>баллов заботы</value></data>
+  <data name="ReadyToCare" xml:space="preserve"><value>Готов к новому достижению?</value></data>
+  <data name="ApprovedPoints" xml:space="preserve"><value>баллов</value></data>
   <data name="MyPets" xml:space="preserve"><value>моих питомцев</value></data>
   <data name="AvailableTasks" xml:space="preserve"><value>доступных дел</value></data>
   <data name="WaitingApproval" xml:space="preserve"><value>ждут проверки</value></data>
   <data name="Today" xml:space="preserve"><value>Сегодня</value></data>
-  <data name="WhatWillYouDo" xml:space="preserve"><value>Что сделаем для питомца?</value></data>
-  <data name="AskParentToSetUp" xml:space="preserve"><value>Попроси родителя добавить питомца и дела по уходу.</value></data>
+  <data name="WhatWillYouDo" xml:space="preserve"><value>Что ты сделаешь сегодня?</value></data>
+  <data name="AskParentToSetUp" xml:space="preserve"><value>Попроси родителя добавить первое задание.</value></data>
   <data name="ChoosePet" xml:space="preserve"><value>Для кого?</value></data>
   <data name="DoneButton" xml:space="preserve"><value>Готово!</value></data>
   <data name="MyProgress" xml:space="preserve"><value>Мои успехи</value></data>
-  <data name="RecentCare" xml:space="preserve"><value>Недавняя забота</value></data>
+  <data name="RecentCare" xml:space="preserve"><value>Последние достижения</value></data>
   <data name="NoCareHistory" xml:space="preserve"><value>Выполненные дела появятся здесь.</value></data>
   <data name="Status_Pending" xml:space="preserve"><value>На проверке</value></data>
   <data name="Status_Approved" xml:space="preserve"><value>Подтверждено</value></data>
@@ -154,11 +154,11 @@
   <data name="PetPhotoHint" xml:space="preserve"><value>Необязательно: JPG, PNG или WebP, не более 5 МБ.</value></data>
   <data name="InvalidPetImage" xml:space="preserve"><value>Выберите изображение JPG, PNG или WebP.</value></data>
   <data name="PetImageTooLarge" xml:space="preserve"><value>Фото питомца должно быть не больше 5 МБ.</value></data>
-  <data name="TaskPet" xml:space="preserve"><value>Питомец</value></data>
+  <data name="TaskPet" xml:space="preserve"><value>Питомец (необязательно)</value></data>
   <data name="ChooseCategory" xml:space="preserve"><value>Выберите категорию</value></data>
   <data name="NewCategory" xml:space="preserve"><value>Или добавьте новую категорию</value></data>
-  <data name="NewCategoryPlaceholder" xml:space="preserve"><value>Например: Расчесать шерсть</value></data>
-  <data name="NewCategoryHint" xml:space="preserve"><value>Если заполнить это поле, новая категория заменит выбранную.</value></data>
+  <data name="NewCategoryPlaceholder" xml:space="preserve"><value>Например: Учёба или Домашние дела</value></data>
+  <data name="NewCategoryHint" xml:space="preserve"><value>Необязательно. Новая категория заменяет выбранную.</value></data>
   <data name="ChooseOrAddCategory" xml:space="preserve"><value>Выберите категорию или введите новую.</value></data>
   <data name="AssignedMember" xml:space="preserve"><value>Член семьи</value></data>
   <data name="ChooseMember" xml:space="preserve"><value>Выберите члена семьи</value></data>
@@ -167,7 +167,7 @@
   <data name="SaveChanges" xml:space="preserve"><value>Сохранить изменения</value></data>
   <data name="EditFamilyMember" xml:space="preserve"><value>Изменить члена семьи</value></data>
   <data name="EditPet" xml:space="preserve"><value>Изменить питомца</value></data>
-  <data name="EditCareTask" xml:space="preserve"><value>Изменить дело</value></data>
+  <data name="EditCareTask" xml:space="preserve"><value>Изменить задание</value></data>
   <data name="ReplacePetPhoto" xml:space="preserve"><value>Заменить фото</value></data>
   <data name="ConfirmDeleteMember" xml:space="preserve"><value>Удалить {0} из семьи? Его активные дела тоже будут удалены.</value></data>
   <data name="ConfirmDeletePet" xml:space="preserve"><value>Удалить питомца {0}? Его активные дела тоже будут удалены.</value></data>
@@ -190,13 +190,13 @@
   <data name="ChangePassword" xml:space="preserve"><value>Изменить пароль</value></data>
   <data name="BackToDashboard" xml:space="preserve"><value>Вернуться на панель</value></data>
   <data name="History" xml:space="preserve"><value>История</value></data>
-  <data name="MemberHistoryTitle" xml:space="preserve"><value>История заботы: {0}</value></data>
+  <data name="MemberHistoryTitle" xml:space="preserve"><value>История заданий: {0}</value></data>
   <data name="FamilyMemberHistory" xml:space="preserve"><value>История члена семьи</value></data>
   <data name="CurrentPoints" xml:space="preserve"><value>Текущие баллы</value></data>
   <data name="HistoryPrivacy" xml:space="preserve"><value>Приватность истории</value></data>
   <data name="Activity" xml:space="preserve"><value>Активность</value></data>
   <data name="TaskHistory" xml:space="preserve"><value>История дел</value></data>
-  <data name="NoMemberHistory" xml:space="preserve"><value>Дела по уходу ещё не отмечались.</value></data>
+  <data name="NoMemberHistory" xml:space="preserve"><value>Пока нет отчётов о выполненных заданиях.</value></data>
   <data name="PetPhotoAlt" xml:space="preserve"><value>Фото питомца {0}</value></data>
   <data name="ReportedAt" xml:space="preserve"><value>Отмечено</value></data>
   <data name="ApprovedAt" xml:space="preserve"><value>Подтверждено</value></data>
@@ -215,17 +215,17 @@
   <data name="FamilyActivity" xml:space="preserve"><value>Семейная активность</value></data>
   <data name="NoSharedFamilyHistory" xml:space="preserve"><value>Пока нет доступной семейной активности.</value></data>
   <data name="KidLetsCare" xml:space="preserve"><value>Поможем нашим пушистикам!</value></data>
-  <data name="PointsLabel" xml:space="preserve"><value>Звёздочек заботы: {0}</value></data>
-  <data name="KidOverview" xml:space="preserve"><value>Моя забота</value></data>
+  <data name="PointsLabel" xml:space="preserve"><value>{0} звёзд</value></data>
+  <data name="KidOverview" xml:space="preserve"><value>Мои достижения</value></data>
   <data name="KidPetsShort" xml:space="preserve"><value>питомцы</value></data>
   <data name="KidTasksShort" xml:space="preserve"><value>сделать</value></data>
   <data name="KidWaitingShort" xml:space="preserve"><value>ждут</value></data>
   <data name="KidChooseTask" xml:space="preserve"><value>Выбери картинку</value></data>
-  <data name="KidAskGrownup" xml:space="preserve"><value>Попроси взрослого добавить питомца</value></data>
+  <data name="KidAskGrownup" xml:space="preserve"><value>Попроси взрослого добавить задание</value></data>
   <data name="TaskPointsLabel" xml:space="preserve"><value>Звёздочек за дело: {0}</value></data>
   <data name="KidDone" xml:space="preserve"><value>Я сделала!</value></data>
   <data name="KidMyPictures" xml:space="preserve"><value>Мой альбом</value></data>
-  <data name="KidNoMemories" xml:space="preserve"><value>Здесь появятся картинки с питомцами</value></data>
+  <data name="KidNoMemories" xml:space="preserve"><value>Здесь появятся фотографии твоих достижений</value></data>
   <data name="KidFriends" xml:space="preserve"><value>Наши друзья</value></data>
   <data name="KidNoFriendStories" xml:space="preserve"><value>Здесь появятся новые истории</value></data>
   <data name="AccountSafetyNote" xml:space="preserve"><value>Пароль и коды подтверждения надёжно обрабатываются системой входа и не показываются другим членам семьи.</value></data>
@@ -292,7 +292,7 @@
   <data name="Done" xml:space="preserve"><value>Готово</value></data>
   <data name="AuthenticatorQrAlt" xml:space="preserve"><value>QR-код для подключения HamsterHub к приложению-аутентификатору</value></data>
   <data name="TaskImage" xml:space="preserve"><value>Картинка дела</value></data>
-  <data name="TaskImageHint" xml:space="preserve"><value>Необязательно. У стандартных категорий уже есть картинки. JPG, PNG или WebP до 5 МБ.</value></data>
+  <data name="TaskImageHint" xml:space="preserve"><value>Необязательная фотография. Без неё показывается иллюстрация задания.</value></data>
   <data name="TaskImageAlt" xml:space="preserve"><value>Картинка для дела «{0}»</value></data>
   <data name="ReplaceTaskImage" xml:space="preserve"><value>Заменить картинку дела</value></data>
   <data name="CustomTaskImage" xml:space="preserve"><value>Своя картинка</value></data>
@@ -389,7 +389,7 @@
   <data name="PointsLeftAfterReward" xml:space="preserve"><value>После награды осталось звёзд: {0}</value></data>
   <data name="PointsDeductedCount" xml:space="preserve"><value>Списано баллов: {0}</value></data>
   <data name="RewardCostCount" xml:space="preserve"><value>Награда стоит баллов: {0}</value></data>
-  <data name="ParentHomeIntro" xml:space="preserve"><value>Всё для заботы о питомцах — в одном простом месте.</value></data>
+  <data name="ParentHomeIntro" xml:space="preserve"><value>Учёба, домашние дела, забота о питомцах и награды — всё в одном месте.</value></data>
   <data name="FamilyHome" xml:space="preserve"><value>Ваша семья</value></data>
   <data name="ItemsNeedAttention" xml:space="preserve"><value>Ждут вашего решения: {0}</value></data>
   <data name="EverythingUpToDate" xml:space="preserve"><value>Всё в порядке</value></data>
@@ -398,26 +398,26 @@
   <data name="QuickActionHint" xml:space="preserve"><value>Выберите одно из частых действий.</value></data>
   <data name="ActionAddMemberHint" xml:space="preserve"><value>Создать аккаунт ребёнку или другому взрослому</value></data>
   <data name="ActionAddPetHint" xml:space="preserve"><value>Добавить питомца и его фото</value></data>
-  <data name="ActionAddTaskHint" xml:space="preserve"><value>Указать, кто и как заботится о питомце</value></data>
+  <data name="ActionAddTaskHint" xml:space="preserve"><value>Уроки, домашние дела, забота о питомцах и многое другое</value></data>
   <data name="ActionAddRewardHint" xml:space="preserve"><value>Добавить то, что ребёнок сможет получить</value></data>
   <data name="NeedsYourAttention" xml:space="preserve"><value>Нужно ваше решение</value></data>
   <data name="AttentionHint" xml:space="preserve"><value>Одобрите или отклоните запросы семьи.</value></data>
   <data name="AllCaughtUp" xml:space="preserve"><value>Всё готово</value></data>
   <data name="AllCaughtUpHint" xml:space="preserve"><value>Сейчас ничто не ждёт вашего одобрения.</value></data>
-  <data name="CareWaitingHint" xml:space="preserve"><value>Выполненные дела на проверку</value></data>
+  <data name="CareWaitingHint" xml:space="preserve"><value>Выполненные задания для проверки</value></data>
   <data name="RewardWaitingHint" xml:space="preserve"><value>Награды, которые попросили дети</value></data>
   <data name="FamilyAtAGlance" xml:space="preserve"><value>Ваша семья сегодня</value></data>
   <data name="PeopleInFamily" xml:space="preserve"><value>членов семьи</value></data>
   <data name="PetsAtHome" xml:space="preserve"><value>питомцев</value></data>
-  <data name="ActiveCareTasks" xml:space="preserve"><value>дел по уходу</value></data>
+  <data name="ActiveCareTasks" xml:space="preserve"><value>заданий</value></data>
   <data name="AvailableRewards" xml:space="preserve"><value>наград</value></data>
   <data name="FamilyPointsAtAGlance" xml:space="preserve"><value>Звёзды детей</value></data>
   <data name="FamilyPointsHint" xml:space="preserve"><value>Смотрите баланс каждого ребёнка и открывайте историю его баллов.</value></data>
-  <data name="DailyManagement" xml:space="preserve"><value>Повседневные дела и награды</value></data>
-  <data name="DailyManagementHint" xml:space="preserve"><value>Здесь можно распределить дела и выдать награду.</value></data>
+  <data name="DailyManagement" xml:space="preserve"><value>Ежедневные задания и награды</value></data>
+  <data name="DailyManagementHint" xml:space="preserve"><value>Управляйте заданиями и наградами в одном месте.</value></data>
   <data name="CareTaskSettingsHint" xml:space="preserve"><value>Смотрите, кто выполняет дело и сколько звёзд оно приносит.</value></data>
   <data name="RewardCatalogHint" xml:space="preserve"><value>Смотрите, что могут получить дети и кто видит каждую награду.</value></data>
-  <data name="FamilySetup" xml:space="preserve"><value>Семья и питомцы</value></data>
+  <data name="FamilySetup" xml:space="preserve"><value>Настройки семьи</value></data>
   <data name="FamilySetupHint" xml:space="preserve"><value>Меняйте аккаунты и данные питомцев, когда это понадобится.</value></data>
   <data name="YourCareTeamHint" xml:space="preserve"><value>Открывайте историю человека или меняйте его аккаунт.</value></data>
   <data name="FamilyPetsHint" xml:space="preserve"><value>Добавляйте питомцев и обновляйте информацию о них.</value></data>
@@ -444,9 +444,9 @@
   <data name="MobileNoTasks" xml:space="preserve"><value>Пока нет заданий. Родитель может добавить их в настройках семьи.</value></data>
   <data name="MobileApprovals" xml:space="preserve"><value>Ждут проверки</value></data>
   <data name="MobileNoApprovals" xml:space="preserve"><value>Всё проверено!</value></data>
-  <data name="MobileHistory" xml:space="preserve"><value>Моя забота</value></data>
-  <data name="MobileParentTasks" xml:space="preserve"><value>Мои задачи по уходу</value></data>
-  <data name="MobileParentHistory" xml:space="preserve"><value>Моя история ухода</value></data>
+  <data name="MobileHistory" xml:space="preserve"><value>История моих заданий</value></data>
+  <data name="MobileParentTasks" xml:space="preserve"><value>Мои задания</value></data>
+  <data name="MobileParentHistory" xml:space="preserve"><value>История моих заданий</value></data>
   <data name="MobileGiveReward" xml:space="preserve"><value>Выдать эту награду</value></data>
   <data name="MobileNoRewards" xml:space="preserve"><value>Пока нет доступных наград.</value></data>
   <data name="MobileNoHistory" xml:space="preserve"><value>Здесь появятся выполненные задания.</value></data>
@@ -456,9 +456,9 @@
   <data name="MobileCarePhoto" xml:space="preserve"><value>Фото выполненного задания</value></data>
   <data name="MobileApprove" xml:space="preserve"><value>Одобрить</value></data>
   <data name="MobileReject" xml:space="preserve"><value>Отклонить</value></data>
-  <data name="MobileCompletionHelp" xml:space="preserve"><value>Уже позаботились о питомце? Можно добавить до 8 фото (JPG, PNG или WebP, до 5 МБ каждое) или отправить без фото.</value></data>
+  <data name="MobileCompletionHelp" xml:space="preserve"><value>Задание выполнено? Добавь до 8 фотографий с камеры или из галереи (JPG, PNG или WebP, до 5 МБ каждая) или отправь отчёт без фото.</value></data>
   <data name="MobileRemovePhoto" xml:space="preserve"><value>Убрать фото</value></data>
-  <data name="MobilePickPhoto" xml:space="preserve"><value>Выбрать фото</value></data>
+  <data name="MobilePickPhoto" xml:space="preserve"><value>Выбрать из галереи</value></data>
   <data name="MobileTakePhoto" xml:space="preserve"><value>Сфотографировать</value></data>
   <data name="MobileSendCompletion" xml:space="preserve"><value>Готово! Отправить</value></data>
   <data name="MobileBack" xml:space="preserve"><value>Назад</value></data>
@@ -476,4 +476,12 @@
   <data name="AndroidAppTitle" xml:space="preserve"><value>HamsterHub для Android</value></data>
   <data name="AndroidAppHelp" xml:space="preserve"><value>Предварительная версия для телефонов и планшетов (Android 7+). Скачайте APK, откройте его и подтвердите установку. Для входа укажите адрес этого сайта.</value></data>
   <data name="DownloadAndroidApp" xml:space="preserve"><value>Скачать приложение Android</value></data>
+  <data name="TaskNamePlaceholder" xml:space="preserve"><value>Убраться в комнате, сделать уроки…</value></data>
+  <data name="TaskNameRequired" xml:space="preserve"><value>Введите название задания.</value></data>
+  <data name="GeneralTask" xml:space="preserve"><value>Семейное задание</value></data>
+  <data name="NoPet" xml:space="preserve"><value>Без питомца</value></data>
+  <data name="NoCategory" xml:space="preserve"><value>Без категории</value></data>
+  <data name="MobileSettings" xml:space="preserve"><value>Настройки</value></data>
+  <data name="MobileAddPhoto" xml:space="preserve"><value>Добавить фотографии</value></data>
+  <data name="MobileChildIntro" xml:space="preserve"><value>Маленькие шаги — большие достижения!</value></data>
 </root>

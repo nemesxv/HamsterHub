@@ -17,7 +17,7 @@ public sealed record HouseholdMemberItemDto(int Id, string DisplayName, string E
     bool IsCurrentUser, string? PhotoPath, int Balance);
 public sealed record PetItemDto(int Id, string Name, string Species, DateOnly? BirthDate, string? PhotoPath);
 public sealed record CategoryItemDto(int Id, string Name);
-public sealed record ManagedTaskItemDto(int Id, int PetId, string PetName, int CategoryId,
+public sealed record ManagedTaskItemDto(int Id, int? PetId, string PetName, int? CategoryId,
     string Name, int AssignedMemberId, string AssignedMemberName, string Frequency, int Points,
     string ImagePath, bool CanComplete);
 public sealed record RewardItemDto(int Id, string Name, int PointCost, string? ImagePath,
@@ -43,12 +43,14 @@ public sealed record UpdatePetRequest(
     [Required, StringLength(100, MinimumLength = 1)] string Name,
     [Required, StringLength(100, MinimumLength = 2)] string Species,
     DateOnly? BirthDate);
-public sealed record CreateTaskRequest(int PetId, int AssignedMemberId, int? CategoryId,
+public sealed record CreateTaskRequest(int? PetId, int AssignedMemberId, int? CategoryId,
     [StringLength(100, MinimumLength = 2)] string? NewCategoryName,
-    [Required] string Frequency, [Range(0, 1000)] int Points);
-public sealed record UpdateTaskRequest(int PetId, int AssignedMemberId, int? CategoryId,
+    [Required] string Frequency, [Range(0, 1000)] int Points,
+    [StringLength(100, MinimumLength = 2)] string? Name = null);
+public sealed record UpdateTaskRequest(int? PetId, int AssignedMemberId, int? CategoryId,
     [StringLength(100, MinimumLength = 2)] string? NewCategoryName,
-    [Required] string Frequency, [Range(0, 1000)] int Points);
+    [Required] string Frequency, [Range(0, 1000)] int Points,
+    [StringLength(100, MinimumLength = 2)] string? Name = null);
 public sealed record CreateRewardRequest(
     [Required, StringLength(100, MinimumLength = 2)] string Name,
     [Range(1, 100000)] int PointCost,

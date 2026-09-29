@@ -53,6 +53,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<CareTask>(entity =>
         {
+            entity.Property(task => task.Name).HasMaxLength(100);
             entity.Property(task => task.ImagePath).HasMaxLength(500);
             entity.ToTable(table =>
                 table.HasCheckConstraint("CK_CareTasks_PointValue_NonNegative", "[PointValue] >= 0"));

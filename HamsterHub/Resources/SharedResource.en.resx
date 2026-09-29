@@ -4,8 +4,8 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
-  <data name="SiteTitle" xml:space="preserve"><value>Happy pet care, together</value></data>
-  <data name="MetaDescription" xml:space="preserve"><value>A joyful family hub for building healthy pet-care habits.</value></data>
+  <data name="SiteTitle" xml:space="preserve"><value>Everyday achievements, together</value></data>
+  <data name="MetaDescription" xml:space="preserve"><value>A family hub for homework, chores, pet care, and rewarding everyday achievements.</value></data>
   <data name="Login" xml:space="preserve"><value>Log in</value></data>
   <data name="SignUp" xml:space="preserve"><value>Sign up</value></data>
   <data name="Logout" xml:space="preserve"><value>Log out</value></data>
@@ -17,7 +17,7 @@
   <data name="Eyebrow" xml:space="preserve"><value>Little tasks, big care</value></data>
   <data name="HeroLine1" xml:space="preserve"><value>Help them care.</value></data>
   <data name="HeroLine2" xml:space="preserve"><value>Watch them grow.</value></data>
-  <data name="HeroLead" xml:space="preserve"><value>HamsterHub turns everyday pet care into simple, rewarding moments your whole family can feel proud of.</value></data>
+  <data name="HeroLead" xml:space="preserve"><value>HamsterHub turns homework, household chores and pet care into simple, rewarding moments for the whole family.</value></data>
   <data name="StartHub" xml:space="preserve"><value>Start your family hub</value></data>
   <data name="ExistingAccount" xml:space="preserve"><value>I already have an account</value></data>
   <data name="TrustNote" xml:space="preserve"><value>Made for families. Parent-managed and child-friendly.</value></data>
@@ -26,14 +26,14 @@
   <data name="FreshWater" xml:space="preserve"><value>Fresh water</value></data>
   <data name="MorningFood" xml:space="preserve"><value>Morning food</value></data>
   <data name="PlayTime" xml:space="preserve"><value>Play time</value></data>
-  <data name="CarePoints" xml:space="preserve"><value>care points!</value></data>
+  <data name="CarePoints" xml:space="preserve"><value>points!</value></data>
   <data name="RoutineKicker" xml:space="preserve"><value>A happy little routine</value></data>
   <data name="HowTitle" xml:space="preserve"><value>Care, celebrate, repeat.</value></data>
-  <data name="ChooseTask" xml:space="preserve"><value>Choose a care task</value></data>
+  <data name="ChooseTask" xml:space="preserve"><value>Choose a task</value></data>
   <data name="ChooseDesc" xml:space="preserve"><value>Feeding, fresh water, cleaning or playtime.</value></data>
   <data name="MarkComplete" xml:space="preserve"><value>Mark it complete</value></data>
   <data name="MarkDesc" xml:space="preserve"><value>A satisfying little tap after a job well done.</value></data>
-  <data name="EarnPoints" xml:space="preserve"><value>Earn care points</value></data>
+  <data name="EarnPoints" xml:space="preserve"><value>Earn points</value></data>
   <data name="EarnDesc" xml:space="preserve"><value>Celebrate consistency and build healthy habits.</value></data>
   <data name="LoginTitle" xml:space="preserve"><value>Welcome back</value></data>
   <data name="LoginIntro" xml:space="preserve"><value>Sign in to see how your little caretaker is doing.</value></data>
@@ -68,14 +68,14 @@
   <data name="ParentDashboardTitle" xml:space="preserve"><value>Family dashboard</value></data>
   <data name="ParentSpace" xml:space="preserve"><value>Parent space</value></data>
   <data name="ParentWelcome" xml:space="preserve"><value>Welcome, {0}</value></data>
-  <data name="HouseholdSubtitle" xml:space="preserve"><value>Manage care for the {0} household.</value></data>
+  <data name="HouseholdSubtitle" xml:space="preserve"><value>Manage tasks for the {0} household.</value></data>
   <data name="AddFamilyMember" xml:space="preserve"><value>Add family member</value></data>
   <data name="AddPet" xml:space="preserve"><value>Add pet</value></data>
-  <data name="AddCareTask" xml:space="preserve"><value>Add care task</value></data>
+  <data name="AddCareTask" xml:space="preserve"><value>Add task</value></data>
   <data name="FamilyOverview" xml:space="preserve"><value>Family overview</value></data>
   <data name="FamilyMembers" xml:space="preserve"><value>Family members</value></data>
   <data name="Pets" xml:space="preserve"><value>Pets</value></data>
-  <data name="CareTasks" xml:space="preserve"><value>Care tasks</value></data>
+  <data name="CareTasks" xml:space="preserve"><value>Tasks</value></data>
   <data name="AwaitingApproval" xml:space="preserve"><value>Awaiting approval</value></data>
   <data name="Family" xml:space="preserve"><value>Family</value></data>
   <data name="YourCareTeam" xml:space="preserve"><value>Family accounts</value></data>
@@ -113,13 +113,13 @@
   <data name="Species" xml:space="preserve"><value>Species</value></data>
   <data name="BirthDate" xml:space="preserve"><value>Birth date</value></data>
   <data name="SavePet" xml:space="preserve"><value>Save pet</value></data>
-  <data name="TaskFormIntro" xml:space="preserve"><value>Set up a helpful task and its point value.</value></data>
-  <data name="TaskName" xml:space="preserve"><value>Task name</value></data>
-  <data name="TaskCategory" xml:space="preserve"><value>Category</value></data>
+  <data name="TaskFormIntro" xml:space="preserve"><value>Choose a title and assignee. A category and pet are optional.</value></data>
+  <data name="TaskName" xml:space="preserve"><value>Task title</value></data>
+  <data name="TaskCategory" xml:space="preserve"><value>Category (optional)</value></data>
   <data name="TaskFrequency" xml:space="preserve"><value>Frequency</value></data>
   <data name="PointValue" xml:space="preserve"><value>Points</value></data>
   <data name="PointRange" xml:space="preserve"><value>Enter between 0 and 1000 points.</value></data>
-  <data name="SaveCareTask" xml:space="preserve"><value>Save care task</value></data>
+  <data name="SaveCareTask" xml:space="preserve"><value>Save task</value></data>
   <data name="CheckFormFields" xml:space="preserve"><value>Please check the form fields.</value></data>
   <data name="FamilyMemberAdded" xml:space="preserve"><value>{0} was added to the family.</value></data>
   <data name="PetAdded" xml:space="preserve"><value>{0} was added as a pet.</value></data>
@@ -129,22 +129,22 @@
   <data name="CareApproved" xml:space="preserve"><value>Care approved and points awarded.</value></data>
   <data name="CareRejected" xml:space="preserve"><value>The care record was rejected.</value></data>
   <data name="DefaultHouseholdName" xml:space="preserve"><value>Our family</value></data>
-  <data name="KidDashboardTitle" xml:space="preserve"><value>My care tasks</value></data>
-  <data name="KidSpace" xml:space="preserve"><value>My care corner</value></data>
+  <data name="KidDashboardTitle" xml:space="preserve"><value>My tasks</value></data>
+  <data name="KidSpace" xml:space="preserve"><value>My corner</value></data>
   <data name="KidWelcome" xml:space="preserve"><value>Hi, {0}!</value></data>
   <data name="WaitingForFamily" xml:space="preserve"><value>A parent will add you to the family hub soon.</value></data>
-  <data name="ReadyToCare" xml:space="preserve"><value>Ready to care for your pet?</value></data>
-  <data name="ApprovedPoints" xml:space="preserve"><value>care points</value></data>
+  <data name="ReadyToCare" xml:space="preserve"><value>Ready for a new achievement?</value></data>
+  <data name="ApprovedPoints" xml:space="preserve"><value>points</value></data>
   <data name="MyPets" xml:space="preserve"><value>my pets</value></data>
   <data name="AvailableTasks" xml:space="preserve"><value>available tasks</value></data>
   <data name="WaitingApproval" xml:space="preserve"><value>waiting for approval</value></data>
   <data name="Today" xml:space="preserve"><value>Today</value></data>
-  <data name="WhatWillYouDo" xml:space="preserve"><value>What will you do for your pet?</value></data>
-  <data name="AskParentToSetUp" xml:space="preserve"><value>Ask a parent to add a pet and care tasks.</value></data>
+  <data name="WhatWillYouDo" xml:space="preserve"><value>What will you do today?</value></data>
+  <data name="AskParentToSetUp" xml:space="preserve"><value>Ask a parent to add your first task.</value></data>
   <data name="ChoosePet" xml:space="preserve"><value>Who is it for?</value></data>
   <data name="DoneButton" xml:space="preserve"><value>Done!</value></data>
   <data name="MyProgress" xml:space="preserve"><value>My progress</value></data>
-  <data name="RecentCare" xml:space="preserve"><value>Recent care</value></data>
+  <data name="RecentCare" xml:space="preserve"><value>Recent achievements</value></data>
   <data name="NoCareHistory" xml:space="preserve"><value>Your completed tasks will appear here.</value></data>
   <data name="Status_Pending" xml:space="preserve"><value>Pending</value></data>
   <data name="Status_Approved" xml:space="preserve"><value>Approved</value></data>
@@ -154,11 +154,11 @@
   <data name="PetPhotoHint" xml:space="preserve"><value>Optional JPG, PNG or WebP image, up to 5 MB.</value></data>
   <data name="InvalidPetImage" xml:space="preserve"><value>Please choose a JPG, PNG or WebP image.</value></data>
   <data name="PetImageTooLarge" xml:space="preserve"><value>The pet photo must be no larger than 5 MB.</value></data>
-  <data name="TaskPet" xml:space="preserve"><value>Pet</value></data>
+  <data name="TaskPet" xml:space="preserve"><value>Pet (optional)</value></data>
   <data name="ChooseCategory" xml:space="preserve"><value>Choose a category</value></data>
   <data name="NewCategory" xml:space="preserve"><value>Or add a new category</value></data>
-  <data name="NewCategoryPlaceholder" xml:space="preserve"><value>For example: Brush fur</value></data>
-  <data name="NewCategoryHint" xml:space="preserve"><value>If filled in, the new category is used instead of the selected one.</value></data>
+  <data name="NewCategoryPlaceholder" xml:space="preserve"><value>For example: Homework or Housework</value></data>
+  <data name="NewCategoryHint" xml:space="preserve"><value>Optional. A new category replaces the selected category.</value></data>
   <data name="ChooseOrAddCategory" xml:space="preserve"><value>Choose an existing category or enter a new one.</value></data>
   <data name="AssignedMember" xml:space="preserve"><value>Family member</value></data>
   <data name="ChooseMember" xml:space="preserve"><value>Choose a family member</value></data>
@@ -167,7 +167,7 @@
   <data name="SaveChanges" xml:space="preserve"><value>Save changes</value></data>
   <data name="EditFamilyMember" xml:space="preserve"><value>Edit family member</value></data>
   <data name="EditPet" xml:space="preserve"><value>Edit pet</value></data>
-  <data name="EditCareTask" xml:space="preserve"><value>Edit care task</value></data>
+  <data name="EditCareTask" xml:space="preserve"><value>Edit task</value></data>
   <data name="ReplacePetPhoto" xml:space="preserve"><value>Replace photo</value></data>
   <data name="ConfirmDeleteMember" xml:space="preserve"><value>Remove {0} from the family? Their active tasks will also be removed.</value></data>
   <data name="ConfirmDeletePet" xml:space="preserve"><value>Delete {0}? Its active tasks will also be removed.</value></data>
@@ -190,13 +190,13 @@
   <data name="ChangePassword" xml:space="preserve"><value>Change password</value></data>
   <data name="BackToDashboard" xml:space="preserve"><value>Back to dashboard</value></data>
   <data name="History" xml:space="preserve"><value>History</value></data>
-  <data name="MemberHistoryTitle" xml:space="preserve"><value>{0}'s care history</value></data>
+  <data name="MemberHistoryTitle" xml:space="preserve"><value>{0}'s task history</value></data>
   <data name="FamilyMemberHistory" xml:space="preserve"><value>Family member history</value></data>
   <data name="CurrentPoints" xml:space="preserve"><value>Current points</value></data>
   <data name="HistoryPrivacy" xml:space="preserve"><value>History privacy</value></data>
   <data name="Activity" xml:space="preserve"><value>Activity</value></data>
   <data name="TaskHistory" xml:space="preserve"><value>Task history</value></data>
-  <data name="NoMemberHistory" xml:space="preserve"><value>No care tasks have been reported yet.</value></data>
+  <data name="NoMemberHistory" xml:space="preserve"><value>No tasks have been reported yet.</value></data>
   <data name="PetPhotoAlt" xml:space="preserve"><value>Photo of {0}</value></data>
   <data name="ReportedAt" xml:space="preserve"><value>Reported</value></data>
   <data name="ApprovedAt" xml:space="preserve"><value>Approved</value></data>
@@ -215,17 +215,17 @@
   <data name="FamilyActivity" xml:space="preserve"><value>Family activity</value></data>
   <data name="NoSharedFamilyHistory" xml:space="preserve"><value>No shared family activity yet.</value></data>
   <data name="KidLetsCare" xml:space="preserve"><value>Let's help our little friends!</value></data>
-  <data name="PointsLabel" xml:space="preserve"><value>{0} care stars</value></data>
-  <data name="KidOverview" xml:space="preserve"><value>My care overview</value></data>
+  <data name="PointsLabel" xml:space="preserve"><value>{0} stars</value></data>
+  <data name="KidOverview" xml:space="preserve"><value>My achievements</value></data>
   <data name="KidPetsShort" xml:space="preserve"><value>pets</value></data>
   <data name="KidTasksShort" xml:space="preserve"><value>to do</value></data>
   <data name="KidWaitingShort" xml:space="preserve"><value>waiting</value></data>
   <data name="KidChooseTask" xml:space="preserve"><value>Choose a picture</value></data>
-  <data name="KidAskGrownup" xml:space="preserve"><value>Ask a grown-up to add a pet</value></data>
+  <data name="KidAskGrownup" xml:space="preserve"><value>Ask a grown-up to add a task</value></data>
   <data name="TaskPointsLabel" xml:space="preserve"><value>{0} stars for this task</value></data>
   <data name="KidDone" xml:space="preserve"><value>I did it!</value></data>
   <data name="KidMyPictures" xml:space="preserve"><value>My little album</value></data>
-  <data name="KidNoMemories" xml:space="preserve"><value>Your pet pictures will appear here</value></data>
+  <data name="KidNoMemories" xml:space="preserve"><value>Your task photos will appear here</value></data>
   <data name="KidFriends" xml:space="preserve"><value>Our friends</value></data>
   <data name="KidNoFriendStories" xml:space="preserve"><value>New stories will appear here</value></data>
   <data name="AccountSafetyNote" xml:space="preserve"><value>Your password and verification codes are handled securely by the sign-in system and are never shown to other family members.</value></data>
@@ -292,7 +292,7 @@
   <data name="Done" xml:space="preserve"><value>Done</value></data>
   <data name="AuthenticatorQrAlt" xml:space="preserve"><value>QR code for connecting HamsterHub to an authenticator app</value></data>
   <data name="TaskImage" xml:space="preserve"><value>Task picture</value></data>
-  <data name="TaskImageHint" xml:space="preserve"><value>Optional. Built-in care categories already have a picture. JPG, PNG, or WebP, up to 5 MB.</value></data>
+  <data name="TaskImageHint" xml:space="preserve"><value>Optional photo. Without one, a task illustration is shown.</value></data>
   <data name="TaskImageAlt" xml:space="preserve"><value>Picture for {0}</value></data>
   <data name="ReplaceTaskImage" xml:space="preserve"><value>Replace task picture</value></data>
   <data name="CustomTaskImage" xml:space="preserve"><value>Custom picture</value></data>
@@ -389,7 +389,7 @@
   <data name="PointsLeftAfterReward" xml:space="preserve"><value>{0} stars left after this reward</value></data>
   <data name="PointsDeductedCount" xml:space="preserve"><value>{0} points deducted</value></data>
   <data name="RewardCostCount" xml:space="preserve"><value>Reward costs {0} points</value></data>
-  <data name="ParentHomeIntro" xml:space="preserve"><value>Everything your family needs for pet care, all in one simple place.</value></data>
+  <data name="ParentHomeIntro" xml:space="preserve"><value>Homework, household chores, pet care and rewards — together in one place.</value></data>
   <data name="FamilyHome" xml:space="preserve"><value>Your family</value></data>
   <data name="ItemsNeedAttention" xml:space="preserve"><value>{0} waiting for your decision</value></data>
   <data name="EverythingUpToDate" xml:space="preserve"><value>Everything is up to date</value></data>
@@ -398,26 +398,26 @@
   <data name="QuickActionHint" xml:space="preserve"><value>Choose one of the common actions below.</value></data>
   <data name="ActionAddMemberHint" xml:space="preserve"><value>Create an account for a child or another adult</value></data>
   <data name="ActionAddPetHint" xml:space="preserve"><value>Add a pet and its photo</value></data>
-  <data name="ActionAddTaskHint" xml:space="preserve"><value>Choose who cares for which pet</value></data>
+  <data name="ActionAddTaskHint" xml:space="preserve"><value>Homework, chores, pet care and more</value></data>
   <data name="ActionAddRewardHint" xml:space="preserve"><value>Add something a child can earn</value></data>
   <data name="NeedsYourAttention" xml:space="preserve"><value>Needs your attention</value></data>
   <data name="AttentionHint" xml:space="preserve"><value>Approve or decline requests from your family.</value></data>
   <data name="AllCaughtUp" xml:space="preserve"><value>You're all caught up</value></data>
   <data name="AllCaughtUpHint" xml:space="preserve"><value>There is nothing waiting for your approval.</value></data>
-  <data name="CareWaitingHint" xml:space="preserve"><value>Completed care tasks to review</value></data>
+  <data name="CareWaitingHint" xml:space="preserve"><value>Completed tasks to review</value></data>
   <data name="RewardWaitingHint" xml:space="preserve"><value>Rewards children have asked for</value></data>
   <data name="FamilyAtAGlance" xml:space="preserve"><value>Your family at a glance</value></data>
   <data name="PeopleInFamily" xml:space="preserve"><value>people</value></data>
   <data name="PetsAtHome" xml:space="preserve"><value>pets</value></data>
-  <data name="ActiveCareTasks" xml:space="preserve"><value>care tasks</value></data>
+  <data name="ActiveCareTasks" xml:space="preserve"><value>tasks</value></data>
   <data name="AvailableRewards" xml:space="preserve"><value>rewards</value></data>
   <data name="FamilyPointsAtAGlance" xml:space="preserve"><value>Children's stars</value></data>
   <data name="FamilyPointsHint" xml:space="preserve"><value>See each child's balance and open their point history.</value></data>
-  <data name="DailyManagement" xml:space="preserve"><value>Everyday care and rewards</value></data>
-  <data name="DailyManagementHint" xml:space="preserve"><value>Manage care tasks and give rewards from one place.</value></data>
+  <data name="DailyManagement" xml:space="preserve"><value>Everyday tasks and rewards</value></data>
+  <data name="DailyManagementHint" xml:space="preserve"><value>Manage tasks and rewards from one place.</value></data>
   <data name="CareTaskSettingsHint" xml:space="preserve"><value>See who does each task and how many stars it earns.</value></data>
   <data name="RewardCatalogHint" xml:space="preserve"><value>See what children can earn and who can view each reward.</value></data>
-  <data name="FamilySetup" xml:space="preserve"><value>Family and pet settings</value></data>
+  <data name="FamilySetup" xml:space="preserve"><value>Family settings</value></data>
   <data name="FamilySetupHint" xml:space="preserve"><value>Manage accounts and pets here whenever something changes.</value></data>
   <data name="YourCareTeamHint" xml:space="preserve"><value>Open a person's history or update their account.</value></data>
   <data name="FamilyPetsHint" xml:space="preserve"><value>Add pets and keep their details up to date.</value></data>
@@ -444,9 +444,9 @@
   <data name="MobileNoTasks" xml:space="preserve"><value>No tasks yet. A parent can add one from family settings.</value></data>
   <data name="MobileApprovals" xml:space="preserve"><value>Waiting for approval</value></data>
   <data name="MobileNoApprovals" xml:space="preserve"><value>All caught up!</value></data>
-  <data name="MobileHistory" xml:space="preserve"><value>My care history</value></data>
-  <data name="MobileParentTasks" xml:space="preserve"><value>My assigned care tasks</value></data>
-  <data name="MobileParentHistory" xml:space="preserve"><value>My care history</value></data>
+  <data name="MobileHistory" xml:space="preserve"><value>My task history</value></data>
+  <data name="MobileParentTasks" xml:space="preserve"><value>My assigned tasks</value></data>
+  <data name="MobileParentHistory" xml:space="preserve"><value>My task history</value></data>
   <data name="MobileGiveReward" xml:space="preserve"><value>Give this reward</value></data>
   <data name="MobileNoRewards" xml:space="preserve"><value>No rewards are available yet.</value></data>
   <data name="MobileNoHistory" xml:space="preserve"><value>Completed tasks will appear here.</value></data>
@@ -456,9 +456,9 @@
   <data name="MobileCarePhoto" xml:space="preserve"><value>Task completion photo</value></data>
   <data name="MobileApprove" xml:space="preserve"><value>Approve</value></data>
   <data name="MobileReject" xml:space="preserve"><value>Reject</value></data>
-  <data name="MobileCompletionHelp" xml:space="preserve"><value>Finished caring for your pet? Add up to 8 photos (JPG, PNG or WebP, up to 5 MB each), or send without a photo.</value></data>
+  <data name="MobileCompletionHelp" xml:space="preserve"><value>Finished your task? Add up to 8 photos from your camera or gallery (JPG, PNG or WebP, up to 5 MB each), or send without photos.</value></data>
   <data name="MobileRemovePhoto" xml:space="preserve"><value>Remove photo</value></data>
-  <data name="MobilePickPhoto" xml:space="preserve"><value>Choose photo</value></data>
+  <data name="MobilePickPhoto" xml:space="preserve"><value>Choose from gallery</value></data>
   <data name="MobileTakePhoto" xml:space="preserve"><value>Take photo</value></data>
   <data name="MobileSendCompletion" xml:space="preserve"><value>All done! Send</value></data>
   <data name="MobileBack" xml:space="preserve"><value>Back</value></data>
@@ -476,4 +476,12 @@
   <data name="AndroidAppTitle" xml:space="preserve"><value>HamsterHub for Android</value></data>
   <data name="AndroidAppHelp" xml:space="preserve"><value>Preview app for phones and tablets (Android 7+). Download the APK, open it, and confirm installation. Use the same website address to sign in.</value></data>
   <data name="DownloadAndroidApp" xml:space="preserve"><value>Download Android app</value></data>
+  <data name="TaskNamePlaceholder" xml:space="preserve"><value>Clean the room, do homework…</value></data>
+  <data name="TaskNameRequired" xml:space="preserve"><value>Enter a task title.</value></data>
+  <data name="GeneralTask" xml:space="preserve"><value>Family task</value></data>
+  <data name="NoPet" xml:space="preserve"><value>No pet</value></data>
+  <data name="NoCategory" xml:space="preserve"><value>No category</value></data>
+  <data name="MobileSettings" xml:space="preserve"><value>Settings</value></data>
+  <data name="MobileAddPhoto" xml:space="preserve"><value>Add photos</value></data>
+  <data name="MobileChildIntro" xml:space="preserve"><value>Small steps, big achievements!</value></data>
 </root>
