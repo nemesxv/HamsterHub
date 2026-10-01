@@ -255,3 +255,24 @@ yellow warnings and explicit Allow notifications / Allow precise reminders butto
 when permission is missing, rechecking when returning from Android settings. Parent
 creation actions are illustrated tiles in a two-by-two grid. Local tests/builds remain
 skipped by request; the automatic deployment workflow builds the release.
+
+### Visual mobile cards, profiles and saved accounts (2026-10-01)
+
+Parent creation tiles use separate large icons, readable titles and descriptions.
+Management cards open editing when tapped; archival is inside editing with confirmation.
+Member editing includes name, email, optional replacement password, role, photo and child
+history-sharing controls. Self-demotion/deletion is blocked. Rewards are editable and
+archivable, preserving historical redemption snapshots. Child family/pet cards open
+profiles with privacy-filtered approved care history. Photos in both dashboards,
+profiles and local previews open a full-screen pinch/pan viewer with reset and navigation.
+Persistent field labels, password visibility controls, top Back actions, available-task
+ordering and compact completion instructions improve phone use. Management precedes
+long own-history lists after the approval queues.
+
+Saved accounts are device-local and encrypted. Users can save an account for password
+entry or explicitly enable direct sign-in using tokens; passwords are never stored.
+Settings offers switching, and login offers password entry or forgetting a saved account.
+Expired/revoked sessions fall back to password entry. Signing out clears the active
+session and reminders but retains explicitly saved sign-in choices. Only the active
+child account receives reminders. Local tests/builds remain skipped by user instruction;
+deployment compilation and actual-phone acceptance are separate verification stages.

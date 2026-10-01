@@ -534,4 +534,36 @@
   <data name="AlarmPermissionWarning" xml:space="preserve"><value>Precise reminders are off. Allow them so reminders arrive on time.</value></data>
   <data name="NotificationPermissionWarning" xml:space="preserve"><value>Notifications are off. Allow them to receive task reminders.</value></data>
   <data name="RewardAudience" xml:space="preserve"><value>Reward recipients</value></data>
+  <data name="MobileCreateMemberHint" xml:space="preserve"><value>Name, sign-in and photo</value></data>
+  <data name="MobileCreatePetHint" xml:space="preserve"><value>A new family friend</value></data>
+  <data name="MobileCreateTaskHint" xml:space="preserve"><value>Task and reminder</value></data>
+  <data name="MobileCreateRewardHint" xml:space="preserve"><value>A gift for stars</value></data>
+  <data name="MobileTapToEdit" xml:space="preserve"><value>Tap a card to edit</value></data>
+  <data name="MobileOpenProfile" xml:space="preserve"><value>Open profile</value></data>
+  <data name="MobileProfile" xml:space="preserve"><value>Profile</value></data>
+  <data name="MobileViewHistory" xml:space="preserve"><value>View history</value></data>
+  <data name="MobileEditReward" xml:space="preserve"><value>Edit reward</value></data>
+  <data name="MobileViewFamilyHistory" xml:space="preserve"><value>Can view other children’s history</value></data>
+  <data name="MobileShareHistory" xml:space="preserve"><value>Share history with other children</value></data>
+  <data name="MobileKeepPassword" xml:space="preserve"><value>Leave blank to keep the current password</value></data>
+  <data name="MobileShowPassword" xml:space="preserve"><value>Show password</value></data>
+  <data name="MobileHidePassword" xml:space="preserve"><value>Hide password</value></data>
+  <data name="MobilePasswordChangedSignIn" xml:space="preserve"><value>Password changed. Sign in with the new password.</value></data>
+  <data name="MobileDeleteConfirm" xml:space="preserve"><value>Remove “{0}”? Existing history will be kept.</value></data>
+  <data name="PhotoOpen" xml:space="preserve"><value>Tap to enlarge</value></data>
+  <data name="PhotoZoomHint" xml:space="preserve"><value>Pinch to zoom. Drag to move. Double-tap to change zoom.</value></data>
+  <data name="PhotoResetZoom" xml:space="preserve"><value>Reset zoom</value></data>
+  <data name="PhotoPrevious" xml:space="preserve"><value>Previous</value></data>
+  <data name="PhotoNext" xml:space="preserve"><value>Next</value></data>
+  <data name="MobileCompletionShort" xml:space="preserve"><value>Done? Add a photo or send without one.</value></data>
+  <data name="MobileSavedAccounts" xml:space="preserve"><value>Who’s here today?</value></data>
+  <data name="MobileRememberAccount" xml:space="preserve"><value>Save account on this device</value></data>
+  <data name="MobileDirectSignIn" xml:space="preserve"><value>Allow sign-in without a password</value></data>
+  <data name="SavedAccountSignIn" xml:space="preserve"><value>Sign in</value></data>
+  <data name="MobileSignInWithPassword" xml:space="preserve"><value>Sign in with password</value></data>
+  <data name="MobileUsePassword" xml:space="preserve"><value>Use password</value></data>
+  <data name="MobileForgetAccount" xml:space="preserve"><value>Forget account</value></data>
+  <data name="MobileSwitchAccount" xml:space="preserve"><value>Switch account</value></data>
+  <data name="MobileSavedSessionExpired" xml:space="preserve"><value>Enter your password to sign in to this saved account again.</value></data>
+  <data name="MobileAnotherAccount" xml:space="preserve"><value>Another account</value></data>
 </root>

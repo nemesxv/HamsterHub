@@ -132,3 +132,10 @@ its implementation and proportionate verification are complete.
   four-character password minimum, optional-photo inline errors, conditional permission
   warnings/actions and two-by-two parent add-action tiles. Local checks remain skipped
   by request; real-phone acceptance is still pending.
+
+- Implemented mobile visual creation tiles, tappable management cards with deletion in
+  editing, full member account/privacy fields, reward editing/archival, child member/pet
+  profiles, privacy-scoped history/media, full-screen photo zoom and encrypted saved
+  account/password sign-in choices. Added readable field labels, password visibility,
+  top Back actions, available-task ordering and shorter completion copy. Local tests/
+  builds skipped by instruction; autodeploy compilation and phone acceptance pending.

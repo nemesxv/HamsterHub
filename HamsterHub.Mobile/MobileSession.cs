@@ -31,7 +31,11 @@ internal sealed class SecureSessionStore(Uri server) : ISessionStore
             return null;
         }
     }
-    public Task SaveAsync(TokenResponse tokens) => SecureStorage.Default.SetAsync(key, JsonSerializer.Serialize(tokens));
+    public async Task SaveAsync(TokenResponse tokens)
+    {
+        await SecureStorage.Default.SetAsync(key, JsonSerializer.Serialize(tokens));
+        await SavedAccounts.UpdateTokensAsync(server, tokens);
+    }
     public Task ClearAsync() { SecureStorage.Default.Remove(key); return Task.CompletedTask; }
 }
 

@@ -284,3 +284,18 @@ have their own inline label. ASP.NET Identity password policy and all password i
 annotations use a four-character minimum without composition requirements. Settings
 reads Android notification/channel and exact-alarm permission states and rebuilds on
 resume; explanatory warnings are conditional rather than permanent Settings prose.
+
+Mobile profile history endpoints scope target members/pets to the viewer's household.
+Children receive only approved logs of themselves, parents, or children permitted by
+both history-sharing flags. The same policy authorizes report-photo retrieval, including
+pet histories, so a profile cannot bypass privacy by revealing another child's photo.
+Identity member updates use a database transaction for email/username, password resets,
+roles and household privacy flags; password/role changes invalidate old security stamps.
+Reward updates preserve redemption snapshots, and deletion archives catalog records.
+
+SavedAccounts uses SecureStorage for account identities and optional bearer token pairs.
+SecureSessionStore keeps the existing active server session for reminder jobs and mirrors
+refreshed tokens to the selected account only. Saved accounts are keyed by server/email;
+passwords are never persisted. Switching cancels reminders before replacing the active
+session. PhotoViewerPage runs outside the dashboard ScrollView and pauses dashboard
+refresh while presented. AccountScreens/VisualScreens isolate the new presentation code.

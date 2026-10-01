@@ -37,7 +37,12 @@ public sealed class MobileCareController(ApplicationDbContext db, UserManager<Ap
             "care-logs" => await db.CareLogPhotos.AnyAsync(p => p.ImagePath == path &&
                 (p.CareLog.PetId == null || p.CareLog.Pet!.HouseholdId == member.HouseholdId) &&
                 p.CareLog.CareTask.HouseholdId == member.HouseholdId &&
-                (isParent || p.CareLog.CompletedByUserId == member.UserId), cancellationToken),
+                (isParent || p.CareLog.CompletedByUserId == member.UserId ||
+                    (p.CareLog.Status == CareLogStatus.Approved && db.HouseholdMembers.Any(target =>
+                        target.HouseholdId == member.HouseholdId && target.UserId == p.CareLog.CompletedByUserId &&
+                        target.IsActive && target.User.IsActive &&
+                        (target.MemberRole == HouseholdMemberRole.Parent ||
+                            (member.CanViewOtherChildrenHistory && target.ShareHistoryWithChildren))))), cancellationToken),
             "tasks" => await db.CareTasks.AnyAsync(t => t.ImagePath == path && t.HouseholdId == member.HouseholdId &&
                 (t.PetId == null || t.Pet!.HouseholdId == member.HouseholdId) && (isParent || t.AssignedMemberId == member.Id), cancellationToken),
             "pets" => await db.Pets.AnyAsync(p => p.PhotoPath == path && p.HouseholdId == member.HouseholdId, cancellationToken),
@@ -93,6 +98,47 @@ public sealed class MobileCareController(ApplicationDbContext db, UserManager<Ap
             ownLogs.OrderByDescending(l => l.CompletedAt).Take(50).Select(ToDto).ToList(),
             pending.OrderByDescending(l => l.CompletedAt).Select(ToDto).ToList());
     }
+
+    [HttpGet("memberships/{memberId:int}/profiles/members/{id:int}/history")]
+    public async Task<ActionResult<IReadOnlyList<CareLogDto>>> MemberHistory(int memberId, int id,
+        CancellationToken cancellationToken)
+    {
+        var viewer = await GetMemberAsync(memberId, cancellationToken);
+        if (viewer is null) return Forbid();
+        var target = await db.HouseholdMembers.AsNoTracking().FirstOrDefaultAsync(item =>
+            item.Id == id && item.HouseholdId == viewer.HouseholdId && item.IsActive && item.User.IsActive,
+            cancellationToken);
+        if (target is null) return NotFound();
+        if (!CanViewHistory(viewer, target)) return Forbid();
+        var query = ScopedLogs(viewer.HouseholdId).Where(log => log.CompletedByUserId == target.UserId);
+        if (viewer.MemberRole != HouseholdMemberRole.Parent) query = query.Where(log => log.Status == CareLogStatus.Approved);
+        var rows = await query.OrderByDescending(log => log.CompletedAt).Take(50).ToListAsync(cancellationToken);
+        return rows.Select(ToDto).ToList();
+    }
+
+    [HttpGet("memberships/{memberId:int}/profiles/pets/{id:int}/history")]
+    public async Task<ActionResult<IReadOnlyList<CareLogDto>>> PetHistory(int memberId, int id,
+        CancellationToken cancellationToken)
+    {
+        var viewer = await GetMemberAsync(memberId, cancellationToken);
+        if (viewer is null) return Forbid();
+        if (!await db.Pets.AnyAsync(item => item.Id == id && item.HouseholdId == viewer.HouseholdId &&
+            item.IsActive, cancellationToken)) return NotFound();
+        var query = ScopedLogs(viewer.HouseholdId).Where(log => log.PetId == id);
+        if (viewer.MemberRole != HouseholdMemberRole.Parent)
+            query = query.Where(log => log.Status == CareLogStatus.Approved &&
+                (log.CompletedByUserId == viewer.UserId || db.HouseholdMembers.Any(target =>
+                    target.HouseholdId == viewer.HouseholdId && target.UserId == log.CompletedByUserId &&
+                    target.IsActive && target.User.IsActive && (target.MemberRole == HouseholdMemberRole.Parent ||
+                        (viewer.CanViewOtherChildrenHistory && target.ShareHistoryWithChildren)))));
+        var rows = await query.OrderByDescending(log => log.CompletedAt).Take(50).ToListAsync(cancellationToken);
+        return rows.Select(ToDto).ToList();
+    }
+
+    private static bool CanViewHistory(HouseholdMember viewer, HouseholdMember target) =>
+        viewer.MemberRole == HouseholdMemberRole.Parent || viewer.UserId == target.UserId ||
+        target.MemberRole == HouseholdMemberRole.Parent ||
+        (viewer.CanViewOtherChildrenHistory && target.ShareHistoryWithChildren);
 
     [HttpGet("memberships/{memberId:int}/reminders")]
     public async Task<ActionResult<IReadOnlyList<ScheduledTaskReminderDto>>> Reminders(

@@ -62,6 +62,14 @@ public sealed class HamsterHubClient(HttpClient http, ISessionStore store)
         GetAsync<IReadOnlyList<ScheduledTaskReminderDto>>($"api/v1/memberships/{memberId}/reminders");
     public Task<HouseholdHubDto> GetHouseholdAsync(int memberId) =>
         GetAsync<HouseholdHubDto>($"api/v1/memberships/{memberId}/household");
+    public Task<IReadOnlyList<CareLogDto>> GetMemberHistoryAsync(int memberId, int id) =>
+        GetAsync<IReadOnlyList<CareLogDto>>($"api/v1/memberships/{memberId}/profiles/members/{id}/history");
+    public Task<IReadOnlyList<CareLogDto>> GetPetHistoryAsync(int memberId, int id) =>
+        GetAsync<IReadOnlyList<CareLogDto>>($"api/v1/memberships/{memberId}/profiles/pets/{id}/history");
+    public Task UpdateRewardAsync(int memberId, int id, CreateRewardRequest request) =>
+        PutAsync($"api/v1/memberships/{memberId}/rewards/{id}", request);
+    public Task ArchiveRewardAsync(int memberId, int id) =>
+        DeleteAsync($"api/v1/memberships/{memberId}/rewards/{id}");
 
     public async Task<int> AddMemberAsync(int memberId, CreateMemberRequest request) =>
         (await PostForAsync<CreatedItemDto, CreateMemberRequest>($"api/v1/memberships/{memberId}/members", request)).Id;

@@ -40,7 +40,8 @@ public sealed class MobileHouseholdController(
             memberItems.Add(new HouseholdMemberItemDto(item.Id, item.User.DisplayName,
                 isParent ? item.User.Email ?? "" : "", item.MemberRole.ToString(), item.Id == viewer.Id,
                 item.User.ProfilePhotoPath,
-                await points.GetBalanceAsync(viewer.HouseholdId, item.UserId, cancellationToken)));
+                await points.GetBalanceAsync(viewer.HouseholdId, item.UserId, cancellationToken),
+                isParent && item.CanViewOtherChildrenHistory, isParent && item.ShareHistoryWithChildren));
         }
 
         var pets = await db.Pets.AsNoTracking().Where(item => item.HouseholdId == viewer.HouseholdId && item.IsActive)
@@ -228,8 +229,30 @@ public sealed class MobileHouseholdController(
         var target = await db.HouseholdMembers.Include(item => item.User).FirstOrDefaultAsync(item =>
             item.Id == id && item.HouseholdId == parent.HouseholdId && item.IsActive, cancellationToken);
         if (target is null) return NotFound();
+        if (target.UserId == parent.UserId && role != HouseholdMemberRole.Parent)
+            return BadRequest(new ApiError("CannotChangeOwnParentRole"));
+        // Identity account changes, roles and household fields succeed or roll back together.
+        await using var transaction = await db.Database.BeginTransactionAsync(cancellationToken);
         var previousRole = target.MemberRole;
+        if (request.Email is { } requestedEmail)
+        {
+            var email = requestedEmail.Trim();
+            if (string.IsNullOrWhiteSpace(email)) return BadRequest(new ApiError("InvalidEmail"));
+            var existing = await users.FindByEmailAsync(email);
+            if (existing is not null && existing.Id != target.UserId)
+                return Conflict(new ApiError("EmailInUse"));
+            target.User.Email = email;
+            target.User.UserName = email;
+        }
         target.User.DisplayName = request.DisplayName.Trim();
+        var updated = await users.UpdateAsync(target.User);
+        if (!updated.Succeeded) return BadRequest(new ApiError("AccountUpdateFailed"));
+        if (request.Password is { } password)
+        {
+            var resetToken = await users.GeneratePasswordResetTokenAsync(target.User);
+            var reset = await users.ResetPasswordAsync(target.User, resetToken, password);
+            if (!reset.Succeeded) return BadRequest(new ApiError("MobilePasswordLength"));
+        }
         if (previousRole != role)
         {
             var added = await users.AddToRoleAsync(target.User, role.ToString());
@@ -241,7 +264,48 @@ public sealed class MobileHouseholdController(
                 return BadRequest(new ApiError("AccountUpdateFailed"));
             }
             target.MemberRole = role;
+            await users.UpdateSecurityStampAsync(target.User);
         }
+        if (request.CanViewOtherChildrenHistory is { } canView) target.CanViewOtherChildrenHistory = canView;
+        if (request.ShareHistoryWithChildren is { } share) target.ShareHistoryWithChildren = share;
+        await db.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return Ok();
+    }
+
+    [HttpPut("rewards/{id:int}")]
+    public async Task<IActionResult> UpdateReward(int memberId, int id, CreateRewardRequest request,
+        CancellationToken cancellationToken)
+    {
+        var parent = await GetParentAsync(memberId, cancellationToken);
+        if (parent is null) return Forbid();
+        var reward = await db.Rewards.Include(item => item.VisibleToMembers).FirstOrDefaultAsync(item =>
+            item.Id == id && item.HouseholdId == parent.HouseholdId && item.IsActive, cancellationToken);
+        if (reward is null) return NotFound();
+        var ids = request.VisibleToMemberIds.Distinct().ToArray();
+        if (ids.Length == 0 || await db.HouseholdMembers.CountAsync(item => ids.Contains(item.Id) &&
+            item.HouseholdId == parent.HouseholdId && item.IsActive &&
+            item.MemberRole == HouseholdMemberRole.Child, cancellationToken) != ids.Length)
+            return BadRequest(new ApiError("ChooseRewardAudience"));
+        reward.Name = request.Name.Trim(); reward.PointCost = request.PointCost;
+        // Preserve existing links and immutable redemption snapshots.
+        foreach (var link in reward.VisibleToMembers.Where(link => !ids.Contains(link.HouseholdMemberId)).ToList())
+            db.Remove(link);
+        foreach (var childId in ids.Where(childId => !reward.VisibleToMembers.Any(link => link.HouseholdMemberId == childId)))
+            reward.VisibleToMembers.Add(new RewardVisibility { HouseholdMemberId = childId });
+        await db.SaveChangesAsync(cancellationToken);
+        return Ok();
+    }
+
+    [HttpDelete("rewards/{id:int}")]
+    public async Task<IActionResult> ArchiveReward(int memberId, int id, CancellationToken cancellationToken)
+    {
+        var parent = await GetParentAsync(memberId, cancellationToken);
+        if (parent is null) return Forbid();
+        var reward = await db.Rewards.FirstOrDefaultAsync(item => item.Id == id &&
+            item.HouseholdId == parent.HouseholdId && item.IsActive, cancellationToken);
+        if (reward is null) return NotFound();
+        reward.IsActive = false;
         await db.SaveChangesAsync(cancellationToken);
         return Ok();
     }

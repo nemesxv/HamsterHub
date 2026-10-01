@@ -14,7 +14,8 @@ public sealed record HouseholdHubDto(
     IReadOnlyList<RewardHistoryItemDto> RewardHistory);
 
 public sealed record HouseholdMemberItemDto(int Id, string DisplayName, string Email, string Role,
-    bool IsCurrentUser, string? PhotoPath, int Balance);
+    bool IsCurrentUser, string? PhotoPath, int Balance,
+    bool CanViewOtherChildrenHistory = false, bool ShareHistoryWithChildren = false);
 public sealed record PetItemDto(int Id, string Name, string Species, DateOnly? BirthDate, string? PhotoPath);
 public sealed record CategoryItemDto(int Id, string Name);
 public sealed record ManagedTaskItemDto(int Id, int? PetId, string PetName, int? CategoryId,
@@ -38,7 +39,10 @@ public sealed record CreatePetRequest(
     DateOnly? BirthDate);
 public sealed record UpdateMemberRequest(
     [Required, StringLength(100, MinimumLength = 2)] string DisplayName,
-    [Required] string Role);
+    [Required] string Role,
+    [EmailAddress] string? Email = null,
+    [MinLength(4)] string? Password = null,
+    bool? CanViewOtherChildrenHistory = null, bool? ShareHistoryWithChildren = null);
 public sealed record UpdatePetRequest(
     [Required, StringLength(100, MinimumLength = 1)] string Name,
     [Required, StringLength(100, MinimumLength = 2)] string Species,

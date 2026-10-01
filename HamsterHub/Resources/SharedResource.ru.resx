@@ -534,4 +534,36 @@
   <data name="AlarmPermissionWarning" xml:space="preserve"><value>Точные напоминания отключены. Разрешите их, чтобы получать напоминания вовремя.</value></data>
   <data name="NotificationPermissionWarning" xml:space="preserve"><value>Уведомления отключены. Разрешите их, чтобы получать напоминания о заданиях.</value></data>
   <data name="RewardAudience" xml:space="preserve"><value>Получатели награды</value></data>
+  <data name="MobileCreateMemberHint" xml:space="preserve"><value>Имя, доступ и фото</value></data>
+  <data name="MobileCreatePetHint" xml:space="preserve"><value>Новый друг семьи</value></data>
+  <data name="MobileCreateTaskHint" xml:space="preserve"><value>Задание и напоминание</value></data>
+  <data name="MobileCreateRewardHint" xml:space="preserve"><value>Подарок за звёзды</value></data>
+  <data name="MobileTapToEdit" xml:space="preserve"><value>Нажмите на карточку, чтобы изменить</value></data>
+  <data name="MobileOpenProfile" xml:space="preserve"><value>Открыть профиль</value></data>
+  <data name="MobileProfile" xml:space="preserve"><value>Профиль</value></data>
+  <data name="MobileViewHistory" xml:space="preserve"><value>Посмотреть историю</value></data>
+  <data name="MobileEditReward" xml:space="preserve"><value>Изменить награду</value></data>
+  <data name="MobileViewFamilyHistory" xml:space="preserve"><value>Может видеть историю других детей</value></data>
+  <data name="MobileShareHistory" xml:space="preserve"><value>Делиться историей с другими детьми</value></data>
+  <data name="MobileKeepPassword" xml:space="preserve"><value>Оставьте пустым, чтобы сохранить пароль</value></data>
+  <data name="MobileShowPassword" xml:space="preserve"><value>Показать пароль</value></data>
+  <data name="MobileHidePassword" xml:space="preserve"><value>Скрыть пароль</value></data>
+  <data name="MobilePasswordChangedSignIn" xml:space="preserve"><value>Пароль изменён. Войдите с новым паролем.</value></data>
+  <data name="MobileDeleteConfirm" xml:space="preserve"><value>Удалить «{0}»? История останется сохранённой.</value></data>
+  <data name="PhotoOpen" xml:space="preserve"><value>Нажмите, чтобы увеличить</value></data>
+  <data name="PhotoZoomHint" xml:space="preserve"><value>Разведите пальцы, чтобы увеличить. Перетаскивайте фото. Двойное нажатие меняет масштаб.</value></data>
+  <data name="PhotoResetZoom" xml:space="preserve"><value>Сбросить масштаб</value></data>
+  <data name="PhotoPrevious" xml:space="preserve"><value>Назад</value></data>
+  <data name="PhotoNext" xml:space="preserve"><value>Далее</value></data>
+  <data name="MobileCompletionShort" xml:space="preserve"><value>Готово? Можно добавить фото или отправить без него.</value></data>
+  <data name="MobileSavedAccounts" xml:space="preserve"><value>Кто сегодня с нами?</value></data>
+  <data name="MobileRememberAccount" xml:space="preserve"><value>Сохранить аккаунт на этом устройстве</value></data>
+  <data name="MobileDirectSignIn" xml:space="preserve"><value>Разрешить вход без пароля</value></data>
+  <data name="SavedAccountSignIn" xml:space="preserve"><value>Войти</value></data>
+  <data name="MobileSignInWithPassword" xml:space="preserve"><value>Войти с паролем</value></data>
+  <data name="MobileUsePassword" xml:space="preserve"><value>С паролем</value></data>
+  <data name="MobileForgetAccount" xml:space="preserve"><value>Убрать аккаунт</value></data>
+  <data name="MobileSwitchAccount" xml:space="preserve"><value>Сменить аккаунт</value></data>
+  <data name="MobileSavedSessionExpired" xml:space="preserve"><value>Введите пароль, чтобы снова войти в сохранённый аккаунт.</value></data>
+  <data name="MobileAnotherAccount" xml:space="preserve"><value>Другой аккаунт</value></data>
 </root>
