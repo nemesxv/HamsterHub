@@ -49,6 +49,11 @@ public sealed class MainPage : ContentPage
     private bool wide;
     private bool showingCompletion;
     private bool showingForm;
+    private bool showingSettings;
+    private readonly Dictionary<Entry, (string Key, Label Error)> formInputs = [];
+    private readonly Dictionary<Picker, (string Title, bool Required, Label Error)> formPickers = [];
+    private readonly List<(Func<string?> Validate, Label Error)> formGroups = [];
+    private readonly Dictionary<string, Label> formPhotoErrors = [];
     private static string L(string key) => Strings.Get(key);
 
     public MainPage()
@@ -106,6 +111,7 @@ public sealed class MainPage : ContentPage
                     foreground = true;
                     dashboardRefreshTimer.Start();
                     await RunAsync(async () => { AppUpdateInstaller.Continue(); await Task.CompletedTask; });
+                    if (showingSettings) ShowSettings();
                     if (session is not null && member is not null && !showingCompletion && !showingForm)
                         await RunAsync(RefreshAsync);
                     await CheckUpdateAsync();
@@ -178,7 +184,13 @@ public sealed class MainPage : ContentPage
             Margin = new Thickness(0, 0, 4, 4), BackgroundColor = MintDeep, TextColor = Colors.White,
             FontAttributes = FontAttributes.Bold, FontSize = 16, Padding = new Thickness(16, 10) };
         SemanticProperties.SetDescription(button, L(key));
-        button.Clicked += async (_, _) => await RunAsync(action);
+        button.Clicked += async (_, _) =>
+        {
+            if (key is "LoginSubmit" or "SaveChanges" or "SavePet" or "SaveCareTask" or "SaveReward" ||
+                (key == "AddFamilyMember" && showingForm))
+                if (!ValidateInputs()) return;
+            await RunAsync(action);
+        };
         return button;
     }
 
@@ -210,10 +222,9 @@ public sealed class MainPage : ContentPage
 
     private void ShowSettings()
     {
-        ResetScroll(); body.Clear(); showingForm = true;
+        ResetScroll(); body.Clear(); showingForm = true; showingSettings = true; formInputs.Clear(); formPickers.Clear(); formGroups.Clear(); formPhotoErrors.Clear();
         var settings = new VerticalStackLayout { Spacing = 14, MaximumWidthRequest = 620 };
         settings.Add(Text(L("MobileSettings"), 28));
-        settings.Add(Text(Format("AppCurrentVersion", AppInfo.Current.VersionString), 14));
         var automaticUpdates = new Switch { IsToggled = Preferences.Default.Get(AutoUpdateCheckPreference, true) };
         SemanticProperties.SetDescription(automaticUpdates, L("AppAutoCheckUpdates"));
         var automaticUpdateRow = new Grid { ColumnDefinitions = { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) }, ColumnSpacing = 12 };
@@ -229,9 +240,17 @@ public sealed class MainPage : ContentPage
         if (updateCard.Parent is Microsoft.Maui.Controls.Layout previousSettings) previousSettings.Remove(updateCard);
         RenderUpdateCard();
         settings.Add(updateCard);
-        settings.Add(SecondaryButton("TaskNotification", TaskNotifications.RequestPermissionAsync));
-        settings.Add(SecondaryButton("NotificationExactTime", TaskNotifications.OpenExactAlarmSettingsAsync));
-        settings.Add(Text(L("NotificationDeviceHint"), 14));
+        if (!TaskNotifications.NotificationsAllowed)
+        {
+            settings.Add(PermissionWarning("NotificationPermissionWarning"));
+            settings.Add(SecondaryButton("AllowNotifications", async () =>
+            { await TaskNotifications.RequestPermissionAsync(); ShowSettings(); }));
+        }
+        if (!TaskNotifications.ExactAlarmsAllowed)
+        {
+            settings.Add(PermissionWarning("AlarmPermissionWarning"));
+            settings.Add(SecondaryButton("AllowExactAlarms", TaskNotifications.OpenExactAlarmSettingsAsync));
+        }
         settings.Add(SecondaryButton("SwitchLanguage", async () =>
         {
             Strings.Culture = Strings.Culture == "ru" ? "en" : "ru";
@@ -256,6 +275,13 @@ public sealed class MainPage : ContentPage
         settings.Add(SecondaryButton("MobileBack", () =>
         { if (session is null) ShowLogin(); else ShowDashboard(); return Task.CompletedTask; }));
         body.Add(Card(settings));
+    }
+
+    private View PermissionWarning(string key)
+    {
+        var label = new Label { Text = "⚠ " + L(key), FontSize = 15, TextColor = Color.FromArgb("614900") };
+        return new Border { Content = label, Padding = 14, StrokeThickness = 0,
+            BackgroundColor = Color.FromArgb("FFF1B8"), StrokeShape = new RoundRectangle { CornerRadius = 16 } };
     }
 
     private async Task CheckUpdateAsync(bool manual = false)
@@ -291,7 +317,6 @@ public sealed class MainPage : ContentPage
         updateCard.IsVisible = availableUpdate is not null;
         if (availableUpdate is not { } update) return;
         updateContent.Add(Text(Format("AppUpdateAvailable", update.VersionName), 20));
-        updateContent.Add(Text(L("AppUpdateHint"), 14));
         updateContent.Add(Button("AppUpdateNow", InstallUpdateAsync));
     }
 
@@ -321,15 +346,119 @@ public sealed class MainPage : ContentPage
 
     private Entry Field(string key, bool password = false)
     {
-        var entry = new Entry { Placeholder = L(key), IsPassword = password, MinimumHeightRequest = 52 };
+        var required = key is not ("NewCategory" or "MobileServer");
+        var entry = new Entry { Placeholder = L(key) + (required ? " *" : ""), IsPassword = password, MinimumHeightRequest = 52 };
         entry.SetAppThemeColor(Entry.TextColorProperty, Ink, Color.FromArgb("E8F5F1"));
         entry.SetAppThemeColor(Entry.PlaceholderColorProperty, InkSoft, Color.FromArgb("A9C2BC"));
         SemanticProperties.SetDescription(entry, L(key));
+        var error = new Label { IsVisible = false, FontSize = 13 };
+        error.SetAppThemeColor(Label.TextColorProperty, Color.FromArgb("AD2424"), Color.FromArgb("FFB0A7"));
+        formInputs[entry] = (key, error);
+        entry.TextChanged += (_, _) =>
+        {
+            if (!error.IsVisible) return;
+            var reason = InputError(key, entry.Text);
+            error.Text = reason is null ? "" : L(reason);
+            error.IsVisible = reason is not null;
+        };
         return entry;
+    }
+
+    private void AddInput(VerticalStackLayout form, Entry input)
+    {
+        form.Add(input);
+        if (formInputs.TryGetValue(input, out var details)) form.Add(details.Error);
+    }
+
+    private static string? InputError(string key, string? text)
+    {
+        var value = text?.Trim() ?? "";
+        if (value.Length == 0) return key is "NewCategory" or "MobileServer" ? null : "FieldRequired";
+        return key switch
+        {
+            "Email" when !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(value) => "InvalidEmail",
+            "TemporaryPassword" when text!.Length < 4 => "PasswordLength",
+            "DisplayName" or "TaskName" or "RewardName" when value.Length is < 2 or > 100 => "NameLength",
+            "PetName" when value.Length > 100 => "NameLength",
+            "Species" when value.Length is < 2 or > 100 => "MobileSpeciesLength",
+            "NewCategory" when value.Length is < 2 or > 100 => "MobileCategoryNameLength",
+            "PointValue" when !int.TryParse(value, out var points) || points is < 0 or > 1000 => "PointRange",
+            "RewardPointCost" when !int.TryParse(value, out var cost) || cost is < 1 or > 100000 => "RewardPointRange",
+            _ => null
+        };
+    }
+
+    private bool ValidateInputs()
+    {
+        Entry? first = null;
+        message.Text = ""; message.IsVisible = false;
+        foreach (var (input, details) in formInputs)
+        {
+            if (details.Error.Parent is null || !input.IsVisible) continue;
+            var reason = InputError(details.Key, input.Text);
+            details.Error.Text = reason is null ? "" : L(reason);
+            details.Error.IsVisible = reason is not null;
+            if (reason is not null) first ??= input;
+        }
+        var additionalErrors = false;
+        foreach (var (picker, details) in formPickers)
+        {
+            if (details.Error.Parent is null) continue;
+            details.Error.IsVisible = details.Required && picker.SelectedItem is null;
+            details.Error.Text = details.Error.IsVisible ? L("FieldRequired") : "";
+            additionalErrors |= details.Error.IsVisible;
+        }
+        foreach (var group in formGroups)
+        {
+            var reason = group.Validate();
+            group.Error.Text = reason is null ? "" : L(reason);
+            group.Error.IsVisible = reason is not null;
+            additionalErrors |= group.Error.IsVisible;
+        }
+        first?.Focus();
+        return first is null && !additionalErrors;
+    }
+
+    private bool ShowInputError(string code)
+    {
+        if (code is "InvalidTaskPhoto" or "InvalidMemberImage" or "MemberImageTooLarge" or
+            "InvalidPetImage" or "PetImageTooLarge" or "InvalidTaskImage" or "TaskImageTooLarge" or
+            "InvalidRewardImage" or "RewardImageTooLarge")
+        {
+            if (formPhotoErrors.Values.FirstOrDefault() is { } photoError)
+            { photoError.Text = L(code); photoError.IsVisible = true; return true; }
+        }
+        if (code == "ChooseRewardAudience" && formGroups.Count > 0)
+        {
+            formGroups[0].Error.Text = L(code); formGroups[0].Error.IsVisible = true; return true;
+        }
+        if (code == "ChooseMember")
+        {
+            foreach (var details in formPickers.Values.Where(item => item.Title == L("ChooseMember")))
+            { details.Error.Text = L(code); details.Error.IsVisible = true; }
+            return formPickers.Values.Any(item => item.Title == L("ChooseMember"));
+        }
+        var key = code switch
+        {
+            "InvalidEmail" or "EmailInUse" => "Email",
+            "PasswordLength" or "MobilePasswordLength" or "PasswordRequirements" => "TemporaryPassword",
+            "MobileCategoryNameLength" => "NewCategory",
+            "PointRange" => "PointValue",
+            "RewardPointRange" => "RewardPointCost",
+            "MobileSpeciesLength" => "Species",
+            _ => null
+        };
+        var candidates = formInputs.Where(pair => pair.Value.Error.Parent is not null &&
+            (pair.Value.Key == key || (code == "NameLength" && pair.Value.Key is "DisplayName" or "TaskName" or "PetName" or "RewardName"))).ToList();
+        if (candidates.Count == 0) return false;
+        foreach (var pair in candidates)
+        { pair.Value.Error.Text = L(code); pair.Value.Error.IsVisible = true; }
+        return true;
     }
 
     private void ShowLogin()
     {
+        formInputs.Clear(); formPickers.Clear(); formGroups.Clear(); formPhotoErrors.Clear(); showingSettings = false;
         ResetScroll();
         body.Clear();
         showingForm = false;
@@ -357,12 +486,12 @@ public sealed class MainPage : ContentPage
             return Task.CompletedTask;
         });
         form.Add(advanced);
-        form.Add(address);
+        AddInput(form, address);
         var email = Field("Email"); email.Keyboard = Keyboard.Email;
         var password = Field("Password", true);
         var code = Field("MobileTwoFactor"); code.Keyboard = Keyboard.Numeric;
         code.IsVisible = false;
-        foreach (var field in new[] { email, password, code }) form.Add(field);
+        foreach (var field in new[] { email, password, code }) AddInput(form, field);
         Button? login = null;
         login = Button("LoginSubmit", async () =>
         {
@@ -427,6 +556,7 @@ public sealed class MainPage : ContentPage
 
     private void ShowDashboard(bool resetScroll = true)
     {
+        formInputs.Clear(); formPickers.Clear(); formGroups.Clear(); formPhotoErrors.Clear(); showingSettings = false;
         if (resetScroll) ResetScroll();
         showingCompletion = false;
         showingForm = false;
@@ -746,11 +876,26 @@ public sealed class MainPage : ContentPage
     {
         var section = new VerticalStackLayout { Spacing = 16 };
         section.Add(RoleSectionHeading("⚙", L("FamilySetup"), L("FamilySetupHint")));
-        var actions = new FlexLayout { Wrap = FlexWrap.Wrap, JustifyContent = FlexJustify.Start };
-        actions.Add(Button("AddFamilyMember", () => { ShowAddMember(); return Task.CompletedTask; }));
-        actions.Add(Button("AddPet", () => { ShowAddPet(); return Task.CompletedTask; }));
-        actions.Add(Button("AddCareTask", () => { ShowAddTask(); return Task.CompletedTask; }));
-        actions.Add(Button("AddReward", () => { ShowAddReward(); return Task.CompletedTask; }));
+        var actions = new Grid { ColumnSpacing = 12, RowSpacing = 12,
+            ColumnDefinitions = { new(GridLength.Star), new(GridLength.Star) },
+            RowDefinitions = { new(GridLength.Auto), new(GridLength.Auto) } };
+        var addActions = new (string Icon, string Key, Action Open)[]
+        {
+            ("👨‍👩‍👧", "AddFamilyMember", ShowAddMember), ("🐹", "AddPet", ShowAddPet),
+            ("📋", "AddCareTask", ShowAddTask), ("🎁", "AddReward", ShowAddReward)
+        };
+        for (var index = 0; index < addActions.Length; index++)
+        {
+            var action = addActions[index];
+            var tile = Button(action.Key, () => { action.Open(); return Task.CompletedTask; });
+            tile.Text = action.Icon + "\n" + L(action.Key);
+            tile.MinimumHeightRequest = 112; tile.CornerRadius = 22; tile.FontSize = 16;
+            tile.Margin = 0;
+            tile.SetAppThemeColor(Button.BackgroundColorProperty,
+                index % 2 == 0 ? Mint : Peach, index % 2 == 0 ? Color.FromArgb("244C43") : Color.FromArgb("563C32"));
+            tile.SetAppThemeColor(Button.TextColorProperty, Ink, Color.FromArgb("FFF7EC"));
+            actions.Add(tile, index % 2, index / 2);
+        }
         section.Add(actions);
 
         section.Add(ManagementHeading("FamilyMembers"));
@@ -880,11 +1025,22 @@ public sealed class MainPage : ContentPage
 
     private Picker PickerFor<T>(string title, IReadOnlyList<T> items, string displayProperty)
     {
-        var picker = new Picker { Title = title, ItemsSource = items.ToList(),
+        var required = title != L("ChoosePet") && title != L("ChooseCategory");
+        var picker = new Picker { Title = title + (required ? " *" : ""), ItemsSource = items.ToList(),
             ItemDisplayBinding = new Binding(displayProperty) };
+        var error = new Label { IsVisible = false, FontSize = 13 };
+        error.SetAppThemeColor(Label.TextColorProperty, Color.FromArgb("AD2424"), Color.FromArgb("FFB0A7"));
+        formPickers[picker] = (title, required, error);
+        picker.SelectedIndexChanged += (_, _) => { if (picker.SelectedItem is not null) error.IsVisible = false; };
         picker.SetAppThemeColor(Picker.TextColorProperty, Ink, Color.FromArgb("E8F5F1"));
         if (items.Count > 0) picker.SelectedIndex = 0;
         return picker;
+    }
+
+    private void AddPicker(VerticalStackLayout form, Picker picker)
+    {
+        form.Add(picker);
+        if (formPickers.TryGetValue(picker, out var details)) form.Add(details.Error);
     }
 
     private Picker ChoicePicker(string title, IReadOnlyList<Choice> choices, string selectedValue)
@@ -896,6 +1052,7 @@ public sealed class MainPage : ContentPage
 
     private void ShowForm(string titleKey, Action<VerticalStackLayout> build)
     {
+        formInputs.Clear(); formPickers.Clear(); formGroups.Clear(); formPhotoErrors.Clear(); showingSettings = false;
         ResetScroll(); body.Clear(); selectedPhotos.Clear(); showingForm = true;
         var form = new VerticalStackLayout { Spacing = 14, MaximumWidthRequest = 620 };
         var title = Text(L(titleKey), 28); title.FontAttributes = FontAttributes.Bold; form.Add(title);
@@ -952,8 +1109,7 @@ public sealed class MainPage : ContentPage
         var roles = new[] { new Choice("Child", L("Role_Child")),
             new Choice("Parent", L("Role_Parent")) };
         var role = ChoicePicker(L("FamilyRole"), roles, "Child");
-        form.Add(name); form.Add(email); form.Add(password); form.Add(role);
-        form.Add(Text(L("PasswordLength") + " " + L("PasswordRequirements"), 14));
+        AddInput(form, name); AddInput(form, email); AddInput(form, password); AddPicker(form, role);
         AddPhotoPicker(form, "MemberPhoto", file => photo = file);
         form.Add(Button("AddFamilyMember", async () =>
         {
@@ -964,7 +1120,7 @@ public sealed class MainPage : ContentPage
                 if (string.IsNullOrWhiteSpace(email.Text) ||
                     !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email.Text.Trim()))
                     throw new MobileApiException("InvalidEmail");
-                if (password.Text is null || password.Text.Length is < 6 or > 100)
+                if (password.Text is null || password.Text.Length < 4)
                     throw new MobileApiException("MobilePasswordLength");
             }
             createdId ??= await api!.AddMemberAsync(member!.Id, new CreateMemberRequest(name.Text ?? "", email.Text ?? "",
@@ -983,7 +1139,7 @@ public sealed class MainPage : ContentPage
         var name = Field("PetName"); var species = Field("Species");
         FileResult? photo = null;
         int? createdId = null;
-        form.Add(name); form.Add(species);
+        AddInput(form, name); AddInput(form, species);
         var birthDate = AddBirthDatePicker(form, null);
         AddPhotoPicker(form, "PetPhoto", file => photo = file);
         form.Add(Button("SavePet", async () =>
@@ -1050,7 +1206,7 @@ public sealed class MainPage : ContentPage
             new Choice("AsNeeded", L("Frequency_AsNeeded")) };
         var frequency = ChoicePicker(L("TaskFrequency"), frequencies, "Daily");
         var points = Field("PointValue"); points.Text = "5"; points.Keyboard = Keyboard.Numeric;
-        form.Add(name); form.Add(pet); form.Add(assignee); form.Add(category); form.Add(custom); form.Add(frequency); form.Add(points);
+        AddInput(form, name); AddPicker(form, pet); AddPicker(form, assignee); AddPicker(form, category); AddInput(form, custom); AddPicker(form, frequency); AddInput(form, points);
         var reminder = AddTaskReminderPicker(form, frequency, null);
         AddPhotoPicker(form, "TaskImage", file => photo = file);
         form.Add(Button("SaveCareTask", async () =>
@@ -1077,8 +1233,9 @@ public sealed class MainPage : ContentPage
         var name = Field("RewardName"); var cost = Field("RewardPointCost"); cost.Text = "10";
         FileResult? photo = null;
         int? createdId = null;
-        cost.Keyboard = Keyboard.Numeric; form.Add(name); form.Add(cost);
+        cost.Keyboard = Keyboard.Numeric; AddInput(form, name); AddInput(form, cost);
         AddPhotoPicker(form, "RewardImage", file => photo = file);
+        form.Add(Text(L("RewardAudience") + " *", 16));
         var choices = new List<(int Id, CheckBox Box)>();
         foreach (var child in household!.Members.Where(item => item.Role == "Child"))
         {
@@ -1086,6 +1243,10 @@ public sealed class MainPage : ContentPage
             var row = new HorizontalStackLayout { Spacing = 10, Children = { box, Text(child.DisplayName, 17) } };
             form.Add(row);
         }
+        var audienceError = new Label { IsVisible = false, FontSize = 13 };
+        audienceError.SetAppThemeColor(Label.TextColorProperty, Color.FromArgb("AD2424"), Color.FromArgb("FFB0A7"));
+        form.Add(audienceError);
+        formGroups.Add((() => choices.Any(item => item.Box.IsChecked) ? null : "ChooseRewardAudience", audienceError));
         form.Add(Button("SaveReward", async () =>
         {
             var pointCost = ParsePoints(cost, 1, 100000, "RewardPointRange");
@@ -1107,7 +1268,7 @@ public sealed class MainPage : ContentPage
         var roles = new[] { new Choice("Child", L("Role_Child")),
             new Choice("Parent", L("Role_Parent")) };
         var role = ChoicePicker(L("FamilyRole"), roles, item.Role);
-        form.Add(name); form.Add(role);
+        AddInput(form, name); AddPicker(form, role);
         AddPhotoPicker(form, "MemberPhoto", file => photo = file);
         form.Add(Button("SaveChanges", async () =>
         {
@@ -1123,7 +1284,7 @@ public sealed class MainPage : ContentPage
         var name = Field("PetName"); name.Text = item.Name;
         var species = Field("Species"); species.Text = item.Species;
         FileResult? photo = null;
-        form.Add(name); form.Add(species);
+        AddInput(form, name); AddInput(form, species);
         var birthDate = AddBirthDatePicker(form, item.BirthDate);
         AddPhotoPicker(form, "PetPhoto", file => photo = file);
         form.Add(Button("SaveChanges", async () =>
@@ -1156,7 +1317,7 @@ public sealed class MainPage : ContentPage
             new Choice("AsNeeded", L("Frequency_AsNeeded")) };
         var frequency = ChoicePicker(L("TaskFrequency"), frequencies, item.Frequency);
         var points = Field("PointValue"); points.Text = item.Points.ToString(); points.Keyboard = Keyboard.Numeric;
-        form.Add(name); form.Add(pet); form.Add(assignee); form.Add(category); form.Add(custom); form.Add(frequency); form.Add(points);
+        AddInput(form, name); AddPicker(form, pet); AddPicker(form, assignee); AddPicker(form, category); AddInput(form, custom); AddPicker(form, frequency); AddInput(form, points);
         var reminder = AddTaskReminderPicker(form, frequency, item.Reminder);
         AddPhotoPicker(form, "TaskImage", file => photo = file);
         form.Add(Button("SaveChanges", async () =>
@@ -1194,22 +1355,25 @@ public sealed class MainPage : ContentPage
 
     private void AddPhotoPicker(VerticalStackLayout form, string key, Action<FileResult?> setPhoto)
     {
-        form.Add(Text(L("MobileImageOptional"), 14));
+        var error = new Label { IsVisible = false, FontSize = 13 };
+        error.SetAppThemeColor(Label.TextColorProperty, Color.FromArgb("AD2424"), Color.FromArgb("FFB0A7"));
+        formPhotoErrors[key] = error;
         var preview = new Image { IsVisible = false, HeightRequest = 150, Aspect = Aspect.AspectFit };
         var remove = SecondaryButton("MobileRemovePhoto", () =>
-        { setPhoto(null); preview.Source = null; preview.IsVisible = false; return Task.CompletedTask; });
+        { setPhoto(null); preview.Source = null; preview.IsVisible = false; error.IsVisible = false; return Task.CompletedTask; });
         remove.IsVisible = false;
         form.Add(SecondaryButton(key, async () =>
         {
             var file = (await ChoosePhotosAsync(1)).FirstOrDefault();
             if (file is null) return;
             setPhoto(file);
+            error.IsVisible = false;
             preview.Source = ImageSource.FromStream(_ => file.OpenReadAsync());
             preview.IsVisible = true; remove.IsVisible = true;
         }));
         preview.PropertyChanged += (_, args) =>
         { if (args.PropertyName == nameof(IsVisible)) remove.IsVisible = preview.IsVisible; };
-        form.Add(preview); form.Add(remove);
+        form.Add(error); form.Add(preview); form.Add(remove);
     }
 
     private Task UploadManagementPhotoAsync(string kind, int id, FileResult file) =>
@@ -1313,8 +1477,9 @@ public sealed class MainPage : ContentPage
                 TaskNotifications.Clear();
                 ShowLogin();
             }
-            message.Text = string.Join("\n", new[] { L(exception.Code == "TooManyTaskPhotos" ? "MobilePhotoLimit" : exception.Code) }
-                .Concat(exception.Details.Select(L)).Distinct());
+            var codes = exception.Details.Count > 0 ? exception.Details : new[] { exception.Code };
+            message.Text = string.Join("\n", codes.Where(code => !ShowInputError(code))
+                .Select(code => L(code == "TooManyTaskPhotos" ? "MobilePhotoLimit" : code)).Distinct());
         }
         catch (PermissionException) { message.Text = L("MobileCameraPermission"); }
         catch (HttpRequestException) { message.Text = L("MobileConnectionError"); }

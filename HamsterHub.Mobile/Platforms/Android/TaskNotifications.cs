@@ -203,11 +203,22 @@ internal static class TaskNotifications
 
     public static Task RequestPermissionAsync() => RequestPermissionCoreAsync(true);
 
+    public static bool NotificationsAllowed =>
+        AndroidX.Core.App.NotificationManagerCompat.From(Context).AreNotificationsEnabled() &&
+        (!OperatingSystem.IsAndroidVersionAtLeast(26) ||
+         ((NotificationManager)Context.GetSystemService(Context.NotificationService)!)
+             .GetNotificationChannel(ChannelId)?.Importance != NotificationImportance.None);
+
+    public static bool ExactAlarmsAllowed => !OperatingSystem.IsAndroidVersionAtLeast(31) ||
+        ((AlarmManager)Context.GetSystemService(Context.AlarmService)!).CanScheduleExactAlarms();
+
     private static async Task RequestPermissionCoreAsync(bool openSettingsOnDenied)
     {
         EnsureChannel();
         if (OperatingSystem.IsAndroidVersionAtLeast(33) &&
             await Permissions.RequestAsync<NotificationPermission>() != PermissionStatus.Granted && openSettingsOnDenied)
+            AppInfo.Current.ShowSettingsUI();
+        else if (openSettingsOnDenied && !NotificationsAllowed)
             AppInfo.Current.ShowSettingsUI();
         Rearm();
     }

@@ -49,7 +49,7 @@ public class RegisterInputModel
     public string Email { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Required")]
-    [StringLength(100, MinimumLength = 6, ErrorMessage = "PasswordLength")]
+    [MinLength(4, ErrorMessage = "PasswordLength")]
     [DataType(DataType.Password)]
     [Display(Name = "Password")]
     public string Password { get; set; } = string.Empty;

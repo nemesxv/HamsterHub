@@ -127,3 +127,8 @@ its implementation and proportionate verification are complete.
 - Mobile creation feedback: accept blank optional categories, explicitly label optional
   photos, show model/Identity validation causes and distinguish transport/server errors.
   Local tests/builds skipped under the continuing user instruction; autodeploy builds.
+
+- Form/Settings refinement: required-field stars, simultaneous per-field validation,
+  four-character password minimum, optional-photo inline errors, conditional permission
+  warnings/actions and two-by-two parent add-action tiles. Local checks remain skipped
+  by request; real-phone acceptance is still pending.

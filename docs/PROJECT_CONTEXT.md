@@ -84,8 +84,7 @@ The core product loop is:
   multi-photo previews, and an accessible in-page viewer for pet and care
   photos. Photo viewing never requires navigating away from the dashboard.
 - Authenticator setup provides both a scannable QR code and a manual setup key.
-- Passwords require upper- and lowercase letters and a number; punctuation and
-  symbols are optional.
+- Passwords require at least four characters; uppercase/lowercase letters, numbers and symbols are optional.
 - The child dashboard is designed picture-first for children around ages 3–6,
   with Лилит—a creative 4–5-year-old who loves animals and drawing—as the
   primary design persona. It uses minimal copy, oversized pet imagery, familiar
@@ -243,3 +242,16 @@ The app displays the individual validation reasons, explains password rules, val
 member name/email/password length before sending, and distinguishes validation, server,
 timeout and connectivity errors. Identity creation errors preserve their specific cause.
 This revision continues the user's preference to skip local tests/builds and use autodeploy.
+
+### Field errors, permissions and parent actions
+
+App forms mark required fields with *, keep optional photos unmarked, and show red
+errors beneath every failed input only after submission. Entry, picker and reward
+audience validation collects errors together; server validation errors are mapped to
+the same controls. Passwords require at least four characters, with no letter-case,
+number or symbol rule, consistently across app, registration, member creation and
+password changes. Password/photo instructional paragraphs are removed. Settings shows
+yellow warnings and explicit Allow notifications / Allow precise reminders buttons only
+when permission is missing, rechecking when returning from Android settings. Parent
+creation actions are illustrated tiles in a two-by-two grid. Local tests/builds remain
+skipped by request; the automatic deployment workflow builds the release.

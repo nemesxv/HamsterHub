@@ -30,7 +30,7 @@ public sealed record RewardHistoryItemDto(int Id, string RewardName, int PointsC
 public sealed record CreateMemberRequest(
     [Required, StringLength(100, MinimumLength = 2)] string DisplayName,
     [Required, EmailAddress] string Email,
-    [Required, StringLength(100, MinimumLength = 6)] string Password,
+    [Required, MinLength(4)] string Password,
     [Required] string Role);
 public sealed record CreatePetRequest(
     [Required, StringLength(100, MinimumLength = 1)] string Name,

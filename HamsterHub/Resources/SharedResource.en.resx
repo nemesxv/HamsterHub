@@ -50,20 +50,20 @@
   <data name="DisplayName" xml:space="preserve"><value>Your name</value></data>
   <data name="NamePlaceholder" xml:space="preserve"><value>Alex</value></data>
   <data name="ConfirmPassword" xml:space="preserve"><value>Confirm password</value></data>
-  <data name="Password6Placeholder" xml:space="preserve"><value>6+ characters</value></data>
+  <data name="Password6Placeholder" xml:space="preserve"><value>4+ characters</value></data>
   <data name="RepeatPasswordPlaceholder" xml:space="preserve"><value>Repeat password</value></data>
   <data name="CreateParentAccount" xml:space="preserve"><value>Create parent account</value></data>
   <data name="AlreadyAccount" xml:space="preserve"><value>Already have an account?</value></data>
   <data name="Required" xml:space="preserve"><value>This field is required.</value></data>
   <data name="InvalidEmail" xml:space="preserve"><value>Enter a valid email address.</value></data>
   <data name="DisplayNameLength" xml:space="preserve"><value>Name must be between 2 and 100 characters.</value></data>
-  <data name="PasswordLength" xml:space="preserve"><value>Password must be at least 6 characters.</value></data>
+  <data name="PasswordLength" xml:space="preserve"><value>Password is too short. Use at least 4 characters.</value></data>
   <data name="PasswordsDoNotMatch" xml:space="preserve"><value>The passwords do not match.</value></data>
   <data name="LockedOut" xml:space="preserve"><value>This account is temporarily locked. Please try again later.</value></data>
   <data name="InvalidLogin" xml:space="preserve"><value>We couldn't sign you in with that email and password.</value></data>
   <data name="AccountCreationFailed" xml:space="preserve"><value>We couldn't finish creating the account. Please try again.</value></data>
   <data name="EmailInUse" xml:space="preserve"><value>An account with this email already exists.</value></data>
-  <data name="PasswordRequirements" xml:space="preserve"><value>Password must include lowercase and uppercase letters and a number. A special character is optional.</value></data>
+  <data name="PasswordRequirements" xml:space="preserve"><value>Password must contain at least 4 characters.</value></data>
   <data name="ManageAccount" xml:space="preserve"><value>Account</value></data>
   <data name="ParentDashboardTitle" xml:space="preserve"><value>Family dashboard</value></data>
   <data name="ParentSpace" xml:space="preserve"><value>Parent space</value></data>
@@ -522,10 +522,16 @@
   <data name="MobileCategoryNameLength" xml:space="preserve"><value>Use 2 to 100 characters for the new category, or leave it blank.</value></data>
   <data name="MobileImageOptional" xml:space="preserve"><value>Photo is optional. You can save without one.</value></data>
   <data name="MobileItemUnavailable" xml:space="preserve"><value>This item is no longer available. Go back and refresh the list.</value></data>
-  <data name="MobilePasswordLength" xml:space="preserve"><value>Password must contain 6 to 100 characters.</value></data>
+  <data name="MobilePasswordLength" xml:space="preserve"><value>Password is too short. Use at least 4 characters.</value></data>
   <data name="MobileRequestFailed" xml:space="preserve"><value>The server could not complete the request. Check the details and try again.</value></data>
   <data name="MobileRequestTimeout" xml:space="preserve"><value>The server did not respond in time. Check the list before submitting again.</value></data>
   <data name="MobileServerError" xml:space="preserve"><value>The server encountered an error. Try again later.</value></data>
   <data name="MobileSpeciesLength" xml:space="preserve"><value>Enter a pet species using 2 to 100 characters.</value></data>
   <data name="MobileUnexpectedError" xml:space="preserve"><value>The app could not complete this action. Go back to the list and try again.</value></data>
+  <data name="FieldRequired" xml:space="preserve"><value>This field is required.</value></data>
+  <data name="AllowExactAlarms" xml:space="preserve"><value>Allow precise reminders</value></data>
+  <data name="AllowNotifications" xml:space="preserve"><value>Allow notifications</value></data>
+  <data name="AlarmPermissionWarning" xml:space="preserve"><value>Precise reminders are off. Allow them so reminders arrive on time.</value></data>
+  <data name="NotificationPermissionWarning" xml:space="preserve"><value>Notifications are off. Allow them to receive task reminders.</value></data>
+  <data name="RewardAudience" xml:space="preserve"><value>Reward recipients</value></data>
 </root>

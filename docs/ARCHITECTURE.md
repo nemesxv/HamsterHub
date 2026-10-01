@@ -277,3 +277,10 @@ and shows them without exposing internal exception text. HTTP 400 fallback is fo
 validation, 404 stale/unavailable item, and 5xx server failure, separate from transport
 errors. Optional category strings are normalized by the app; the API permits empty
 strings but explicitly validates a nonempty trimmed category's minimum length.
+
+MAUI input validation stores per-control error labels, validates all attached inputs on
+submission and maps ApiError details back to those controls. Optional photo failures
+have their own inline label. ASP.NET Identity password policy and all password input
+annotations use a four-character minimum without composition requirements. Settings
+reads Android notification/channel and exact-alarm permission states and rebuilds on
+resume; explanatory warnings are conditional rather than permanent Settings prose.

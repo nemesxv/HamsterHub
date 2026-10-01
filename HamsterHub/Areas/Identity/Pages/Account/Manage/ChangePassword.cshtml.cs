@@ -28,7 +28,7 @@ public class ChangePasswordModel(
         public string OldPassword { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Required")]
-        [StringLength(100, MinimumLength = 6, ErrorMessage = "PasswordLength")]
+        [MinLength(4, ErrorMessage = "PasswordLength")]
         [DataType(DataType.Password)]
         [Display(Name = "NewPassword")]
         public string NewPassword { get; set; } = string.Empty;
