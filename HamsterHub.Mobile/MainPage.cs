@@ -891,9 +891,9 @@ public sealed class MainPage : ContentPage
             tile.Text = action.Icon + "\n" + L(action.Key);
             tile.MinimumHeightRequest = 112; tile.CornerRadius = 22; tile.FontSize = 16;
             tile.Margin = 0;
-            tile.SetAppThemeColor(Button.BackgroundColorProperty,
+            tile.SetAppThemeColor(Microsoft.Maui.Controls.Button.BackgroundColorProperty,
                 index % 2 == 0 ? Mint : Peach, index % 2 == 0 ? Color.FromArgb("244C43") : Color.FromArgb("563C32"));
-            tile.SetAppThemeColor(Button.TextColorProperty, Ink, Color.FromArgb("FFF7EC"));
+            tile.SetAppThemeColor(Microsoft.Maui.Controls.Button.TextColorProperty, Ink, Color.FromArgb("FFF7EC"));
             actions.Add(tile, index % 2, index / 2);
         }
         section.Add(actions);

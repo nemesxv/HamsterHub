@@ -204,7 +204,7 @@ internal static class TaskNotifications
     public static Task RequestPermissionAsync() => RequestPermissionCoreAsync(true);
 
     public static bool NotificationsAllowed =>
-        AndroidX.Core.App.NotificationManagerCompat.From(Context).AreNotificationsEnabled() &&
+        AndroidX.Core.App.NotificationManagerCompat.From(Context)?.AreNotificationsEnabled() == true &&
         (!OperatingSystem.IsAndroidVersionAtLeast(26) ||
          ((NotificationManager)Context.GetSystemService(Context.NotificationService)!)
              .GetNotificationChannel(ChannelId)?.Importance != NotificationImportance.None);
