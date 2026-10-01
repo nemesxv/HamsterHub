@@ -60,7 +60,7 @@ public sealed class MobileHouseholdController(
         var taskItems = tasks.Select(item => new ManagedTaskItemDto(item.Id, item.PetId, item.Pet?.Name ?? CategoryName(item.CareCategory),
             item.CareCategoryId, item.Name ?? CategoryName(item.CareCategory), item.AssignedMemberId,
             item.AssignedMember.User.DisplayName, item.Frequency.ToString(), item.PointValue,
-            TaskImage(item), false)).ToList();
+            TaskImage(item), false, TaskReminderSettings.Read(item))).ToList();
 
         var rewardQuery = db.Rewards.AsNoTracking().Include(item => item.VisibleToMembers)
             .Where(item => item.HouseholdId == viewer.HouseholdId && item.IsActive);
@@ -148,7 +148,8 @@ public sealed class MobileHouseholdController(
         var parent = await GetParentAsync(memberId, cancellationToken);
         if (parent is null) return Forbid();
         if (!Enum.TryParse<CareTaskFrequency>(request.Frequency, true, out var frequency) ||
-            !Enum.IsDefined(frequency) || request.Points is < 0 or > 1000) return BadRequest(new ApiError("CheckFormFields"));
+            !Enum.IsDefined(frequency) || request.Points is < 0 or > 1000 ||
+            !TaskReminderSettings.IsValid(frequency, request.Reminder)) return BadRequest(new ApiError("CheckFormFields"));
         var pet = await db.Pets.FirstOrDefaultAsync(item => item.Id == request.PetId &&
             item.HouseholdId == parent.HouseholdId && item.IsActive, cancellationToken);
         var assignee = await db.HouseholdMembers.FirstOrDefaultAsync(item =>
@@ -177,6 +178,7 @@ public sealed class MobileHouseholdController(
         var task = new CareTask { HouseholdId = parent.HouseholdId, PetId = pet?.Id, Name = request.Name?.Trim(),
             AssignedMemberId = assignee.Id, CareCategory = category, Frequency = frequency,
             PointValue = request.Points };
+        TaskReminderSettings.Apply(task, request.Reminder);
         db.CareTasks.Add(task);
         await db.SaveChangesAsync(cancellationToken);
         return Ok(new CreatedItemDto(task.Id));
@@ -252,7 +254,8 @@ public sealed class MobileHouseholdController(
         var parent = await GetParentAsync(memberId, cancellationToken);
         if (parent is null) return Forbid();
         if (!Enum.TryParse<CareTaskFrequency>(request.Frequency, true, out var frequency) ||
-            !Enum.IsDefined(frequency) || request.Points is < 0 or > 1000) return BadRequest(new ApiError("CheckFormFields"));
+            !Enum.IsDefined(frequency) || request.Points is < 0 or > 1000 ||
+            !TaskReminderSettings.IsValid(frequency, request.Reminder)) return BadRequest(new ApiError("CheckFormFields"));
         var task = await db.CareTasks.FirstOrDefaultAsync(item => item.Id == id &&
             item.HouseholdId == parent.HouseholdId && item.IsActive, cancellationToken);
         var pet = await db.Pets.FirstOrDefaultAsync(item => item.Id == request.PetId &&
@@ -283,6 +286,7 @@ public sealed class MobileHouseholdController(
         task.PetId = pet?.Id; task.Name = request.Name?.Trim(); task.AssignedMemberId = assignee.Id;
         task.CareCategoryId = category?.Id; task.CareCategory = category;
         task.Frequency = frequency; task.PointValue = request.Points;
+        TaskReminderSettings.Apply(task, request.Reminder);
         await db.SaveChangesAsync(cancellationToken);
         return Ok();
     }

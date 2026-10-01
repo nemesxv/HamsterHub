@@ -15,9 +15,25 @@ public sealed class CareLogService(TimeProvider timeProvider)
                 new DateTimeOffset(now.UtcDateTime.Date, TimeSpan.Zero),
             CareTaskFrequency.Weekly => now.AddDays(-7),
             CareTaskFrequency.AsNeeded => null,
+            CareTaskFrequency.Once => DateTimeOffset.MinValue,
             _ => throw new ArgumentOutOfRangeException(
                 nameof(frequency), frequency, "Unknown care task frequency.")
         };
+
+    public CareLogStatus? GetCurrentPeriodStatus(
+        CareTask task, IEnumerable<CareLog> ownLogs, DateTimeOffset now)
+    {
+        var cutoff = GetEarliestAllowed(task.Frequency, now);
+        if (cutoff is null) return null;
+
+        return ownLogs
+            .Where(log => log.CareTaskId == task.Id &&
+                log.Status != CareLogStatus.Rejected &&
+                log.CompletedAt >= cutoff.Value)
+            .OrderByDescending(log => log.CompletedAt)
+            .Select(log => (CareLogStatus?)log.Status)
+            .FirstOrDefault();
+    }
 
     public bool CanCompleteTask(CareTask careTask, HouseholdMember member) =>
         member.IsActive &&

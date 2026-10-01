@@ -71,6 +71,23 @@ state. Legacy tasks without a stored title retain their localized category name.
 presentation resolves a built-in category illustration or a pet-photo fallback
 without persisting the derived path.
 
+`CareTask` also stores nullable `ReminderTime`, `ReminderStartDate`, and
+`ReminderTimeZoneId`, added by the `TaskReminders` EF migration. `Once` is a new
+frequency value; its recurrence cutoff covers all prior reports for the assignee.
+The shared `ReminderSchedule` utility validates and calculates calendar occurrences
+using the stored zone. MVC and mobile management use the same reminder policy.
+The child-only `/api/v1/memberships/{memberId}/reminders` projection includes only
+active, authorized assignments and carries a suppression boundary from non-rejected
+care reports. It exposes no device tokens or other family members' reminders.
+
+Android stores the selected child and schedule locally, delivers through a private
+alarm receiver, restores alarms via boot/update receivers, and uses a persisted
+JobScheduler job for authenticated background sync. Bearer tokens remain in
+SecureStorage. Sync failures retain the cached schedule; invalid sessions clear it.
+There is no FCM dependency or foreground polling timer. Device acceptance for
+background delivery, Doze, reboot, permission denial and OEM battery controls is
+still required separately from the build and scheduling tests.
+
 ### CareLog
 
 An immutable historical record connecting an optional historical pet, task, completing user,

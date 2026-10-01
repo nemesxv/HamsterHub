@@ -17,6 +17,41 @@ namespace HamsterHub.Tests.Controllers;
 public sealed class MobileApiTests
 {
     [Fact]
+    public async Task RemindersAreParentConfiguredChildScopedAndSuppressedAfterSubmission()
+    {
+        using var factory = new MobileApiFactory(); await factory.SeedAsync();
+        using var parentHttp = factory.CreateClient(); using var childHttp = factory.CreateClient();
+        var parent = new HamsterHubClient(parentHttp, new MemorySessionStore());
+        var child = new HamsterHubClient(childHttp, new MemorySessionStore());
+        await parent.LoginAsync("parent@test.local", MobileApiFactory.Password, null);
+        await child.LoginAsync("child@test.local", MobileApiFactory.Password, null);
+        var settings = new TaskReminderDto(new(18, 0), new(2026, 10, 1), "Europe/Moscow");
+        var taskId = await parent.AddTaskAsync(factory.ParentMemberId,
+            new CreateTaskRequest(null, factory.ChildMemberId, null, null, "Once", 5, "Tidy toys", settings));
+        Assert.Equal(settings, (await parent.GetHouseholdAsync(factory.ParentMemberId)).Tasks.Single(t => t.Id == taskId).Reminder);
+        var reminder = Assert.Single(await child.GetRemindersAsync(factory.ChildMemberId));
+        Assert.Equal(taskId, reminder.TaskId); Assert.Equal(settings, reminder.Schedule);
+        Assert.Empty(await parent.GetRemindersAsync(factory.ParentMemberId));
+        await Assert.ThrowsAsync<MobileApiException>(() => child.GetRemindersAsync(factory.ForeignMemberId));
+        await Assert.ThrowsAsync<MobileApiException>(() => child.AddTaskAsync(factory.ChildMemberId,
+            new CreateTaskRequest(null, factory.ChildMemberId, null, null, "Daily", 5, "Forbidden", settings)));
+        await Assert.ThrowsAsync<MobileApiException>(() => parent.AddTaskAsync(factory.ParentMemberId,
+            new CreateTaskRequest(null, factory.ChildMemberId, null, null, "AsNeeded", 5, "Unlimited", settings)));
+        await child.CompleteAsync(factory.ChildMemberId, taskId, []);
+        Assert.Equal(DateTimeOffset.MaxValue, Assert.Single(await child.GetRemindersAsync(factory.ChildMemberId)).SuppressUntil);
+        await Assert.ThrowsAsync<MobileApiException>(() => child.CompleteAsync(factory.ChildMemberId, taskId, []));
+        await parent.UpdateTaskAsync(factory.ParentMemberId, taskId,
+            new UpdateTaskRequest(null, factory.ChildMemberId, null, null, "AsNeeded", 5, "Tidy toys"));
+        Assert.Empty(await child.GetRemindersAsync(factory.ChildMemberId));
+        Assert.Null((await parent.GetHouseholdAsync(factory.ParentMemberId)).Tasks.Single(t => t.Id == taskId).Reminder);
+        await parent.UpdateTaskAsync(factory.ParentMemberId, taskId,
+            new UpdateTaskRequest(null, factory.ChildMemberId, null, null, "Weekly", 5, "Tidy toys", settings));
+        Assert.NotNull(Assert.Single(await child.GetRemindersAsync(factory.ChildMemberId)).SuppressUntil);
+        await parent.ArchiveTaskAsync(factory.ParentMemberId, taskId);
+        Assert.Empty(await child.GetRemindersAsync(factory.ChildMemberId));
+    }
+
+    [Fact]
     public async Task ParentCanManageHouseholdFromMobileApi()
     {
         using var factory = new MobileApiFactory(); await factory.SeedAsync();

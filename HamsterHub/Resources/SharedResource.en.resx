@@ -224,6 +224,11 @@
   <data name="KidAskGrownup" xml:space="preserve"><value>Ask a grown-up to add a task</value></data>
   <data name="TaskPointsLabel" xml:space="preserve"><value>{0} stars for this task</value></data>
   <data name="KidDone" xml:space="preserve"><value>I did it!</value></data>
+  <data name="KidTaskDoneForPeriod" xml:space="preserve"><value>Done for now</value></data>
+  <data name="MobilePotentialPoints" xml:space="preserve"><value>After approval: +{0} ★</value></data>
+  <data name="MobilePotentialCost" xml:space="preserve"><value>Cost: {0} ★</value></data>
+  <data name="MobileNoPointsAwarded" xml:space="preserve"><value>No stars awarded</value></data>
+  <data name="MobileNoCareApprovals" xml:space="preserve"><value>No tasks need review</value></data>
   <data name="KidMyPictures" xml:space="preserve"><value>My little album</value></data>
   <data name="KidNoMemories" xml:space="preserve"><value>Your task photos will appear here</value></data>
   <data name="KidFriends" xml:space="preserve"><value>Our friends</value></data>
@@ -437,7 +442,11 @@
   <data name="MobileAdvancedSettings" xml:space="preserve"><value>Advanced settings</value></data>
   <data name="MobileHideAdvancedSettings" xml:space="preserve"><value>Hide advanced settings</value></data>
   <data name="MobileVerifyCode" xml:space="preserve"><value>Verify code</value></data>
-  <data name="MobileAccountHelp" xml:space="preserve"><value>Parents can create and manage family accounts after signing in.</value></data>
+  <data name="MobileAccountHelp" xml:space="preserve"><value>New parent? Create a family on the website, then return here to sign in. Children use the account and temporary password a parent creates for them.</value></data>
+  <data name="MobileCreateFamily" xml:space="preserve"><value>Create a family on the website</value></data>
+  <data name="MobileUpdatedAt" xml:space="preserve"><value>Updated at {0}</value></data>
+  <data name="StarsToReward" xml:space="preserve"><value>{0} more stars to this reward</value></data>
+  <data name="MobileBirthDateKnown" xml:space="preserve"><value>Set birth date</value></data>
   <data name="MobileNoHousehold" xml:space="preserve"><value>Open the website to set up your household, or ask a parent to add you.</value></data>
   <data name="MobileHousehold" xml:space="preserve"><value>Household</value></data>
   <data name="MobileRefresh" xml:space="preserve"><value>Refresh</value></data>
@@ -484,4 +493,15 @@
   <data name="MobileSettings" xml:space="preserve"><value>Settings</value></data>
   <data name="MobileAddPhoto" xml:space="preserve"><value>Add photos</value></data>
   <data name="MobileChildIntro" xml:space="preserve"><value>Small steps, big achievements!</value></data>
+  <data name="Frequency_Once" xml:space="preserve"><value>One time only</value></data>
+  <data name="TaskNotification" xml:space="preserve"><value>Task reminders</value></data>
+  <data name="NotificationTime" xml:space="preserve"><value>Reminder time</value></data>
+  <data name="NotificationStartDate" xml:space="preserve"><value>First reminder date</value></data>
+  <data name="NotificationScheduleHint" xml:space="preserve"><value>Daily: every day. Weekly: this weekday. One time: only this date. Time zone:</value></data>
+  <data name="NotificationUnlimitedHint" xml:space="preserve"><value>Unlimited tasks have no scheduled reminders.</value></data>
+  <data name="TaskReminderTitle" xml:space="preserve"><value>Time for your task ★</value></data>
+  <data name="TaskReminderBody" xml:space="preserve"><value>Remember to do: {0}</value></data>
+  <data name="NotificationExactTime" xml:space="preserve"><value>Allow reminders at the chosen time</value></data>
+  <data name="NotificationDeviceHint" xml:space="preserve"><value>Allow notifications on this child's device. Reminders work while the app is in the background. Android may delay them unless alarms are allowed. Force-stopping the app pauses reminders until you open it again.</value></data>
+  <data name="NotificationSyncFailed" xml:space="preserve"><value>Your dashboard refreshed, but reminder changes could not be downloaded. The last synced reminders remain active. Try refreshing again.</value></data>
 </root>

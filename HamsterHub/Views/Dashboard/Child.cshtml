@@ -45,7 +45,7 @@
         </button>
         <article>
             <span class="kid-count-picture" aria-hidden="true">🎨</span>
-            <strong>@Model.CareTasks.Count</strong>
+            <strong>@Model.CareTasks.Count(task => task.CanCurrentUserComplete)</strong>
             <small>@L["KidTasksShort"]</small>
         </article>
         <article>
@@ -81,8 +81,9 @@
                         CareTaskFrequency.Weekly => "📅",
                         _ => "✨"
                     };
-                    <article class="kid-big-task-card">
+                    <article class="kid-big-task-card @(task.CanCurrentUserComplete ? "" : "kid-task-complete")">
                         <button type="button" class="kid-task-art"
+                                disabled="@(!task.CanCurrentUserComplete)"
                                 data-bs-toggle="modal" data-bs-target="#complete-task-@task.Id"
                                 aria-label="@L["OpenTask", task.CategoryName, task.PetName]">
                             <img src="@task.ImagePath" alt="@L["TaskImageAlt", task.CategoryName]" />
@@ -103,9 +104,14 @@
                             <strong>+@task.PointValue</strong>
                         </div>
                         <button type="button" class="kid-complete-button"
+                                disabled="@(!task.CanCurrentUserComplete)"
                                 data-bs-toggle="modal" data-bs-target="#complete-task-@task.Id">
                             <span aria-hidden="true">✓</span>
-                            @L["KidDone"]
+                            @(task.CurrentPeriodStatus == CareLogStatus.Pending
+                                ? L["MobileStatusPending"]
+                                : task.CurrentPeriodStatus == CareLogStatus.Approved
+                                    ? L["KidTaskDoneForPeriod"]
+                                    : L["KidDone"])
                         </button>
                     </article>
                 }
@@ -151,7 +157,7 @@
                                     ? L["RewardWaiting"]
                                     : reward.CanAfford
                                         ? L["RequestReward"]
-                                        : L["NeedMorePoints"])
+                                        : L["StarsToReward", reward.PointCost - Model.CurrentPoints])
                             </button>
                         </form>
                     </article>
@@ -247,7 +253,12 @@
                         </div>
                         <strong>@item.TaskName</strong>
                         <small>@item.PetName · @item.CompletedAt.ToLocalTime().ToString("dd.MM")</small>
-                        <span class="kid-polaroid-points">+@item.Points ★</span>
+                        <span class="kid-polaroid-points">@(item.Status switch
+                        {
+                            CareLogStatus.Approved => $"+{item.Points} ★",
+                            CareLogStatus.Pending => L["MobilePotentialPoints", item.Points].Value,
+                            _ => L["MobileNoPointsAwarded"].Value
+                        })</span>
                         @if (item.PhotoPaths.Count > 0)
                         {
                             @foreach (var photoPath in item.PhotoPaths)
@@ -349,7 +360,7 @@
     </div>
 </div>
 
-@foreach (var task in Model.CareTasks)
+@foreach (var task in Model.CareTasks.Where(task => task.CanCurrentUserComplete))
 {
     <div data-photo-limit="@L["MobilePhotoLimit"]" data-photo-remove="@L["MobileRemovePhoto"]" class="modal fade kid-complete-modal" id="complete-task-@task.Id" tabindex="-1"
          aria-labelledby="complete-task-title-@task.Id" aria-hidden="true">

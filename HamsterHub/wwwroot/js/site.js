@@ -1,4 +1,31 @@
 document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("[data-task-reminder]").forEach((section) => {
+    const frequency = section.closest("form").querySelector('select[name$=".Frequency"]');
+    const enabled = section.querySelector("[data-reminder-enabled]");
+    const options = section.querySelector("[data-reminder-options]");
+    const zone = section.querySelector("[data-reminder-zone]");
+    const date = section.querySelector("[data-reminder-date]");
+    if (!zone.value) zone.value = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    section.querySelector("[data-reminder-zone-label]").textContent = zone.value;
+    if (!date.value) {
+      const today = new Date();
+      date.value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    }
+    const updateReminder = () => {
+      const unlimited = frequency.value === "3";
+      enabled.disabled = unlimited;
+      if (unlimited) enabled.checked = false;
+      options.hidden = !enabled.checked;
+      section.querySelector("[data-reminder-unlimited]").hidden = !unlimited;
+      options.querySelectorAll("input").forEach((input) => {
+        input.disabled = !enabled.checked;
+        input.required = enabled.checked && input.type !== "hidden";
+      });
+    };
+    frequency.addEventListener("change", updateReminder);
+    enabled.addEventListener("change", updateReminder);
+    updateReminder();
+  });
   const themeButton = document.querySelector("[data-theme-toggle]");
   themeButton?.addEventListener("click", () => {
     const nextTheme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";

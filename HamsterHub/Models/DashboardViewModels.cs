@@ -64,7 +64,10 @@ public record CareTaskSummary(
     int PointValue,
     string ImagePath,
     bool HasCustomImage,
-    bool CanCurrentUserComplete);
+    bool CanCurrentUserComplete,
+    CareLogStatus? CurrentPeriodStatus = null,
+    HamsterHub.Contracts.TaskReminderDto? Reminder = null);
+public record TaskReminderFormModel(string Prefix, string Id, HamsterHub.Contracts.TaskReminderDto? Reminder);
 public record PendingCareSummary(
     int Id,
     string ChildName,
@@ -211,6 +214,21 @@ public class AddPetInput
 
 public class AddCareTaskInput
 {
+    [Display(Name = "TaskNotification")]
+    public bool NotificationEnabled { get; set; }
+    [Display(Name = "NotificationTime")]
+    public TimeOnly? ReminderTime { get; set; }
+    [Display(Name = "NotificationStartDate")]
+    public DateOnly? ReminderStartDate { get; set; }
+    [StringLength(100)]
+    public string? ReminderTimeZoneId { get; set; }
+
+    public bool HasValidReminder => !NotificationEnabled ||
+        (ReminderTime.HasValue && ReminderStartDate.HasValue &&
+         HamsterHub.Contracts.ReminderSchedule.IsValid(Frequency.ToString(), Reminder));
+    public HamsterHub.Contracts.TaskReminderDto? Reminder => NotificationEnabled &&
+        ReminderTime is { } time && ReminderStartDate is { } date && ReminderTimeZoneId is { } zone
+            ? new(time, date, zone) : null;
     [StringLength(100, MinimumLength = 2)]
     [Display(Name = "TaskName")]
     public string? Name { get; set; }

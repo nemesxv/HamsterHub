@@ -27,16 +27,19 @@ public sealed class MainPage : ContentPage
     private MemberDto? member;
     private DashboardDto? dashboard;
     private HouseholdHubDto? household;
+    private DateTimeOffset? lastUpdatedAt;
     private readonly VerticalStackLayout body = new() { Spacing = 16 };
     private readonly Label message = new() { FontSize = 16, IsVisible = false };
     private readonly ActivityIndicator activity = new() { IsVisible = false, HeightRequest = 24 };
     private readonly Grid columns = new() { ColumnSpacing = 24, RowSpacing = 24 };
     private readonly ScrollView scroll = new();
+    private readonly RefreshView refreshView = new();
     private readonly List<FileResult> selectedPhotos = [];
     private bool initialized;
     private bool busy;
     private bool wide;
     private bool showingCompletion;
+    private bool showingForm;
     private static string L(string key) => Strings.Get(key);
 
     public MainPage()
@@ -52,7 +55,17 @@ public sealed class MainPage : ContentPage
         root.Add(message);
         root.Add(body);
         scroll.Content = root;
-        Content = scroll;
+        refreshView.Content = scroll;
+        refreshView.Refreshing += async (_, _) =>
+        {
+            try
+            {
+                if (session is not null && member is not null && !showingCompletion && !showingForm)
+                    await RunAsync(RefreshAsync);
+            }
+            finally { refreshView.IsRefreshing = false; }
+        };
+        Content = refreshView;
         SizeChanged += (_, _) =>
         {
             var nextWide = Width >= 720;
@@ -64,6 +77,12 @@ public sealed class MainPage : ContentPage
         {
             if (initialized) return;
             initialized = true;
+            if (Window is { } window)
+                window.Resumed += async (_, _) =>
+                {
+                    if (session is not null && member is not null && !showingCompletion && !showingForm)
+                        await RunAsync(RefreshAsync);
+                };
             ShowLogin();
             await RunAsync(async () =>
             {
@@ -158,9 +177,12 @@ public sealed class MainPage : ContentPage
 
     private void ShowSettings()
     {
-        ResetScroll(); body.Clear();
+        ResetScroll(); body.Clear(); showingForm = true;
         var settings = new VerticalStackLayout { Spacing = 14, MaximumWidthRequest = 620 };
         settings.Add(Text(L("MobileSettings"), 28));
+        settings.Add(SecondaryButton("TaskNotification", TaskNotifications.RequestPermissionAsync));
+        settings.Add(SecondaryButton("NotificationExactTime", TaskNotifications.OpenExactAlarmSettingsAsync));
+        settings.Add(Text(L("NotificationDeviceHint"), 14));
         settings.Add(SecondaryButton("SwitchLanguage", async () =>
         {
             Strings.Culture = Strings.Culture == "ru" ? "en" : "ru";
@@ -181,7 +203,7 @@ public sealed class MainPage : ContentPage
             return Task.CompletedTask;
         }));
         if (session is not null)
-            settings.Add(SecondaryButton("Logout", async () => { await api!.LogoutAsync(); ShowLogin(); }));
+            settings.Add(SecondaryButton("Logout", async () => { TaskNotifications.Clear(); await api!.LogoutAsync(); ShowLogin(); }));
         settings.Add(SecondaryButton("MobileBack", () =>
         { if (session is null) ShowLogin(); else ShowDashboard(); return Task.CompletedTask; }));
         body.Add(Card(settings));
@@ -200,10 +222,13 @@ public sealed class MainPage : ContentPage
     {
         ResetScroll();
         body.Clear();
+        showingForm = false;
+        showingCompletion = false;
         session = null;
         member = null;
         dashboard = null;
         household = null;
+        lastUpdatedAt = null;
         selectedPhotos.Clear();
         AddSettings();
         var form = new VerticalStackLayout { Spacing = 14, MaximumWidthRequest = 480 };
@@ -252,6 +277,12 @@ public sealed class MainPage : ContentPage
             await LoadSessionAsync();
         });
         form.Add(login);
+        form.Add(SecondaryButton("MobileCreateFamily", async () =>
+        {
+            var selectedAddress = address.IsVisible ? address.Text ?? "" : ConfiguredServerAddress();
+            var selectedServer = ServerAddress.Parse(selectedAddress);
+            await Launcher.Default.OpenAsync(new Uri(selectedServer, "?dialog=signup"));
+        }));
         form.Add(Text(L("MobileAccountHelp"), 14));
         body.Add(Card(form));
     }
@@ -272,6 +303,10 @@ public sealed class MainPage : ContentPage
         await Task.WhenAll(dashboardTask, householdTask);
         dashboard = await dashboardTask;
         household = await householdTask;
+        lastUpdatedAt = DateTimeOffset.Now;
+        try { await TaskNotifications.ConfigureAsync(server!, member!, api!); }
+        catch (HttpRequestException) { message.Text = L("NotificationSyncFailed"); }
+        catch (TaskCanceledException) { message.Text = L("NotificationSyncFailed"); }
         ShowDashboard();
     }
 
@@ -279,9 +314,17 @@ public sealed class MainPage : ContentPage
     {
         ResetScroll();
         showingCompletion = false;
+        showingForm = false;
         body.Clear();
         selectedPhotos.Clear();
         AddSettings();
+        if (member is not null)
+        {
+            body.Add(SecondaryButton("MobileRefresh", RefreshAsync));
+            if (lastUpdatedAt is { } refreshed)
+                body.Add(Text(Format("MobileUpdatedAt", refreshed.LocalDateTime.ToString("t",
+                    System.Globalization.CultureInfo.GetCultureInfo(Strings.Culture))), 13));
+        }
         if (member is null || dashboard is null)
         {
             var accountRow = new Grid { ColumnDefinitions = new ColumnDefinitionCollection
@@ -339,26 +382,29 @@ public sealed class MainPage : ContentPage
             ("⌛", waiting.ToString(), L("WaitingApproval"), Color.FromArgb("DDF3E8"))));
         columns.Children.Clear();
         columns.Add(RoleTaskSection(true));
-        columns.Add(RoleHistorySection("RecentCare", true));
+        if (household is not null) columns.Add(ChildHouseholdSection());
         ArrangeColumns();
         body.Add(columns);
-        if (household is not null) body.Add(ChildHouseholdSection());
+        body.Add(RoleHistorySection("RecentCare", true));
     }
 
     private void ShowParentRoleDashboard()
     {
+        var pendingTotal = dashboard!.PendingApprovals.Count + (household?.RewardRequests.Count ?? 0);
         body.Add(RoleHero(true));
         body.Add(RoleStats(
-            ("✓", dashboard!.Tasks.Count(item => item.CanComplete).ToString(), L("CareTasks"), Mint),
-            ("!", dashboard.PendingApprovals.Count.ToString(), L("AwaitingApproval"), Color.FromArgb("FFF0C8")),
+            ("✓", dashboard.Tasks.Count(item => item.CanComplete).ToString(), L("CareTasks"), Mint),
+            ("!", pendingTotal.ToString(), L("AwaitingApproval"), Color.FromArgb("FFF0C8")),
             ("↻", dashboard.History.Count.ToString(), L("RecentCare"), Peach)));
 
         var attention = new VerticalStackLayout { Spacing = 14 };
         attention.Add(RoleSectionHeading(dashboard.PendingApprovals.Count == 0 ? "✓" : "!",
-            L("MobileApprovals"), L(dashboard.PendingApprovals.Count == 0 ? "MobileNoApprovals" : "AttentionHint")));
+            L("MobileApprovals"), L(dashboard.PendingApprovals.Count == 0 ? "MobileNoCareApprovals" : "AttentionHint")));
         foreach (var log in dashboard.PendingApprovals) attention.Add(RoleLogCard(log, true, false));
         body.Add(Card(attention, dashboard.PendingApprovals.Count == 0 ? Mint : Color.FromArgb("FFF7D8"),
             dashboard.PendingApprovals.Count == 0 ? Color.FromArgb("25443E") : Color.FromArgb("3C3525"), 26, 1));
+
+        if (household is not null) body.Add(ParentRewardRequests());
 
         columns.Children.Clear();
         columns.Add(RoleTaskSection(false));
@@ -367,7 +413,6 @@ public sealed class MainPage : ContentPage
         body.Add(columns);
         if (household is not null)
         {
-            body.Add(ParentRewardRequests());
             body.Add(ParentManagementSection());
         }
     }
@@ -387,7 +432,7 @@ public sealed class MainPage : ContentPage
 
         var score = new VerticalStackLayout { Spacing = 0, HorizontalOptions = LayoutOptions.Center,
             VerticalOptions = LayoutOptions.Center };
-        var scoreValue = Text((parent ? dashboard!.PendingApprovals.Count : dashboard!.Balance).ToString(), 34);
+        var scoreValue = Text((parent ? dashboard!.PendingApprovals.Count + (household?.RewardRequests.Count ?? 0) : dashboard!.Balance).ToString(), 34);
         scoreValue.HorizontalTextAlignment = TextAlignment.Center;
         scoreValue.FontAttributes = FontAttributes.Bold;
         score.Add(scoreValue);
@@ -523,7 +568,12 @@ public sealed class MainPage : ContentPage
         var statusRow = new Grid { ColumnDefinitions = new ColumnDefinitionCollection
             { new(GridLength.Star), new(GridLength.Auto) }, ColumnSpacing = 10 };
         statusRow.Add(Text(L("MobileStatus" + log.Status), 14));
-        var points = Text("★ +" + log.Points, 16);
+        var points = Text(log.Status switch
+        {
+            "Approved" => "★ +" + log.Points,
+            "Pending" => Format("MobilePotentialPoints", log.Points),
+            _ => L("MobileNoPointsAwarded")
+        }, 16);
         points.FontAttributes = FontAttributes.Bold;
         points.SetAppThemeColor(Label.TextColorProperty, MintDeep, Color.FromArgb("72C8B8"));
         statusRow.Add(points, 1);
@@ -655,8 +705,14 @@ public sealed class MainPage : ContentPage
                     Aspect = Aspect.AspectFit });
             var title = Text(reward.Name, 21); title.FontAttributes = FontAttributes.Bold; card.Add(title);
             card.Add(Text(Format("RewardCostCount", reward.PointCost), 15));
-            var request = Button(reward.HasPendingRequest ? "RewardWaiting" : "RequestReward", async () =>
+            var request = Button(reward.HasPendingRequest ? "RewardWaiting" :
+                reward.CanAfford ? "RequestReward" : "NeedMorePoints", async () =>
             { await api!.RequestRewardAsync(member!.Id, reward.Id); await RefreshAsync(); });
+            if (!reward.CanAfford && !reward.HasPendingRequest)
+            {
+                request.Text = Format("StarsToReward", reward.PointCost - dashboard!.Balance);
+                SemanticProperties.SetDescription(request, request.Text);
+            }
             request.IsEnabled = reward.CanAfford && !reward.HasPendingRequest;
             card.Add(request);
             section.Add(Card(card, Color.FromArgb("FFF0C8"), Color.FromArgb("3C3525"), 28, 2));
@@ -674,7 +730,9 @@ public sealed class MainPage : ContentPage
             section.Add(RoleSectionHeading("↻", L("PointHistory")));
             foreach (var item in household.RewardHistory)
                 section.Add(ManagementRow(item.RewardName,
-                    $"{L("RewardStatus_" + item.Status)} · −{item.PointsCost} ★", null, null));
+                    item.Status == "Approved"
+                        ? $"{L("RewardStatus_" + item.Status)} · −{item.PointsCost} ★"
+                        : $"{L("RewardStatus_" + item.Status)} · {Format("MobilePotentialCost", item.PointsCost)}", null, null));
         }
         return Card(section, Color.FromArgb("FFFDF7"), Color.FromArgb("17312D"), 30, 2);
     }
@@ -724,7 +782,7 @@ public sealed class MainPage : ContentPage
 
     private void ShowForm(string titleKey, Action<VerticalStackLayout> build)
     {
-        ResetScroll(); body.Clear(); selectedPhotos.Clear();
+        ResetScroll(); body.Clear(); selectedPhotos.Clear(); showingForm = true;
         var form = new VerticalStackLayout { Spacing = 14, MaximumWidthRequest = 620 };
         var title = Text(L(titleKey), 28); title.FontAttributes = FontAttributes.Bold; form.Add(title);
         build(form);
@@ -732,11 +790,39 @@ public sealed class MainPage : ContentPage
         body.Add(Card(form, Paper, Color.FromArgb("17312D"), 28, 1));
     }
 
+    private static int ParsePoints(Entry field, int minimum, int maximum, string errorKey)
+    {
+        if (int.TryParse(field.Text, out var value) && value >= minimum && value <= maximum)
+            return value;
+        field.Focus();
+        throw new MobileApiException(errorKey);
+    }
+
+    private Func<DateOnly?> AddBirthDatePicker(VerticalStackLayout form, DateOnly? initial)
+    {
+        var known = new CheckBox { IsChecked = initial.HasValue };
+        var row = new HorizontalStackLayout { Spacing = 10,
+            Children = { known, Text(L("MobileBirthDateKnown"), 16) } };
+        var date = new DatePicker
+        {
+            Date = initial?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Today,
+            MaximumDate = DateTime.Today,
+            IsVisible = initial.HasValue
+        };
+        SemanticProperties.SetDescription(date, L("BirthDate"));
+        known.CheckedChanged += (_, args) => date.IsVisible = args.Value;
+        form.Add(row);
+        form.Add(date);
+        return () => known.IsChecked && date.Date is DateTime selected
+            ? DateOnly.FromDateTime(selected) : null;
+    }
+
     private void ShowAddMember() => ShowForm("AddFamilyMember", form =>
     {
         var name = Field("DisplayName"); var email = Field("Email"); email.Keyboard = Keyboard.Email;
         var password = Field("TemporaryPassword", true);
         FileResult? photo = null;
+        int? createdId = null;
         var roles = new[] { new Choice("Child", L("Role_Child")),
             new Choice("Parent", L("Role_Parent")) };
         var role = ChoicePicker(L("FamilyRole"), roles, "Child");
@@ -744,27 +830,69 @@ public sealed class MainPage : ContentPage
         AddPhotoPicker(form, "MemberPhoto", file => photo = file);
         form.Add(Button("AddFamilyMember", async () =>
         {
-            var id = await api!.AddMemberAsync(member!.Id, new CreateMemberRequest(name.Text ?? "", email.Text ?? "",
+            createdId ??= await api!.AddMemberAsync(member!.Id, new CreateMemberRequest(name.Text ?? "", email.Text ?? "",
                 password.Text ?? "", (role.SelectedItem as Choice)?.Value ?? "Child"));
-            if (photo is not null) await UploadManagementPhotoAsync("members", id, photo);
+            if (photo is not null)
+            {
+                await UploadManagementPhotoAsync("members", createdId.Value, photo);
+                photo = null;
+            }
             message.Text = Format("FamilyMemberAdded", name.Text ?? ""); await RefreshAsync();
         }));
     });
 
     private void ShowAddPet() => ShowForm("AddPet", form =>
     {
-        var name = Field("PetName"); var species = Field("Species"); var birth = Field("BirthDate");
+        var name = Field("PetName"); var species = Field("Species");
         FileResult? photo = null;
-        birth.Keyboard = Keyboard.Numeric; form.Add(name); form.Add(species); form.Add(birth);
+        int? createdId = null;
+        form.Add(name); form.Add(species);
+        var birthDate = AddBirthDatePicker(form, null);
         AddPhotoPicker(form, "PetPhoto", file => photo = file);
         form.Add(Button("SavePet", async () =>
         {
-            DateOnly? date = DateOnly.TryParse(birth.Text, out var parsed) ? parsed : null;
-            var id = await api!.AddPetAsync(member!.Id, new CreatePetRequest(name.Text ?? "", species.Text ?? "", date));
-            if (photo is not null) await UploadManagementPhotoAsync("pets", id, photo);
+            createdId ??= await api!.AddPetAsync(member!.Id, new CreatePetRequest(name.Text ?? "", species.Text ?? "", birthDate()));
+            if (photo is not null)
+            {
+                await UploadManagementPhotoAsync("pets", createdId.Value, photo);
+                photo = null;
+            }
             message.Text = Format("PetAdded", name.Text ?? ""); await RefreshAsync();
         }));
     });
+
+    private Func<TaskReminderDto?> AddTaskReminderPicker(VerticalStackLayout form, Picker frequency,
+        TaskReminderDto? initial)
+    {
+        var enabled = new Switch { IsToggled = initial is not null };
+        SemanticProperties.SetDescription(enabled, L("TaskNotification"));
+        form.Add(new HorizontalStackLayout { Spacing = 10,
+            Children = { enabled, Text(L("TaskNotification"), 16) } });
+        var zone = initial?.TimeZoneId ?? TimeZoneInfo.Local.Id;
+        var options = new VerticalStackLayout { Spacing = 8 };
+        var time = new TimePicker { Time = initial?.Time.ToTimeSpan() ?? TimeSpan.FromHours(18) };
+        var date = new DatePicker { Date = initial?.StartDate.ToDateTime(TimeOnly.MinValue) ?? DateTime.Today };
+        SemanticProperties.SetDescription(time, L("NotificationTime"));
+        SemanticProperties.SetDescription(date, L("NotificationStartDate"));
+        options.Add(Text(L("NotificationTime"), 15)); options.Add(time);
+        options.Add(Text(L("NotificationStartDate"), 15)); options.Add(date);
+        options.Add(Text(L("NotificationScheduleHint") + " " + zone, 14));
+        var hint = Text(L("NotificationUnlimitedHint"), 14);
+        form.Add(hint); form.Add(options);
+        void Update()
+        {
+            var unlimited = (frequency.SelectedItem as Choice)?.Value == "AsNeeded";
+            enabled.IsEnabled = !unlimited;
+            if (unlimited) enabled.IsToggled = false;
+            options.IsVisible = enabled.IsToggled;
+            hint.IsVisible = unlimited;
+        }
+        enabled.Toggled += (_, _) => Update();
+        frequency.SelectedIndexChanged += (_, _) => Update();
+        Update();
+        return () => enabled.IsToggled && time.Time is TimeSpan chosenTime && date.Date is DateTime chosenDate
+            ? new TaskReminderDto(TimeOnly.FromTimeSpan(chosenTime), DateOnly.FromDateTime(chosenDate), zone) : null;
+    }
 
     private void ShowAddTask() => ShowForm("AddCareTask", form =>
     {
@@ -778,23 +906,30 @@ public sealed class MainPage : ContentPage
         var name = Field("TaskName");
         var custom = Field("NewCategory");
         FileResult? photo = null;
+        int? createdId = null;
         var frequencies = new[] { new Choice("Daily", L("Frequency_Daily")),
             new Choice("Weekly", L("Frequency_Weekly")),
+            new Choice("Once", L("Frequency_Once")),
             new Choice("AsNeeded", L("Frequency_AsNeeded")) };
         var frequency = ChoicePicker(L("TaskFrequency"), frequencies, "Daily");
         var points = Field("PointValue"); points.Text = "5"; points.Keyboard = Keyboard.Numeric;
         form.Add(name); form.Add(pet); form.Add(assignee); form.Add(category); form.Add(custom); form.Add(frequency); form.Add(points);
+        var reminder = AddTaskReminderPicker(form, frequency, null);
         AddPhotoPicker(form, "TaskImage", file => photo = file);
         form.Add(Button("SaveCareTask", async () =>
         {
             if (string.IsNullOrWhiteSpace(name.Text)) throw new MobileApiException("TaskNameRequired");
             var selectedPet = pet.SelectedItem as PetItemDto;
             if (assignee.SelectedItem is not HouseholdMemberItemDto selectedMember) return;
-            int.TryParse(points.Text, out var pointValue);
+            var pointValue = ParsePoints(points, 0, 1000, "PointRange");
             var categoryId = category.SelectedItem is CategoryItemDto { Id: > 0 } selectedCategory ? selectedCategory.Id : (int?)null;
-            var id = await api!.AddTaskAsync(member!.Id, new CreateTaskRequest(selectedPet is { Id: > 0 } ? selectedPet.Id : null, selectedMember.Id,
-                categoryId, custom.Text, (frequency.SelectedItem as Choice)?.Value ?? "Daily", pointValue, name.Text.Trim()));
-            if (photo is not null) await UploadManagementPhotoAsync("tasks", id, photo);
+            createdId ??= await api!.AddTaskAsync(member!.Id, new CreateTaskRequest(selectedPet is { Id: > 0 } ? selectedPet.Id : null, selectedMember.Id,
+                categoryId, custom.Text, (frequency.SelectedItem as Choice)?.Value ?? "Daily", pointValue, name.Text.Trim(), reminder()));
+            if (photo is not null)
+            {
+                await UploadManagementPhotoAsync("tasks", createdId.Value, photo);
+                photo = null;
+            }
             await RefreshAsync();
         }));
     });
@@ -803,6 +938,7 @@ public sealed class MainPage : ContentPage
     {
         var name = Field("RewardName"); var cost = Field("RewardPointCost"); cost.Text = "10";
         FileResult? photo = null;
+        int? createdId = null;
         cost.Keyboard = Keyboard.Numeric; form.Add(name); form.Add(cost);
         AddPhotoPicker(form, "RewardImage", file => photo = file);
         var choices = new List<(int Id, CheckBox Box)>();
@@ -814,10 +950,14 @@ public sealed class MainPage : ContentPage
         }
         form.Add(Button("SaveReward", async () =>
         {
-            int.TryParse(cost.Text, out var pointCost);
-            var id = await api!.AddRewardAsync(member!.Id, new CreateRewardRequest(name.Text ?? "", pointCost,
+            var pointCost = ParsePoints(cost, 1, 100000, "RewardPointRange");
+            createdId ??= await api!.AddRewardAsync(member!.Id, new CreateRewardRequest(name.Text ?? "", pointCost,
                 choices.Where(item => item.Box.IsChecked).Select(item => item.Id).ToList()));
-            if (photo is not null) await UploadManagementPhotoAsync("rewards", id, photo);
+            if (photo is not null)
+            {
+                await UploadManagementPhotoAsync("rewards", createdId.Value, photo);
+                photo = null;
+            }
             await RefreshAsync();
         }));
     });
@@ -845,14 +985,13 @@ public sealed class MainPage : ContentPage
         var name = Field("PetName"); name.Text = item.Name;
         var species = Field("Species"); species.Text = item.Species;
         FileResult? photo = null;
-        var birth = Field("BirthDate"); birth.Text = item.BirthDate?.ToString("yyyy-MM-dd");
-        birth.Keyboard = Keyboard.Numeric; form.Add(name); form.Add(species); form.Add(birth);
+        form.Add(name); form.Add(species);
+        var birthDate = AddBirthDatePicker(form, item.BirthDate);
         AddPhotoPicker(form, "PetPhoto", file => photo = file);
         form.Add(Button("SaveChanges", async () =>
         {
-            DateOnly? date = DateOnly.TryParse(birth.Text, out var parsed) ? parsed : null;
             await api!.UpdatePetAsync(member!.Id, item.Id,
-                new UpdatePetRequest(name.Text ?? "", species.Text ?? "", date));
+                new UpdatePetRequest(name.Text ?? "", species.Text ?? "", birthDate()));
             if (photo is not null) await UploadManagementPhotoAsync("pets", item.Id, photo);
             await RefreshAsync();
         }));
@@ -875,21 +1014,23 @@ public sealed class MainPage : ContentPage
         FileResult? photo = null;
         var frequencies = new[] { new Choice("Daily", L("Frequency_Daily")),
             new Choice("Weekly", L("Frequency_Weekly")),
+            new Choice("Once", L("Frequency_Once")),
             new Choice("AsNeeded", L("Frequency_AsNeeded")) };
         var frequency = ChoicePicker(L("TaskFrequency"), frequencies, item.Frequency);
         var points = Field("PointValue"); points.Text = item.Points.ToString(); points.Keyboard = Keyboard.Numeric;
         form.Add(name); form.Add(pet); form.Add(assignee); form.Add(category); form.Add(custom); form.Add(frequency); form.Add(points);
+        var reminder = AddTaskReminderPicker(form, frequency, item.Reminder);
         AddPhotoPicker(form, "TaskImage", file => photo = file);
         form.Add(Button("SaveChanges", async () =>
         {
             if (string.IsNullOrWhiteSpace(name.Text)) throw new MobileApiException("TaskNameRequired");
             var selectedPet = pet.SelectedItem as PetItemDto;
             if (assignee.SelectedItem is not HouseholdMemberItemDto selectedMember) return;
-            int.TryParse(points.Text, out var pointValue);
+            var pointValue = ParsePoints(points, 0, 1000, "PointRange");
             var categoryId = category.SelectedItem is CategoryItemDto { Id: > 0 } selectedCategory ? selectedCategory.Id : (int?)null;
             await api!.UpdateTaskAsync(member!.Id, item.Id, new UpdateTaskRequest(selectedPet is { Id: > 0 } ? selectedPet.Id : null,
                 selectedMember.Id, categoryId, custom.Text,
-                (frequency.SelectedItem as Choice)?.Value ?? item.Frequency, pointValue, name.Text.Trim()));
+                (frequency.SelectedItem as Choice)?.Value ?? item.Frequency, pointValue, name.Text.Trim(), reminder()));
             if (photo is not null) await UploadManagementPhotoAsync("tasks", item.Id, photo);
             await RefreshAsync();
         }));
@@ -994,6 +1135,7 @@ public sealed class MainPage : ContentPage
         {
             var photos = selectedPhotos.Select(f => new UploadPhoto(f.FileName, MimeType(f), f.OpenReadAsync)).ToList();
             await api!.CompleteAsync(member!.Id, task.Id, photos);
+            TaskNotifications.SuppressTask(task.Id, task.Frequency);
             selectedPhotos.Clear();
             message.Text = L(member.Role == "Parent" ? "ParentTaskCompleted" : "TaskSentForApproval");
             await RefreshAsync();
@@ -1011,9 +1153,12 @@ public sealed class MainPage : ContentPage
     protected override bool OnBackButtonPressed()
     {
         if (busy) return true;
-        if (!showingCompletion) return base.OnBackButtonPressed();
-        ShowDashboard();
-        return true;
+        if (showingCompletion || showingForm)
+        {
+            if (session is null) ShowLogin(); else ShowDashboard();
+            return true;
+        }
+        return base.OnBackButtonPressed();
     }
 
     private async Task RunAsync(Func<Task> action)
@@ -1026,6 +1171,7 @@ public sealed class MainPage : ContentPage
             if (exception.Code is "SessionExpired" or "MobileAccessDenied")
             {
                 if (api is not null) await api.LogoutAsync();
+                TaskNotifications.Clear();
                 ShowLogin();
             }
             message.Text = L(exception.Code == "TooManyTaskPhotos" ? "MobilePhotoLimit" : exception.Code);

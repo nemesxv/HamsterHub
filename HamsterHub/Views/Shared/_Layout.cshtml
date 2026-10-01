@@ -54,7 +54,8 @@
         </nav>
     </header>
 
-    @if (System.IO.File.Exists(System.IO.Path.Combine(HostEnvironment.ContentRootPath, "Downloads", "HamsterHub.apk")))
+    @if (Context.Request.Path == "/" &&
+        System.IO.File.Exists(System.IO.Path.Combine(HostEnvironment.ContentRootPath, "Downloads", "HamsterHub.apk")))
     {
         <aside class="app-download" aria-label="@L["AndroidAppTitle"]">
             <div>

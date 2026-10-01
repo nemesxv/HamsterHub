@@ -10,6 +10,9 @@ public class CareTask
     public int AssignedMemberId { get; set; }
     public int PointValue { get; set; }
     public CareTaskFrequency Frequency { get; set; }
+    public TimeOnly? ReminderTime { get; set; }
+    public DateOnly? ReminderStartDate { get; set; }
+    public string? ReminderTimeZoneId { get; set; }
     public string? ImagePath { get; set; }
     public bool IsActive { get; set; } = true;
     public Household Household { get; set; } = null!;
@@ -19,4 +22,4 @@ public class CareTask
     public ICollection<CareLog> CareLogs { get; set; } = [];
 }
 
-public enum CareTaskFrequency { Daily = 1, Weekly = 2, AsNeeded = 3 }
+public enum CareTaskFrequency { Daily = 1, Weekly = 2, AsNeeded = 3, Once = 4 }

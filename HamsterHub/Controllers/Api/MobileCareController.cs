@@ -86,14 +86,44 @@ public sealed class MobileCareController(ApplicationDbContext db, UserManager<Ap
         return new DashboardDto(await points.GetBalanceAsync(member.HouseholdId, member.UserId, cancellationToken),
             tasks.OrderBy(t => t.Pet == null ? "" : t.Pet.Name).Select(t =>
             {
-                var cutoff = care.GetEarliestAllowed(t.Frequency, now);
                 return new TaskDto(t.Id, t.Pet?.Name ?? CategoryName(t.CareCategory), t.Name ?? CategoryName(t.CareCategory), ImagePath(t),
                     t.PointValue, t.Frequency.ToString(), care.CanCompleteTask(t, member) &&
-                    (cutoff is null || !ownLogs.Any(l => l.CareTaskId == t.Id &&
-                        l.Status != CareLogStatus.Rejected && l.CompletedAt >= cutoff)));
+                    care.GetCurrentPeriodStatus(t, ownLogs, now) is null);
             }).ToList(),
             ownLogs.OrderByDescending(l => l.CompletedAt).Take(50).Select(ToDto).ToList(),
             pending.OrderByDescending(l => l.CompletedAt).Select(ToDto).ToList());
+    }
+
+    [HttpGet("memberships/{memberId:int}/reminders")]
+    public async Task<ActionResult<IReadOnlyList<ScheduledTaskReminderDto>>> Reminders(
+        int memberId, CancellationToken cancellationToken)
+    {
+        var member = await GetMemberAsync(memberId, cancellationToken);
+        if (member is null) return Forbid();
+        if (member.MemberRole != HouseholdMemberRole.Child)
+            return Array.Empty<ScheduledTaskReminderDto>();
+        var tasks = await db.CareTasks.AsNoTracking().Include(t => t.Pet).Include(t => t.CareCategory)
+            .Include(t => t.AssignedMember)
+            .Where(t => t.HouseholdId == member.HouseholdId && t.AssignedMemberId == member.Id &&
+                t.IsActive && t.ReminderTime != null && t.Frequency != CareTaskFrequency.AsNeeded)
+            .ToListAsync(cancellationToken);
+        var logs = await ScopedLogs(member.HouseholdId)
+            .Where(l => l.CompletedByUserId == member.UserId && l.Status != CareLogStatus.Rejected)
+            .ToListAsync(cancellationToken);
+        var now = care.GetUtcNow();
+        return tasks.Where(t => care.CanCompleteTask(t, member) && TaskReminderSettings.Read(t) is not null)
+            .Select(t =>
+            {
+                var latest = logs.Where(l => l.CareTaskId == t.Id).OrderByDescending(l => l.CompletedAt).FirstOrDefault();
+                DateTimeOffset? suppress = latest is null ? null : t.Frequency switch
+                {
+                    CareTaskFrequency.Once => DateTimeOffset.MaxValue,
+                    CareTaskFrequency.Weekly => latest.CompletedAt.AddDays(7),
+                    _ => care.GetEarliestAllowed(CareTaskFrequency.Daily, latest.CompletedAt)!.Value.AddDays(1)
+                };
+                return new ScheduledTaskReminderDto(t.Id, t.Name ?? CategoryName(t.CareCategory),
+                    t.Frequency.ToString(), TaskReminderSettings.Read(t)!, suppress > now ? suppress : null);
+            }).ToList();
     }
 
     [HttpPost("memberships/{memberId:int}/tasks/{taskId:int}/complete")]

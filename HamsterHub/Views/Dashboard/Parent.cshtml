@@ -41,54 +41,6 @@
         </div>
     }
 
-    <section class="parent-action-zone" aria-labelledby="parent-actions-title">
-        <div class="parent-zone-heading">
-            <div>
-                <span>@L["StartHere"]</span>
-                <h2 id="parent-actions-title">@L["WhatWouldYouLikeToDo"]</h2>
-                <p>@L["QuickActionHint"]</p>
-            </div>
-        </div>
-        <div class="parent-action-grid">
-            <button type="button" class="parent-action-card action-family"
-                    data-bs-toggle="modal" data-bs-target="#memberModal">
-                <span class="parent-action-icon" aria-hidden="true">👨‍👩‍👧</span>
-                <span>
-                    <strong>@L["AddFamilyMember"]</strong>
-                    <small>@L["ActionAddMemberHint"]</small>
-                </span>
-                <span class="parent-action-arrow" aria-hidden="true">＋</span>
-            </button>
-            <button type="button" class="parent-action-card action-pet"
-                    data-bs-toggle="modal" data-bs-target="#petModal">
-                <span class="parent-action-icon" aria-hidden="true">🐹</span>
-                <span>
-                    <strong>@L["AddPet"]</strong>
-                    <small>@L["ActionAddPetHint"]</small>
-                </span>
-                <span class="parent-action-arrow" aria-hidden="true">＋</span>
-            </button>
-            <button type="button" class="parent-action-card action-task"
-                    data-bs-toggle="modal" data-bs-target="#taskModal">
-                <span class="parent-action-icon" aria-hidden="true">✓</span>
-                <span>
-                    <strong>@L["AddCareTask"]</strong>
-                    <small>@L["ActionAddTaskHint"]</small>
-                </span>
-                <span class="parent-action-arrow" aria-hidden="true">＋</span>
-            </button>
-            <button type="button" class="parent-action-card action-reward"
-                    data-bs-toggle="modal" data-bs-target="#rewardModal">
-                <span class="parent-action-icon" aria-hidden="true">🎁</span>
-                <span>
-                    <strong>@L["AddReward"]</strong>
-                    <small>@L["ActionAddRewardHint"]</small>
-                </span>
-                <span class="parent-action-arrow" aria-hidden="true">＋</span>
-            </button>
-        </div>
-    </section>
-
     <section class="parent-attention-zone @(pendingTotal == 0 ? "parent-attention-clear" : "")"
              aria-labelledby="parent-attention-title">
         <div class="parent-zone-heading">
@@ -216,6 +168,54 @@
                 }
             </div>
         }
+    </section>
+
+    <section class="parent-action-zone" aria-labelledby="parent-actions-title">
+        <div class="parent-zone-heading">
+            <div>
+                <span>@L["StartHere"]</span>
+                <h2 id="parent-actions-title">@L["WhatWouldYouLikeToDo"]</h2>
+                <p>@L["QuickActionHint"]</p>
+            </div>
+        </div>
+        <div class="parent-action-grid">
+            <button type="button" class="parent-action-card action-family"
+                    data-bs-toggle="modal" data-bs-target="#memberModal">
+                <span class="parent-action-icon" aria-hidden="true">👨‍👩‍👧</span>
+                <span>
+                    <strong>@L["AddFamilyMember"]</strong>
+                    <small>@L["ActionAddMemberHint"]</small>
+                </span>
+                <span class="parent-action-arrow" aria-hidden="true">＋</span>
+            </button>
+            <button type="button" class="parent-action-card action-pet"
+                    data-bs-toggle="modal" data-bs-target="#petModal">
+                <span class="parent-action-icon" aria-hidden="true">🐹</span>
+                <span>
+                    <strong>@L["AddPet"]</strong>
+                    <small>@L["ActionAddPetHint"]</small>
+                </span>
+                <span class="parent-action-arrow" aria-hidden="true">＋</span>
+            </button>
+            <button type="button" class="parent-action-card action-task"
+                    data-bs-toggle="modal" data-bs-target="#taskModal">
+                <span class="parent-action-icon" aria-hidden="true">✓</span>
+                <span>
+                    <strong>@L["AddCareTask"]</strong>
+                    <small>@L["ActionAddTaskHint"]</small>
+                </span>
+                <span class="parent-action-arrow" aria-hidden="true">＋</span>
+            </button>
+            <button type="button" class="parent-action-card action-reward"
+                    data-bs-toggle="modal" data-bs-target="#rewardModal">
+                <span class="parent-action-icon" aria-hidden="true">🎁</span>
+                <span>
+                    <strong>@L["AddReward"]</strong>
+                    <small>@L["ActionAddRewardHint"]</small>
+                </span>
+                <span class="parent-action-arrow" aria-hidden="true">＋</span>
+            </button>
+        </div>
     </section>
 
     <section class="parent-overview @(Model.RewardChildren.Count > 0 ? "parent-points-overview" : "")"
@@ -709,6 +709,7 @@
                         <input asp-for="AddCareTask.PointValue" />
                     </div>
                 </div>
+                <partial name="_TaskReminder" model='new TaskReminderFormModel("AddCareTask", "new-task", null)' />
                 <button type="submit" class="modal-submit">@L["SaveCareTask"]</button>
             </form>
         </div>
@@ -893,6 +894,7 @@
                                    type="number" min="0" max="1000" value="@task.PointValue" />
                         </div>
                     </div>
+                    <partial name="_TaskReminder" model='new TaskReminderFormModel("UpdateCareTask", $"task-{task.Id}", task.Reminder)' />
                     <button type="submit" class="modal-submit">@L["SaveChanges"]</button>
                 </form>
             </div>

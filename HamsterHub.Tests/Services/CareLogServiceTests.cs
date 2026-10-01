@@ -60,6 +60,36 @@ public sealed class CareLogServiceTests
     }
 
     [Fact]
+    public void GetCurrentPeriodStatus_DistinguishesPendingApprovedAndRejected()
+    {
+        var (task, _) = CreateValidAssignment(HouseholdMemberRole.Child);
+        var log = new CareLog
+        {
+            CareTaskId = task.Id,
+            CompletedAt = FrozenUtcNow.AddHours(-1),
+            Status = CareLogStatus.Pending
+        };
+
+        Assert.Equal(CareLogStatus.Pending, service.GetCurrentPeriodStatus(task, [log], FrozenUtcNow));
+        log.Status = CareLogStatus.Approved;
+        Assert.Equal(CareLogStatus.Approved, service.GetCurrentPeriodStatus(task, [log], FrozenUtcNow));
+        log.Status = CareLogStatus.Rejected;
+        Assert.Null(service.GetCurrentPeriodStatus(task, [log], FrozenUtcNow));
+    }
+
+    [Fact]
+    public void ReviewCareLog_AllowsHistoricalPetAfterTaskPetChanges()
+    {
+        var (careLog, parent) = CreateReviewScenario();
+        careLog.CareTask.PetId = careLog.PetId + 1;
+
+        service.ReviewCareLog(careLog, parent, CareLogStatus.Approved, 10, FrozenUtcNow);
+
+        Assert.Equal(CareLogStatus.Approved, careLog.Status);
+        Assert.Equal(15, careLog.PointsTotalAfterApproval);
+    }
+
+    [Fact]
     public void CanCompleteTask_ReturnsTrue_ForValidActiveAssignment()
     {
         var (careTask, member) = CreateValidAssignment(HouseholdMemberRole.Child);
@@ -104,6 +134,7 @@ public sealed class CareLogServiceTests
     public void CanCompleteTask_ReturnsFalse_WhenPetBelongsToAnotherHousehold()
     {
         var (careTask, member) = CreateValidAssignment(HouseholdMemberRole.Child);
+        Assert.NotNull(careTask.Pet);
         careTask.Pet.HouseholdId = member.HouseholdId + 1;
 
         Assert.False(service.CanCompleteTask(careTask, member));
@@ -128,6 +159,7 @@ public sealed class CareLogServiceTests
                 careTask.IsActive = false;
                 break;
             case InactiveGraphPart.Pet:
+                Assert.NotNull(careTask.Pet);
                 careTask.Pet.IsActive = false;
                 break;
             case InactiveGraphPart.AssignedMember:
@@ -270,7 +302,7 @@ public sealed class CareLogServiceTests
     [InlineData(UnauthorizedReviewReason.ChildRole)]
     [InlineData(UnauthorizedReviewReason.ForeignHousehold)]
     [InlineData(UnauthorizedReviewReason.ForeignCareTask)]
-    [InlineData(UnauthorizedReviewReason.MismatchedPet)]
+    [InlineData(UnauthorizedReviewReason.ForeignHistoricalPet)]
     [InlineData(UnauthorizedReviewReason.AlreadyReviewed)]
     public void ReviewCareLog_UnauthorizedReviewerOrLog_Throws(
         UnauthorizedReviewReason reason)
@@ -286,13 +318,14 @@ public sealed class CareLogServiceTests
                 parent.MemberRole = HouseholdMemberRole.Child;
                 break;
             case UnauthorizedReviewReason.ForeignHousehold:
+                Assert.NotNull(careLog.Pet);
                 parent.HouseholdId = careLog.Pet.HouseholdId + 1;
                 break;
             case UnauthorizedReviewReason.ForeignCareTask:
                 careLog.CareTask.HouseholdId = parent.HouseholdId + 1;
                 break;
-            case UnauthorizedReviewReason.MismatchedPet:
-                careLog.CareTask.PetId = careLog.PetId + 1;
+            case UnauthorizedReviewReason.ForeignHistoricalPet:
+                careLog.Pet!.HouseholdId = parent.HouseholdId + 1;
                 break;
             case UnauthorizedReviewReason.AlreadyReviewed:
                 careLog.Status = CareLogStatus.Approved;
@@ -379,7 +412,7 @@ public sealed class CareLogServiceTests
         ChildRole,
         ForeignHousehold,
         ForeignCareTask,
-        MismatchedPet,
+        ForeignHistoricalPet,
         AlreadyReviewed
     }
 

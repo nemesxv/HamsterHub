@@ -5,6 +5,20 @@ its implementation and proportionate verification are complete.
 
 ## Next
 
+- Android reminder device acceptance: app background/process termination, reboot,
+  Doze, permission grant/denial, offline sync, and parent edits on another device.
+- Consider cloud push if immediate remote schedule updates are needed; current
+  reminders use local alarms with periodic background synchronization.
+- Split the long Android dashboard into persistent Today, Tasks/Rewards, and
+  History/Family destinations. Keep form drafts when navigating back and add
+  accessible, field-level validation and save/refresh retry states.
+- Guided family setup and child-device pairing; complete password/account
+  recovery and parent account-security handoff from Android.
+- Reward editing/archival, a combined point ledger, and mobile history-sharing
+  controls.
+- Define household-local task schedules and show exact next availability.
+- HTTPS endpoint, accurate privacy notice, release-signing and photo-access
+  review before broader family use.
 - Verify the initial MAUI Android app on phone and tablet devices/emulators,
   including camera, keyboard/TalkBack, both languages, and both themes.
 - Parent-managed password reset for family accounts.
@@ -18,6 +32,20 @@ its implementation and proportionate verification are complete.
 
 ## Done
 
+- Optional parent-configured task reminders in website/app forms, shared schedule
+  validation, daily/weekly/one-time behavior, unlimited-task exclusion, EF migration,
+  child-scoped API, and native Android alarm/background-sync implementation.
+- Corrected the GitHub failing historical-pet test and nullable fixture warnings.
+- Shared task recurrence status on website/API, actionable child task count,
+  pending/done states, readable two-line task titles, and child-dashboard APK
+  banner removal.
+- Parent approval queues moved ahead of management content; Android combines
+  care and reward request counts.
+- Android pull/resume/manual refresh, last-updated cue, honest pending/rejected
+  point labels, insufficient-reward explanation, Back routing for forms/settings,
+  and first-parent registration handoff.
+- Android date-picker birth dates, numeric point validation, and duplicate-safe
+  retries when a newly created record's photo upload fails.
 - Initial MAUI Android app and `/api/v1` backend for login, care tasks, completion
   photos, parent approvals, care history, and points; device acceptance remains Next.
 - Mobile household management for creating, editing, and archiving family members,

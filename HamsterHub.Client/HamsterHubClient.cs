@@ -57,6 +57,8 @@ public sealed class HamsterHubClient(HttpClient http, ISessionStore store)
     public Task<SessionDto> GetSessionAsync() => GetAsync<SessionDto>("api/v1/me");
     public Task<DashboardDto> GetDashboardAsync(int memberId) =>
         GetAsync<DashboardDto>($"api/v1/memberships/{memberId}/dashboard");
+    public Task<IReadOnlyList<ScheduledTaskReminderDto>> GetRemindersAsync(int memberId) =>
+        GetAsync<IReadOnlyList<ScheduledTaskReminderDto>>($"api/v1/memberships/{memberId}/reminders");
     public Task<HouseholdHubDto> GetHouseholdAsync(int memberId) =>
         GetAsync<HouseholdHubDto>($"api/v1/memberships/{memberId}/household");
 

@@ -160,3 +160,47 @@ here rather than relying only on conversational memory.
 - Image controls offer Camera and Gallery. Reports accumulate up to eight photos,
   support multi-selection from the gallery, and show removable previews.
 - Unit tests and emulator checks were explicitly skipped for this increment.
+
+## Daily-use improvements (2026-09-30)
+
+- The website and API use the same recurrence projection for a child's task:
+  daily and weekly work already pending or approved in the current period is
+  unavailable for another completion. Rejected work can be attempted again.
+- The child website counts only available tasks and shows waiting/done states.
+  The Android app refreshes on pull, a visible refresh action, and resume, and
+  shows when its dashboard last updated.
+- Android history shows signed point changes only for approved records. Pending
+  and rejected records show prospective or unawarded amounts separately.
+- Parent approval queues precede management content on both surfaces. The
+  Android parent count includes care reports and reward requests.
+- Android Back returns from Settings, management forms, and task completion to
+  the dashboard. Native login links first-time parents to website registration;
+  children sign in with credentials created by a parent.
+- Android pet birth dates use a calendar with an explicit optional control.
+  Task points and reward costs are validated before submission. If a photo
+  upload fails after a new management record is created, retrying the form
+  reuses that record instead of creating another.
+
+## Task reminders (2026-10-01)
+
+- Parents can configure optional task reminders in website and Android create/edit
+  forms. Enabling reminders reveals a time and first date. The first date selects
+  the weekday for weekly reminders; daily reminders repeat each day; one-time
+  tasks notify once and cannot be completed again after a pending/approved report.
+  Unlimited (`AsNeeded`) tasks cannot have scheduled reminders.
+- The parent's local time zone is saved with the task. Calendar repetition keeps
+  the chosen clock time through daylight-saving changes. Missing times move to the
+  first valid minute, and repeated times fire once at the later offset.
+- A signed-in child's Android device schedules notifications with AlarmManager,
+  independent of the foreground screen, and restores them after reboot/app update.
+  Notification permission is required on Android 13+. Optional precise alarm access
+  controls exact delivery; otherwise Android may defer the notification.
+- Reminders sync when the dashboard refreshes and through an Android periodic job
+  (requested every 15 minutes; actual background timing is controlled by Android).
+  These are local notifications, not immediate cloud push. A newly created/edited
+  task must reach the child's device before its reminder can fire.
+- Submitted work suppresses reminders for its current recurrence period. Archived,
+  reassigned, disabled, or removed schedules disappear at the next successful sync.
+  Signing out or switching to a parent clears the device's schedules immediately.
+  Offline devices retain their last successfully synced schedule; missed reminders
+  are not replayed. Force-stop blocks delivery until the app is opened again.

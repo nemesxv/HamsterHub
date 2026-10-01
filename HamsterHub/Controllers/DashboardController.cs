@@ -17,6 +17,7 @@ public class DashboardController(
     IStringLocalizer<SharedResource> localizer,
     PointBalanceService pointBalanceService,
     RewardService rewardService,
+    CareLogService careLogService,
     UploadedImageService images,
     CareWorkflowService workflow) : Controller
 {
@@ -158,7 +159,7 @@ public class DashboardController(
                     task.PointValue,
                     GetTaskImagePath(task),
                     task.ImagePath is not null,
-                    task.AssignedMember.UserId == user.Id))
+                    task.AssignedMember.UserId == user.Id, Reminder: TaskReminderSettings.Read(task)))
                 .ToList(),
             PendingCare = pendingEntities
                 .Select(log => new PendingCareSummary(
@@ -256,6 +257,15 @@ public class DashboardController(
             .OrderByDescending(log => log.CompletedAt)
             .Take(8)
             .ToListAsync();
+        var now = careLogService.GetUtcNow();
+        var earliestCurrentPeriod = now.AddDays(-7);
+        var currentPeriodLogs = await dbContext.CareLogs
+            .AsNoTracking()
+            .Where(log => log.CompletedByUserId == user.Id &&
+                log.CareTask.HouseholdId == householdId &&
+                log.Status != CareLogStatus.Rejected &&
+                (log.CareTask.Frequency == CareTaskFrequency.Once || log.CompletedAt >= earliestCurrentPeriod))
+            .ToListAsync();
         var visibleFamilyMemberEntities = await dbContext.HouseholdMembers
             .AsNoTracking()
             .Include(member => member.User)
@@ -319,7 +329,10 @@ public class DashboardController(
                     pet.Id, pet.Name, pet.Species, pet.BirthDate, pet.PhotoPath))
                 .ToListAsync(),
             CareTasks = careTaskEntities
-                .Select(task => new CareTaskSummary(
+                .Select(task =>
+                {
+                    var periodStatus = careLogService.GetCurrentPeriodStatus(task, currentPeriodLogs, now);
+                    return new CareTaskSummary(
                     task.Id,
                     task.PetId,
                     task.Pet?.Name ?? GetCategoryName(task.CareCategory),
@@ -332,7 +345,9 @@ public class DashboardController(
                     task.PointValue,
                     GetTaskImagePath(task),
                     task.ImagePath is not null,
-                    true))
+                    periodStatus is null,
+                    periodStatus);
+                })
                 .ToList(),
             RecentCare = recentCareEntities
                 .Select(log => new KidCareHistorySummary(
@@ -704,7 +719,7 @@ public class DashboardController(
     [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Parent")]
     public async Task<IActionResult> AddCareTask([Bind(Prefix = "AddCareTask")] AddCareTaskInput input)
     {
-        if (!ModelState.IsValid || !Enum.IsDefined(input.Frequency) ||
+        if (!ModelState.IsValid || !input.HasValidReminder || !Enum.IsDefined(input.Frequency) ||
             (string.IsNullOrWhiteSpace(input.Name) && input.CategoryId is null && string.IsNullOrWhiteSpace(input.NewCategoryName)))
         {
             TempData["StatusMessage"] = localizer["CheckFormFields"].Value;
@@ -792,6 +807,9 @@ public class DashboardController(
             AssignedMemberId = assignedMember.Id,
             CareCategory = category,
             Frequency = input.Frequency,
+            ReminderTime = input.Reminder?.Time,
+            ReminderStartDate = input.Reminder?.StartDate,
+            ReminderTimeZoneId = input.Reminder?.TimeZoneId,
             PointValue = input.PointValue,
             ImagePath = imagePath
         });
@@ -1297,7 +1315,7 @@ public class DashboardController(
     public async Task<IActionResult> UpdateCareTask(
         [Bind(Prefix = "UpdateCareTask")] UpdateCareTaskInput input)
     {
-        if (!ModelState.IsValid || !Enum.IsDefined(input.Frequency) ||
+        if (!ModelState.IsValid || !input.HasValidReminder || !Enum.IsDefined(input.Frequency) ||
             (string.IsNullOrWhiteSpace(input.Name) && input.CategoryId is null && string.IsNullOrWhiteSpace(input.NewCategoryName)))
         {
             TempData["StatusMessage"] = localizer["CheckFormFields"].Value;
@@ -1341,6 +1359,7 @@ public class DashboardController(
         task.CareCategoryId = category?.Id;
         task.CareCategory = category;
         task.Frequency = input.Frequency;
+        TaskReminderSettings.Apply(task, input.Reminder);
         task.PointValue = input.PointValue;
         var oldImagePath = task.ImagePath;
         string? newImagePath = null;

@@ -1,0 +1,23 @@
+@model TaskReminderFormModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+<fieldset class="task-reminder-fields" data-task-reminder>
+    <label for="@Model.Id-reminder-enabled">
+        <input id="@Model.Id-reminder-enabled" type="checkbox" name="@(Model.Prefix).NotificationEnabled"
+               value="true" checked="@(Model.Reminder is not null)" data-reminder-enabled />
+        @L["TaskNotification"]
+    </label>
+    <input type="hidden" name="@(Model.Prefix).NotificationEnabled" value="false" />
+    <small class="field-hint" data-reminder-unlimited hidden>@L["NotificationUnlimitedHint"]</small>
+    <div data-reminder-options hidden>
+        <label for="@Model.Id-reminder-time">@L["NotificationTime"]</label>
+        <input id="@Model.Id-reminder-time" name="@(Model.Prefix).ReminderTime" type="time"
+               value="@(Model.Reminder?.Time.ToString("HH:mm") ?? "18:00")" />
+        <label for="@Model.Id-reminder-date">@L["NotificationStartDate"]</label>
+        <input id="@Model.Id-reminder-date" name="@(Model.Prefix).ReminderStartDate" type="date"
+               value="@(Model.Reminder?.StartDate.ToString("yyyy-MM-dd"))" data-reminder-date />
+        <input name="@(Model.Prefix).ReminderTimeZoneId" type="hidden"
+               value="@Model.Reminder?.TimeZoneId" data-reminder-zone />
+        <small class="field-hint">@L["NotificationScheduleHint"] <span data-reminder-zone-label></span></small>
+    </div>
+</fieldset>
