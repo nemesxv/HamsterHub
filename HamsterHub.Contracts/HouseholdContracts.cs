@@ -44,11 +44,11 @@ public sealed record UpdatePetRequest(
     [Required, StringLength(100, MinimumLength = 2)] string Species,
     DateOnly? BirthDate);
 public sealed record CreateTaskRequest(int? PetId, int AssignedMemberId, int? CategoryId,
-    [StringLength(100, MinimumLength = 2)] string? NewCategoryName,
+    [StringLength(100)] string? NewCategoryName,
     [Required] string Frequency, [Range(0, 1000)] int Points,
     [StringLength(100, MinimumLength = 2)] string? Name = null, TaskReminderDto? Reminder = null);
 public sealed record UpdateTaskRequest(int? PetId, int AssignedMemberId, int? CategoryId,
-    [StringLength(100, MinimumLength = 2)] string? NewCategoryName,
+    [StringLength(100)] string? NewCategoryName,
     [Required] string Frequency, [Range(0, 1000)] int Points,
     [StringLength(100, MinimumLength = 2)] string? Name = null, TaskReminderDto? Reminder = null);
 public sealed record CreateRewardRequest(

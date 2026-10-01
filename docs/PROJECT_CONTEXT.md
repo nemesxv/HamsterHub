@@ -231,3 +231,15 @@ Pulling down forces a refresh immediately. Periodic refresh pauses in Settings, 
 forms, completion forms, and during another operation; backgrounding stops the timer.
 App-version checks and installation remain separate Settings controls. This change
 continues the requested skip of local tests/builds and uses automatic deployment.
+
+### Mobile creation and error feedback
+
+Photos remain optional for members, pets, tasks, rewards and completion reports. Mobile
+photo pickers now say so explicitly. Blank optional custom-category text is accepted by
+the API and sent as null by the app; a supplied name still needs 2–100 characters.
+API model-validation errors return localized resource keys rather than the default
+ProblemDetails format that older app error handling mislabeled as a connection failure.
+The app displays the individual validation reasons, explains password rules, validates
+member name/email/password length before sending, and distinguishes validation, server,
+timeout and connectivity errors. Identity creation errors preserve their specific cause.
+This revision continues the user's preference to skip local tests/builds and use autodeploy.

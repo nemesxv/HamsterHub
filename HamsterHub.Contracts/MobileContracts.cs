@@ -8,7 +8,7 @@ public sealed record LoginRequest(
     [MaxLength(32)] string? TwoFactorCode = null);
 public sealed record RefreshRequest([Required] string RefreshToken);
 public sealed record TokenResponse(string TokenType, string AccessToken, int ExpiresIn, string RefreshToken);
-public sealed record ApiError(string Code);
+public sealed record ApiError(string Code, IReadOnlyList<string>? Details = null);
 public sealed record MemberDto(int Id, int HouseholdId, string HouseholdName, string Role);
 public sealed record SessionDto(string DisplayName, IReadOnlyList<MemberDto> Memberships);
 public sealed record TaskDto(int Id, string PetName, string Name, string ImagePath,

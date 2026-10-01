@@ -912,6 +912,18 @@ public sealed class MainPage : ContentPage
         throw new MobileApiException(errorKey);
     }
 
+    private static string? OptionalCategory(Entry field)
+    {
+        var value = field.Text?.Trim();
+        if (string.IsNullOrEmpty(value)) return null;
+        if (value.Length is < 2 or > 100)
+        {
+            field.Focus();
+            throw new MobileApiException("MobileCategoryNameLength");
+        }
+        return value;
+    }
+
     private Func<DateOnly?> AddBirthDatePicker(VerticalStackLayout form, DateOnly? initial)
     {
         var known = new CheckBox { IsChecked = initial.HasValue };
@@ -941,9 +953,20 @@ public sealed class MainPage : ContentPage
             new Choice("Parent", L("Role_Parent")) };
         var role = ChoicePicker(L("FamilyRole"), roles, "Child");
         form.Add(name); form.Add(email); form.Add(password); form.Add(role);
+        form.Add(Text(L("PasswordLength") + " " + L("PasswordRequirements"), 14));
         AddPhotoPicker(form, "MemberPhoto", file => photo = file);
         form.Add(Button("AddFamilyMember", async () =>
         {
+            if (createdId is null)
+            {
+                if (string.IsNullOrWhiteSpace(name.Text) || name.Text.Trim().Length is < 2 or > 100)
+                    throw new MobileApiException("NameLength");
+                if (string.IsNullOrWhiteSpace(email.Text) ||
+                    !new System.ComponentModel.DataAnnotations.EmailAddressAttribute().IsValid(email.Text.Trim()))
+                    throw new MobileApiException("InvalidEmail");
+                if (password.Text is null || password.Text.Length is < 6 or > 100)
+                    throw new MobileApiException("MobilePasswordLength");
+            }
             createdId ??= await api!.AddMemberAsync(member!.Id, new CreateMemberRequest(name.Text ?? "", email.Text ?? "",
                 password.Text ?? "", (role.SelectedItem as Choice)?.Value ?? "Child"));
             if (photo is not null)
@@ -1033,12 +1056,13 @@ public sealed class MainPage : ContentPage
         form.Add(Button("SaveCareTask", async () =>
         {
             if (string.IsNullOrWhiteSpace(name.Text)) throw new MobileApiException("TaskNameRequired");
+            if (name.Text.Trim().Length is < 2 or > 100) throw new MobileApiException("NameLength");
             var selectedPet = pet.SelectedItem as PetItemDto;
-            if (assignee.SelectedItem is not HouseholdMemberItemDto selectedMember) return;
+            if (assignee.SelectedItem is not HouseholdMemberItemDto selectedMember) throw new MobileApiException("ChooseMember");
             var pointValue = ParsePoints(points, 0, 1000, "PointRange");
             var categoryId = category.SelectedItem is CategoryItemDto { Id: > 0 } selectedCategory ? selectedCategory.Id : (int?)null;
             createdId ??= await api!.AddTaskAsync(member!.Id, new CreateTaskRequest(selectedPet is { Id: > 0 } ? selectedPet.Id : null, selectedMember.Id,
-                categoryId, custom.Text, (frequency.SelectedItem as Choice)?.Value ?? "Daily", pointValue, name.Text.Trim(), reminder()));
+                categoryId, OptionalCategory(custom), (frequency.SelectedItem as Choice)?.Value ?? "Daily", pointValue, name.Text.Trim(), reminder()));
             if (photo is not null)
             {
                 await UploadManagementPhotoAsync("tasks", createdId.Value, photo);
@@ -1143,7 +1167,7 @@ public sealed class MainPage : ContentPage
             var pointValue = ParsePoints(points, 0, 1000, "PointRange");
             var categoryId = category.SelectedItem is CategoryItemDto { Id: > 0 } selectedCategory ? selectedCategory.Id : (int?)null;
             await api!.UpdateTaskAsync(member!.Id, item.Id, new UpdateTaskRequest(selectedPet is { Id: > 0 } ? selectedPet.Id : null,
-                selectedMember.Id, categoryId, custom.Text,
+                selectedMember.Id, categoryId, OptionalCategory(custom),
                 (frequency.SelectedItem as Choice)?.Value ?? item.Frequency, pointValue, name.Text.Trim(), reminder()));
             if (photo is not null) await UploadManagementPhotoAsync("tasks", item.Id, photo);
             await RefreshAsync();
@@ -1170,6 +1194,7 @@ public sealed class MainPage : ContentPage
 
     private void AddPhotoPicker(VerticalStackLayout form, string key, Action<FileResult?> setPhoto)
     {
+        form.Add(Text(L("MobileImageOptional"), 14));
         var preview = new Image { IsVisible = false, HeightRequest = 150, Aspect = Aspect.AspectFit };
         var remove = SecondaryButton("MobileRemovePhoto", () =>
         { setPhoto(null); preview.Source = null; preview.IsVisible = false; return Task.CompletedTask; });
@@ -1288,10 +1313,13 @@ public sealed class MainPage : ContentPage
                 TaskNotifications.Clear();
                 ShowLogin();
             }
-            message.Text = L(exception.Code == "TooManyTaskPhotos" ? "MobilePhotoLimit" : exception.Code);
+            message.Text = string.Join("\n", new[] { L(exception.Code == "TooManyTaskPhotos" ? "MobilePhotoLimit" : exception.Code) }
+                .Concat(exception.Details.Select(L)).Distinct());
         }
         catch (PermissionException) { message.Text = L("MobileCameraPermission"); }
-        catch (Exception) { message.Text = L("MobileConnectionError"); }
+        catch (HttpRequestException) { message.Text = L("MobileConnectionError"); }
+        catch (OperationCanceledException) { message.Text = L("MobileRequestTimeout"); }
+        catch (Exception) { message.Text = L("MobileUnexpectedError"); }
         finally { busy = false; body.IsEnabled = true; activity.IsRunning = false; activity.IsVisible = false; message.IsVisible = !string.IsNullOrEmpty(message.Text); }
     }
 }

@@ -123,3 +123,7 @@ its implementation and proportionate verification are complete.
 - Dashboard refresh refinement: removed the Refresh button, added foreground data
   refresh every minute, retained forced pull-down refresh, and paused the timer in
   forms/background. Local tests/builds skipped by the continuing user preference.
+
+- Mobile creation feedback: accept blank optional categories, explicitly label optional
+  photos, show model/Identity validation causes and distinguish transport/server errors.
+  Local tests/builds skipped under the continuing user instruction; autodeploy builds.

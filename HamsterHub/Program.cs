@@ -48,6 +48,20 @@ builder.Services.AddAuthorization(options =>
 builder.Services.AddRazorPages(options =>
     options.Conventions.AuthorizeAreaFolder("Identity", "/Account/Manage", "ParentsOnly"));
 builder.Services.AddControllersWithViews()
+    .ConfigureApiBehaviorOptions(options => options.InvalidModelStateResponseFactory = context =>
+        new Microsoft.AspNetCore.Mvc.BadRequestObjectResult(new HamsterHub.Contracts.ApiError("CheckFormFields",
+            context.ModelState.Where(item => item.Value?.Errors.Count > 0).Select(item => item.Key.Split('.').Last() switch
+            {
+                "DisplayName" or "Name" => "NameLength",
+                "Email" => "InvalidEmail",
+                "Password" => "MobilePasswordLength",
+                "NewCategoryName" => "MobileCategoryNameLength",
+                "Species" => "MobileSpeciesLength",
+                "Points" => "PointRange",
+                "PointCost" => "RewardPointRange",
+                "VisibleToMemberIds" => "ChooseRewardAudience",
+                _ => "CheckFormFields"
+            }).Distinct().ToArray())))
     .AddViewLocalization()
     .AddDataAnnotationsLocalization(options =>
     {

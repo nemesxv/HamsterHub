@@ -519,4 +519,13 @@
   <data name="AppUpdateProgress" xml:space="preserve"><value>Скачиваем обновление: {0}%</value></data>
   <data name="AppUpToDate" xml:space="preserve"><value>Установлена последняя версия приложения.</value></data>
   <data name="AppAutoCheckUpdates" xml:space="preserve"><value>Автоматически проверять обновления</value></data>
+  <data name="MobileCategoryNameLength" xml:space="preserve"><value>Название новой категории должно содержать от 2 до 100 символов. Или оставьте поле пустым.</value></data>
+  <data name="MobileImageOptional" xml:space="preserve"><value>Фото необязательно. Можно сохранить без него.</value></data>
+  <data name="MobileItemUnavailable" xml:space="preserve"><value>Запись больше недоступна. Вернитесь к списку и обновите его.</value></data>
+  <data name="MobilePasswordLength" xml:space="preserve"><value>Пароль должен содержать от 6 до 100 символов.</value></data>
+  <data name="MobileRequestFailed" xml:space="preserve"><value>Сервер не смог выполнить запрос. Проверьте данные и попробуйте снова.</value></data>
+  <data name="MobileRequestTimeout" xml:space="preserve"><value>Сервер не ответил вовремя. Проверьте список перед повторной отправкой.</value></data>
+  <data name="MobileServerError" xml:space="preserve"><value>На сервере произошла ошибка. Попробуйте позже.</value></data>
+  <data name="MobileSpeciesLength" xml:space="preserve"><value>Укажите вид питомца: от 2 до 100 символов.</value></data>
+  <data name="MobileUnexpectedError" xml:space="preserve"><value>Не удалось выполнить действие в приложении. Вернитесь к списку и попробуйте снова.</value></data>
 </root>

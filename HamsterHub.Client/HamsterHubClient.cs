@@ -12,9 +12,10 @@ public interface ISessionStore
     Task ClearAsync();
 }
 
-public sealed class MobileApiException(string code) : Exception(code)
+public sealed class MobileApiException(string code, IReadOnlyList<string>? details = null) : Exception(code)
 {
     public string Code { get; } = code;
+    public IReadOnlyList<string> Details { get; } = details ?? [];
 }
 
 public sealed record UploadPhoto(string FileName, string ContentType, Func<Task<Stream>> OpenReadAsync);
@@ -232,11 +233,14 @@ public sealed class HamsterHubClient(HttpClient http, ISessionStore store)
         catch (System.Text.Json.JsonException) { }
         throw new MobileApiException(error?.Code ?? (response.StatusCode switch
         {
+            HttpStatusCode.BadRequest or HttpStatusCode.UnprocessableEntity => "CheckFormFields",
             HttpStatusCode.Unauthorized => "SessionExpired",
             HttpStatusCode.Forbidden => "MobileAccessDenied",
             HttpStatusCode.TooManyRequests => "MobileTryLater",
             HttpStatusCode.RequestEntityTooLarge => "TaskPhotoTooLarge",
-            _ => "MobileConnectionError"
-        }));
+            HttpStatusCode.NotFound => "MobileItemUnavailable",
+            HttpStatusCode.InternalServerError or HttpStatusCode.BadGateway or HttpStatusCode.ServiceUnavailable => "MobileServerError",
+            _ => "MobileRequestFailed"
+        }), error?.Details);
     }
 }

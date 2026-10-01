@@ -270,3 +270,10 @@ is inactive/backgrounded and restarted on activation/resume. It skips logged-out
 busy, Settings/edit and completion states. RefreshView handles forced pull-down data
 refresh. Automatic data refresh preserves scroll; APK version checks retain their
 separate opt-in/out setting and cadence.
+
+Mobile API automatic model validation uses the shared ApiError envelope, with optional
+Details containing resource keys. The client preserves those details; MAUI localizes
+and shows them without exposing internal exception text. HTTP 400 fallback is form
+validation, 404 stale/unavailable item, and 5xx server failure, separate from transport
+errors. Optional category strings are normalized by the app; the API permits empty
+strings but explicitly validates a nonempty trimmed category's minimum length.

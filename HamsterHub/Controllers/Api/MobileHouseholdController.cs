@@ -111,7 +111,19 @@ public sealed class MobileHouseholdController(
         if (await users.FindByEmailAsync(email) is not null) return Conflict(new ApiError("EmailInUse"));
         var user = new ApplicationUser { DisplayName = request.DisplayName.Trim(), Email = email, UserName = email };
         var result = await users.CreateAsync(user, request.Password);
-        if (!result.Succeeded) return BadRequest(new ApiError("PasswordRequirements"));
+        if (!result.Succeeded)
+        {
+            var errors = result.Errors.Select(error => error.Code switch
+            {
+                "DuplicateEmail" or "DuplicateUserName" => "EmailInUse",
+                "InvalidEmail" or "InvalidUserName" => "InvalidEmail",
+                "PasswordTooShort" => "MobilePasswordLength",
+                "PasswordRequiresDigit" or "PasswordRequiresLower" or "PasswordRequiresUpper" or
+                    "PasswordRequiresNonAlphanumeric" or "PasswordRequiresUniqueChars" => "PasswordRequirements",
+                _ => "AccountCreationFailed"
+            }).Distinct().ToArray();
+            return BadRequest(new ApiError("CheckFormFields", errors));
+        }
         var roleResult = await users.AddToRoleAsync(user, role.ToString());
         if (!roleResult.Succeeded)
         {
@@ -158,6 +170,7 @@ public sealed class MobileHouseholdController(
         if ((request.PetId is not null && pet is null) || assignee is null) return NotFound(new ApiError("NotFound"));
         CareCategory? category = null;
         var custom = request.NewCategoryName?.Trim();
+        if (custom is { Length: 1 }) return BadRequest(new ApiError("MobileCategoryNameLength"));
         if (!string.IsNullOrWhiteSpace(custom))
         {
             category = await db.CareCategories.FirstOrDefaultAsync(item => item.HouseholdId == parent.HouseholdId &&
@@ -266,6 +279,7 @@ public sealed class MobileHouseholdController(
         if (task is null || (request.PetId is not null && pet is null) || assignee is null) return NotFound();
         CareCategory? category = null;
         var custom = request.NewCategoryName?.Trim();
+        if (custom is { Length: 1 }) return BadRequest(new ApiError("MobileCategoryNameLength"));
         if (!string.IsNullOrWhiteSpace(custom))
         {
             category = await db.CareCategories.FirstOrDefaultAsync(item => item.HouseholdId == parent.HouseholdId &&

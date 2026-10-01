@@ -519,4 +519,13 @@
   <data name="AppUpdateProgress" xml:space="preserve"><value>Downloading update: {0}%</value></data>
   <data name="AppUpToDate" xml:space="preserve"><value>Your app is up to date.</value></data>
   <data name="AppAutoCheckUpdates" xml:space="preserve"><value>Automatically check for updates</value></data>
+  <data name="MobileCategoryNameLength" xml:space="preserve"><value>Use 2 to 100 characters for the new category, or leave it blank.</value></data>
+  <data name="MobileImageOptional" xml:space="preserve"><value>Photo is optional. You can save without one.</value></data>
+  <data name="MobileItemUnavailable" xml:space="preserve"><value>This item is no longer available. Go back and refresh the list.</value></data>
+  <data name="MobilePasswordLength" xml:space="preserve"><value>Password must contain 6 to 100 characters.</value></data>
+  <data name="MobileRequestFailed" xml:space="preserve"><value>The server could not complete the request. Check the details and try again.</value></data>
+  <data name="MobileRequestTimeout" xml:space="preserve"><value>The server did not respond in time. Check the list before submitting again.</value></data>
+  <data name="MobileServerError" xml:space="preserve"><value>The server encountered an error. Try again later.</value></data>
+  <data name="MobileSpeciesLength" xml:space="preserve"><value>Enter a pet species using 2 to 100 characters.</value></data>
+  <data name="MobileUnexpectedError" xml:space="preserve"><value>The app could not complete this action. Go back to the list and try again.</value></data>
 </root>
