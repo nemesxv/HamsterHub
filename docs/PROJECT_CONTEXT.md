@@ -204,3 +204,13 @@ here rather than relying only on conversational memory.
   Signing out or switching to a parent clears the device's schedules immediately.
   Offline devices retain their last successfully synced schedule; missed reminders
   are not replayed. Force-stop blocks delivery until the app is opened again.
+
+## Self-hosted app updates (2026-10-01)
+
+The app checks its configured server for newer APK releases and shows one Update
+button, with download progress and Android's installation confirmation. The first
+installation enables per-app installation permission; returning from Settings
+continues the installer. Accounts and settings remain intact. Release metadata,
+artifact checksums and matching package/signing identity protect the update path.
+Existing clients require one manual upgrade to receive this updater. Android
+real-device installation acceptance is still pending.

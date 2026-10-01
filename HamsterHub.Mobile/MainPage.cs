@@ -28,6 +28,12 @@ public sealed class MainPage : ContentPage
     private DashboardDto? dashboard;
     private HouseholdHubDto? household;
     private DateTimeOffset? lastUpdatedAt;
+    private AndroidReleaseDto? availableUpdate;
+    private Uri? updateServer;
+    private DateTimeOffset lastUpdateCheck;
+    private bool checkingUpdate;
+    private readonly VerticalStackLayout updateContent = new() { Spacing = 10 };
+    private Border updateCard = null!;
     private readonly VerticalStackLayout body = new() { Spacing = 16 };
     private readonly Label message = new() { FontSize = 16, IsVisible = false };
     private readonly ActivityIndicator activity = new() { IsVisible = false, HeightRequest = 24 };
@@ -51,6 +57,9 @@ public sealed class MainPage : ContentPage
         var root = new VerticalStackLayout { Padding = new Thickness(20, 22, 20, 40), Spacing = 14,
             MaximumWidthRequest = 1200, HorizontalOptions = LayoutOptions.Fill };
         root.Add(BrandHeader());
+        updateCard = Card(updateContent, Mint);
+        updateCard.IsVisible = false;
+        root.Add(updateCard);
         root.Add(activity);
         root.Add(message);
         root.Add(body);
@@ -80,8 +89,10 @@ public sealed class MainPage : ContentPage
             if (Window is { } window)
                 window.Resumed += async (_, _) =>
                 {
+                    await RunAsync(async () => { AppUpdateInstaller.Continue(); await Task.CompletedTask; });
                     if (session is not null && member is not null && !showingCompletion && !showingForm)
                         await RunAsync(RefreshAsync);
+                    await CheckUpdateAsync();
                 };
             ShowLogin();
             await RunAsync(async () =>
@@ -89,6 +100,7 @@ public sealed class MainPage : ContentPage
                 Connect(ConfiguredServerAddress());
                 if (await api!.RestoreAsync()) await LoadSessionAsync();
             });
+            await CheckUpdateAsync();
         };
     }
 
@@ -133,6 +145,9 @@ public sealed class MainPage : ContentPage
     private void Connect(string address)
     {
         server = ServerAddress.Parse(address);
+        availableUpdate = null;
+        updateCard.IsVisible = false;
+        lastUpdateCheck = default;
         http?.Dispose();
         http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false })
         { BaseAddress = server, Timeout = TimeSpan.FromSeconds(45) };
@@ -180,6 +195,8 @@ public sealed class MainPage : ContentPage
         ResetScroll(); body.Clear(); showingForm = true;
         var settings = new VerticalStackLayout { Spacing = 14, MaximumWidthRequest = 620 };
         settings.Add(Text(L("MobileSettings"), 28));
+        settings.Add(Text(Format("AppCurrentVersion", AppInfo.Current.VersionString), 14));
+        settings.Add(SecondaryButton("AppCheckUpdates", () => CheckUpdateAsync(manual: true)));
         settings.Add(SecondaryButton("TaskNotification", TaskNotifications.RequestPermissionAsync));
         settings.Add(SecondaryButton("NotificationExactTime", TaskNotifications.OpenExactAlarmSettingsAsync));
         settings.Add(Text(L("NotificationDeviceHint"), 14));
@@ -194,6 +211,7 @@ public sealed class MainPage : ContentPage
                 household = await api.GetHouseholdAsync(member.Id);
             }
             ShowSettings();
+            await CheckUpdateAsync(manual: true);
         }));
         settings.Add(SecondaryButton("ToggleTheme", () =>
         {
@@ -207,6 +225,63 @@ public sealed class MainPage : ContentPage
         settings.Add(SecondaryButton("MobileBack", () =>
         { if (session is null) ShowLogin(); else ShowDashboard(); return Task.CompletedTask; }));
         body.Add(Card(settings));
+    }
+
+    private async Task CheckUpdateAsync(bool manual = false)
+    {
+        if (checkingUpdate || (!manual && DateTimeOffset.UtcNow - lastUpdateCheck < TimeSpan.FromMinutes(15))) return;
+        checkingUpdate = true;
+        try
+        {
+            var address = server ?? ServerAddress.Parse(ConfiguredServerAddress());
+            using var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false })
+                { BaseAddress = address, Timeout = TimeSpan.FromSeconds(10) };
+            var release = await new AndroidUpdateClient(client).CheckAsync();
+            if (server is not null && server != address) return;
+            lastUpdateCheck = DateTimeOffset.UtcNow;
+            availableUpdate = release?.VersionCode > AppUpdateInstaller.InstalledVersion ? release : null;
+            updateServer = address;
+            updateContent.Clear();
+            updateCard.IsVisible = availableUpdate is not null;
+            if (availableUpdate is { } update)
+            {
+                updateContent.Add(Text(Format("AppUpdateAvailable", update.VersionName), 20));
+                updateContent.Add(Text(L("AppUpdateHint"), 14));
+                updateContent.Add(Button("AppUpdateNow", InstallUpdateAsync));
+            }
+            else if (manual) { message.Text = L(release is null ? "AppUpdateCheckFailed" : "AppUpToDate"); message.IsVisible = true; }
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or
+            System.Text.Json.JsonException or InvalidDataException)
+        {
+            lastUpdateCheck = DateTimeOffset.UtcNow;
+            if (manual) { message.Text = L("AppUpdateCheckFailed"); message.IsVisible = true; }
+        }
+        finally { checkingUpdate = false; }
+    }
+
+    private async Task InstallUpdateAsync()
+    {
+        if (availableUpdate is not { } release || updateServer is null) return;
+        var progressLabel = Text(L("AppUpdateDownloading"), 14);
+        updateContent.Add(progressLabel);
+        try
+        {
+            using var client = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false, UseCookies = false })
+                { BaseAddress = updateServer, Timeout = TimeSpan.FromMinutes(5) };
+            var path = System.IO.Path.Combine(FileSystem.CacheDirectory, "updates", "HamsterHub.apk");
+            var progress = new Progress<double>(value => progressLabel.Text =
+                Format("AppUpdateProgress", (int)(value * 100)));
+            using var deadline = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+            await new AndroidUpdateClient(client).DownloadAsync(release, path, progress, deadline.Token);
+            if (AppUpdateInstaller.NeedsPermission &&
+                !await DisplayAlertAsync(L("AppUpdateNow"), L("AppUpdatePermission"), L("AppUpdateContinue"), L("AppUpdateLater"))) return;
+            AppUpdateInstaller.Start(path, release);
+            progressLabel.Text = L("AppUpdateInstallReady");
+        }
+        catch (Exception exception) when (exception is HttpRequestException or OperationCanceledException or
+            IOException or Android.Content.ActivityNotFoundException or Java.Lang.SecurityException)
+        { progressLabel.Text = L("AppUpdateFailed"); }
     }
 
     private Entry Field(string key, bool password = false)
@@ -275,6 +350,7 @@ public sealed class MainPage : ContentPage
             }
             password.Text = "";
             await LoadSessionAsync();
+            await CheckUpdateAsync();
         });
         form.Add(login);
         form.Add(SecondaryButton("MobileCreateFamily", async () =>

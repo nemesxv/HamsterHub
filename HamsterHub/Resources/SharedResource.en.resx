@@ -504,4 +504,18 @@
   <data name="NotificationExactTime" xml:space="preserve"><value>Allow reminders at the chosen time</value></data>
   <data name="NotificationDeviceHint" xml:space="preserve"><value>Allow notifications on this child's device. Reminders work while the app is in the background. Android may delay them unless alarms are allowed. Force-stopping the app pauses reminders until you open it again.</value></data>
   <data name="NotificationSyncFailed" xml:space="preserve"><value>Your dashboard refreshed, but reminder changes could not be downloaded. The last synced reminders remain active. Try refreshing again.</value></data>
+  <data name="AppCheckUpdates" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="AppCurrentVersion" xml:space="preserve"><value>App version: {0}</value></data>
+  <data name="AppUpdateAvailable" xml:space="preserve"><value>Version {0} is available</value></data>
+  <data name="AppUpdateCheckFailed" xml:space="preserve"><value>Could not check for updates. Try again later.</value></data>
+  <data name="AppUpdateContinue" xml:space="preserve"><value>Continue</value></data>
+  <data name="AppUpdateDownloading" xml:space="preserve"><value>Downloading update…</value></data>
+  <data name="AppUpdateFailed" xml:space="preserve"><value>Update could not be installed. Check your connection and try again.</value></data>
+  <data name="AppUpdateHint" xml:space="preserve"><value>Update with one tap. Your account and settings will stay.</value></data>
+  <data name="AppUpdateInstallReady" xml:space="preserve"><value>Confirm installation in the Android window.</value></data>
+  <data name="AppUpdateLater" xml:space="preserve"><value>Later</value></data>
+  <data name="AppUpdateNow" xml:space="preserve"><value>Update app</value></data>
+  <data name="AppUpdatePermission" xml:space="preserve"><value>Android needs a one-time permission for updates from HamsterHub. Enable “Allow from this source”, then go back to continue installation.</value></data>
+  <data name="AppUpdateProgress" xml:space="preserve"><value>Downloading update: {0}%</value></data>
+  <data name="AppUpToDate" xml:space="preserve"><value>Your app is up to date.</value></data>
 </root>

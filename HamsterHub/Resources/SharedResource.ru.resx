@@ -504,4 +504,18 @@
   <data name="NotificationExactTime" xml:space="preserve"><value>Разрешить напоминания в выбранное время</value></data>
   <data name="NotificationDeviceHint" xml:space="preserve"><value>Разрешите уведомления на устройстве ребёнка. Напоминания работают в фоне. Android может задерживать их, пока не разрешены будильники. Принудительная остановка приложения приостанавливает напоминания до следующего открытия.</value></data>
   <data name="NotificationSyncFailed" xml:space="preserve"><value>Данные обновлены, но изменения напоминаний загрузить не удалось. Последние загруженные напоминания продолжают работать. Обновите ещё раз.</value></data>
+  <data name="AppCheckUpdates" xml:space="preserve"><value>Проверить обновления</value></data>
+  <data name="AppCurrentVersion" xml:space="preserve"><value>Версия приложения: {0}</value></data>
+  <data name="AppUpdateAvailable" xml:space="preserve"><value>Доступна версия {0}</value></data>
+  <data name="AppUpdateCheckFailed" xml:space="preserve"><value>Не удалось проверить обновления. Попробуйте позже.</value></data>
+  <data name="AppUpdateContinue" xml:space="preserve"><value>Продолжить</value></data>
+  <data name="AppUpdateDownloading" xml:space="preserve"><value>Скачиваем обновление…</value></data>
+  <data name="AppUpdateFailed" xml:space="preserve"><value>Обновление не установлено. Проверьте интернет и попробуйте ещё раз.</value></data>
+  <data name="AppUpdateHint" xml:space="preserve"><value>Обновите приложение одним нажатием. Аккаунт и настройки сохранятся.</value></data>
+  <data name="AppUpdateInstallReady" xml:space="preserve"><value>Подтвердите установку в окне Android.</value></data>
+  <data name="AppUpdateLater" xml:space="preserve"><value>Позже</value></data>
+  <data name="AppUpdateNow" xml:space="preserve"><value>Обновить приложение</value></data>
+  <data name="AppUpdatePermission" xml:space="preserve"><value>Android попросит один раз разрешить обновления из HamsterHub. Включите «Разрешить из этого источника» и вернитесь назад — установка продолжится.</value></data>
+  <data name="AppUpdateProgress" xml:space="preserve"><value>Скачиваем обновление: {0}%</value></data>
+  <data name="AppUpToDate" xml:space="preserve"><value>Установлена последняя версия приложения.</value></data>
 </root>

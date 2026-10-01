@@ -245,3 +245,17 @@ against the task's current pet, so later edits do not erase earned balances.
 Recurrence is checked by task and user regardless of pet changes. The down
 migration refuses to invent pet/category IDs for general tasks; use the backup
 when returning to the previous schema after general tasks have been created.
+
+## Android release discovery and installation
+
+`GET /download/android/version` is anonymous and returns `AndroidReleaseDto` only
+when the metadata sidecar and mounted APK match in size/checksum. It has no-store
+cache headers. `AndroidUpdateClient` is separate from authenticated household APIs:
+it checks release metadata, downloads without tokens/redirects, limits size,
+verifies SHA-256, and moves a valid artifact into the cache after a complete download.
+Android's `AppUpdateInstaller` checks archive package/version and signing identity,
+shares only the private update cache using a dedicated non-exported FileProvider,
+and opens the system installer. REQUEST_INSTALL_PACKAGES is declared; Android 8+
+requires per-app consent. Startup/resume checks are throttled and optional network
+failure leaves the normal app usable. Deployment generates metadata from the signed
+APK with `scripts/Write-AndroidRelease.ps1` and verifies/restores APK+metadata together.

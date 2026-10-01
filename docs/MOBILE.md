@@ -211,3 +211,39 @@ check verified a task without a pet/category, creation and removal of its catego
 a two-photo report, authorized image retrieval, and the resulting points balance.
 The website and Android 0.1.14 Release builds completed with zero warnings/errors;
 JavaScript syntax and parity of all 480 Russian/English resource keys were checked.
+
+## Self-hosted in-app updates
+
+The Android app checks `/download/android/version` on startup/resume (at most once
+per 15 minutes), including before sign-in. Settings also offers a manual check.
+A newer version shows a localized card with one Update button; downloads display
+progress and do not change login tokens or preferences. Network failures during
+an automatic check do not interrupt normal use.
+
+Tapping Update downloads the same server's `/download/android` into a private
+`cache/updates` directory. The client checks its exact size and SHA-256, package
+identity, increasing version code and the installed signing certificate. Android
+then verifies and installs the update, with user confirmation. On Android 8+,
+the first attempt explains and opens the per-app "Allow from this source" page;
+returning to the app continues installation. This is self-hosted APK distribution,
+not a Google Play update flow. Keep the same signing key for future releases.
+
+Version metadata is `Downloads/HamsterHub.version.json` next to the APK, containing
+packageName, versionCode, versionName, sizeBytes and sha256. Generate it from the
+actual signed APK using `scripts/Write-AndroidRelease.ps1`. The version endpoint
+returns 404 when absent/invalid and 503 while metadata and APK do not match, so
+publication cannot advertise a mismatched artifact. Downloads carry no bearer
+tokens and follow no redirects. Interrupted/corrupt downloads leave the previous
+cache intact; retries can reuse a fully verified APK.
+
+The existing Windows homelab deployment generates this metadata after the Release
+APK build, backs up the previous APK and metadata, publishes each via temporary
+files, verifies the live version checksum and download length, and restores the
+previous pair on publication failure. Its downloaded APK and version metadata
+are mounted in Docker at `/app/Downloads`. Other self-hosted deployment setups
+must publish both artifacts with that same filename and keep versionCode increasing.
+
+Existing 0.1.15 clients do not have the updater: install the first updater-enabled
+APK once from the website. Subsequent updates use the in-app button. Real-device
+installer, permissions and login-preservation acceptance checks remain required;
+backend/client tests do not substitute for these Android checks.

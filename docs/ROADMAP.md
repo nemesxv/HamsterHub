@@ -105,3 +105,13 @@ its implementation and proportionate verification are complete.
 - Mobile Settings groups language, theme, and logout.
 - Camera/gallery source choices, multi-photo reports, removable previews.
 - Verification scope: builds and migration review; no unit tests or emulator per request.
+
+## Self-hosted in-app updater (2026-10-01)
+
+- Implemented: startup/resume release checks, Update card, manual Settings check,
+  download progress, private verified APK cache, signing/version checks and Android
+  installer handoff with one-time source-permission continuation.
+- Implemented: anonymous release metadata API and deployment generation/publication
+  with backup, verification and rollback of the previous APK/metadata pair.
+- Acceptance pending: actual Android installation from an older version, source
+  permission denial/approval, interrupted download and preserved login/settings.
