@@ -264,3 +264,9 @@ Update controls are Settings-only. The automatic-check preference is persisted o
 device, defaults to enabled, and gates startup/resume/login checks; manual checks bypass
 it. The website shares `_DashboardAppDownload` between both dashboard welcome areas,
 hiding the compact link when no deployed APK is present. The global banner is removed.
+
+Dashboard data uses a one-minute repeating dispatcher timer, stopped when the window
+is inactive/backgrounded and restarted on activation/resume. It skips logged-out,
+busy, Settings/edit and completion states. RefreshView handles forced pull-down data
+refresh. Automatic data refresh preserves scroll; APK version checks retain their
+separate opt-in/out setting and cadence.

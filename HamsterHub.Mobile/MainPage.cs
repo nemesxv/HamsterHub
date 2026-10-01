@@ -41,6 +41,8 @@ public sealed class MainPage : ContentPage
     private readonly Grid columns = new() { ColumnSpacing = 24, RowSpacing = 24 };
     private readonly ScrollView scroll = new();
     private readonly RefreshView refreshView = new();
+    private readonly Microsoft.Maui.Dispatching.IDispatcherTimer dashboardRefreshTimer;
+    private bool foreground = true;
     private readonly List<FileResult> selectedPhotos = [];
     private bool initialized;
     private bool busy;
@@ -75,6 +77,14 @@ public sealed class MainPage : ContentPage
             finally { refreshView.IsRefreshing = false; }
         };
         Content = refreshView;
+        dashboardRefreshTimer = Dispatcher.CreateTimer();
+        dashboardRefreshTimer.Interval = TimeSpan.FromMinutes(1);
+        dashboardRefreshTimer.IsRepeating = true;
+        dashboardRefreshTimer.Tick += async (_, _) =>
+        {
+            if (!foreground || busy || session is null || member is null || showingCompletion || showingForm) return;
+            await RunAsync(() => RefreshAsync(preserveScroll: true));
+        };
         SizeChanged += (_, _) =>
         {
             var nextWide = Width >= 720;
@@ -87,13 +97,21 @@ public sealed class MainPage : ContentPage
             if (initialized) return;
             initialized = true;
             if (Window is { } window)
+            {
+                window.Activated += (_, _) => { foreground = true; dashboardRefreshTimer.Start(); };
+                window.Deactivated += (_, _) => { foreground = false; dashboardRefreshTimer.Stop(); };
+                window.Stopped += (_, _) => { foreground = false; dashboardRefreshTimer.Stop(); };
                 window.Resumed += async (_, _) =>
                 {
+                    foreground = true;
+                    dashboardRefreshTimer.Start();
                     await RunAsync(async () => { AppUpdateInstaller.Continue(); await Task.CompletedTask; });
                     if (session is not null && member is not null && !showingCompletion && !showingForm)
                         await RunAsync(RefreshAsync);
                     await CheckUpdateAsync();
                 };
+            }
+            dashboardRefreshTimer.Start();
             ShowLogin();
             await RunAsync(async () =>
             {
@@ -389,8 +407,11 @@ public sealed class MainPage : ContentPage
         await RefreshAsync();
     }
 
-    private async Task RefreshAsync()
+    private Task RefreshAsync() => RefreshAsync(preserveScroll: false);
+
+    private async Task RefreshAsync(bool preserveScroll)
     {
+        var position = scroll.ScrollY;
         var dashboardTask = api!.GetDashboardAsync(member!.Id);
         var householdTask = api.GetHouseholdAsync(member.Id);
         await Task.WhenAll(dashboardTask, householdTask);
@@ -400,12 +421,13 @@ public sealed class MainPage : ContentPage
         try { await TaskNotifications.ConfigureAsync(server!, member!, api!); }
         catch (HttpRequestException) { message.Text = L("NotificationSyncFailed"); }
         catch (TaskCanceledException) { message.Text = L("NotificationSyncFailed"); }
-        ShowDashboard();
+        ShowDashboard(resetScroll: !preserveScroll);
+        if (preserveScroll) await scroll.ScrollToAsync(0, position, false);
     }
 
-    private void ShowDashboard()
+    private void ShowDashboard(bool resetScroll = true)
     {
-        ResetScroll();
+        if (resetScroll) ResetScroll();
         showingCompletion = false;
         showingForm = false;
         body.Clear();
@@ -413,7 +435,6 @@ public sealed class MainPage : ContentPage
         AddSettings();
         if (member is not null)
         {
-            body.Add(SecondaryButton("MobileRefresh", RefreshAsync));
             if (lastUpdatedAt is { } refreshed)
                 body.Add(Text(Format("MobileUpdatedAt", refreshed.LocalDateTime.ToString("t",
                     System.Globalization.CultureInfo.GetCultureInfo(Strings.Culture))), 13));

@@ -119,3 +119,7 @@ its implementation and proportionate verification are complete.
 - Update placement refinement: Settings-only update controls and persisted automatic
   checking option; compact website download links in both dashboard welcome areas.
   Local tests/builds skipped by request; publication uses the existing autodeploy flow.
+
+- Dashboard refresh refinement: removed the Refresh button, added foreground data
+  refresh every minute, retained forced pull-down refresh, and paused the timer in
+  forms/background. Local tests/builds skipped by the continuing user preference.

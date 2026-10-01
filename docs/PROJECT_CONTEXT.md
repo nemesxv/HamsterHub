@@ -222,3 +222,12 @@ by default; disabling it leaves manual checking and installation available. Webs
 parent and child welcome areas contain a compact Android download link when the APK
 exists, replacing the layout-wide download banner. This UI revision skips local tests
 and builds at the user's request; the existing CI/autodeploy workflow builds releases.
+
+### Dashboard data refresh
+
+The Android dashboard has no manual Refresh button. While the app is in the foreground,
+it refreshes task/approval/reward data every minute, retaining the scroll position.
+Pulling down forces a refresh immediately. Periodic refresh pauses in Settings, edit
+forms, completion forms, and during another operation; backgrounding stops the timer.
+App-version checks and installation remain separate Settings controls. This change
+continues the requested skip of local tests/builds and uses automatic deployment.
