@@ -115,3 +115,7 @@ its implementation and proportionate verification are complete.
   with backup, verification and rollback of the previous APK/metadata pair.
 - Acceptance pending: actual Android installation from an older version, source
   permission denial/approval, interrupted download and preserved login/settings.
+
+- Update placement refinement: Settings-only update controls and persisted automatic
+  checking option; compact website download links in both dashboard welcome areas.
+  Local tests/builds skipped by request; publication uses the existing autodeploy flow.

@@ -16,6 +16,7 @@
             <span class="kid-sparkles" aria-hidden="true">✦ · ✧</span>
             <h1>@L["KidWelcome", Model.ChildName]</h1>
             <p>@(string.IsNullOrWhiteSpace(Model.HouseholdName) ? L["WaitingForFamily"] : L["KidLetsCare"])</p>
+            <partial name="_DashboardAppDownload" />
         </div>
         <div class="kid-star-jar" aria-label="@L["PointsLabel", Model.CurrentPoints]">
             <span aria-hidden="true">★</span>

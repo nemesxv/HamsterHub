@@ -1,0 +1,11 @@
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<SharedResource> L
+@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
+@if (System.IO.File.Exists(System.IO.Path.Combine(HostEnvironment.ContentRootPath, "Downloads", "HamsterHub.apk")))
+{
+    <a class="dashboard-app-link" asp-controller="AppDownload" asp-action="Android" download="HamsterHub.apk">
+        <span aria-hidden="true">📱</span>
+        <span>@L["DownloadAndroidApp"]</span>
+        <span aria-hidden="true">↓</span>
+    </a>
+}

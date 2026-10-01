@@ -518,4 +518,5 @@
   <data name="AppUpdatePermission" xml:space="preserve"><value>Android needs a one-time permission for updates from HamsterHub. Enable “Allow from this source”, then go back to continue installation.</value></data>
   <data name="AppUpdateProgress" xml:space="preserve"><value>Downloading update: {0}%</value></data>
   <data name="AppUpToDate" xml:space="preserve"><value>Your app is up to date.</value></data>
+  <data name="AppAutoCheckUpdates" xml:space="preserve"><value>Automatically check for updates</value></data>
 </root>

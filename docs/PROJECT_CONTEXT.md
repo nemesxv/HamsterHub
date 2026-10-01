@@ -214,3 +214,11 @@ continues the installer. Accounts and settings remain intact. Release metadata,
 artifact checksums and matching package/signing identity protect the update path.
 Existing clients require one manual upgrade to receive this updater. Android
 real-device installation acceptance is still pending.
+
+### Update and download placement (2026-10-01)
+
+App update controls live only in Settings. A saved automatic-check switch is enabled
+by default; disabling it leaves manual checking and installation available. Website
+parent and child welcome areas contain a compact Android download link when the APK
+exists, replacing the layout-wide download banner. This UI revision skips local tests
+and builds at the user's request; the existing CI/autodeploy workflow builds releases.

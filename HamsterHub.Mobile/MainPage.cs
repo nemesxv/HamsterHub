@@ -12,6 +12,7 @@ public sealed class MainPage : ContentPage
     private const string DefaultServerAddress = "http://95.165.103.141:5080/";
     private const string CustomServerPreference = "custom-server";
     private const string LegacyServerPreference = "server";
+    private const string AutoUpdateCheckPreference = "automatically-check-updates";
     private static readonly Color Ink = Color.FromArgb("173D3A");
     private static readonly Color InkSoft = Color.FromArgb("526D69");
     private static readonly Color Cream = Color.FromArgb("FFFAF0");
@@ -59,7 +60,6 @@ public sealed class MainPage : ContentPage
         root.Add(BrandHeader());
         updateCard = Card(updateContent, Mint);
         updateCard.IsVisible = false;
-        root.Add(updateCard);
         root.Add(activity);
         root.Add(message);
         root.Add(body);
@@ -196,7 +196,21 @@ public sealed class MainPage : ContentPage
         var settings = new VerticalStackLayout { Spacing = 14, MaximumWidthRequest = 620 };
         settings.Add(Text(L("MobileSettings"), 28));
         settings.Add(Text(Format("AppCurrentVersion", AppInfo.Current.VersionString), 14));
+        var automaticUpdates = new Switch { IsToggled = Preferences.Default.Get(AutoUpdateCheckPreference, true) };
+        SemanticProperties.SetDescription(automaticUpdates, L("AppAutoCheckUpdates"));
+        var automaticUpdateRow = new Grid { ColumnDefinitions = { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) }, ColumnSpacing = 12 };
+        automaticUpdateRow.Add(Text(L("AppAutoCheckUpdates"), 16));
+        automaticUpdateRow.Add(automaticUpdates, 1);
+        automaticUpdates.Toggled += async (_, args) =>
+        {
+            Preferences.Default.Set(AutoUpdateCheckPreference, args.Value);
+            if (args.Value) await CheckUpdateAsync();
+        };
+        settings.Add(automaticUpdateRow);
         settings.Add(SecondaryButton("AppCheckUpdates", () => CheckUpdateAsync(manual: true)));
+        if (updateCard.Parent is Microsoft.Maui.Controls.Layout previousSettings) previousSettings.Remove(updateCard);
+        RenderUpdateCard();
+        settings.Add(updateCard);
         settings.Add(SecondaryButton("TaskNotification", TaskNotifications.RequestPermissionAsync));
         settings.Add(SecondaryButton("NotificationExactTime", TaskNotifications.OpenExactAlarmSettingsAsync));
         settings.Add(Text(L("NotificationDeviceHint"), 14));
@@ -211,7 +225,6 @@ public sealed class MainPage : ContentPage
                 household = await api.GetHouseholdAsync(member.Id);
             }
             ShowSettings();
-            await CheckUpdateAsync(manual: true);
         }));
         settings.Add(SecondaryButton("ToggleTheme", () =>
         {
@@ -229,6 +242,7 @@ public sealed class MainPage : ContentPage
 
     private async Task CheckUpdateAsync(bool manual = false)
     {
+        if (!manual && !Preferences.Default.Get(AutoUpdateCheckPreference, true)) return;
         if (checkingUpdate || (!manual && DateTimeOffset.UtcNow - lastUpdateCheck < TimeSpan.FromMinutes(15))) return;
         checkingUpdate = true;
         try
@@ -241,15 +255,8 @@ public sealed class MainPage : ContentPage
             lastUpdateCheck = DateTimeOffset.UtcNow;
             availableUpdate = release?.VersionCode > AppUpdateInstaller.InstalledVersion ? release : null;
             updateServer = address;
-            updateContent.Clear();
-            updateCard.IsVisible = availableUpdate is not null;
-            if (availableUpdate is { } update)
-            {
-                updateContent.Add(Text(Format("AppUpdateAvailable", update.VersionName), 20));
-                updateContent.Add(Text(L("AppUpdateHint"), 14));
-                updateContent.Add(Button("AppUpdateNow", InstallUpdateAsync));
-            }
-            else if (manual) { message.Text = L(release is null ? "AppUpdateCheckFailed" : "AppUpToDate"); message.IsVisible = true; }
+            RenderUpdateCard();
+            if (availableUpdate is null && manual) { message.Text = L(release is null ? "AppUpdateCheckFailed" : "AppUpToDate"); message.IsVisible = true; }
         }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or
             System.Text.Json.JsonException or InvalidDataException)
@@ -258,6 +265,16 @@ public sealed class MainPage : ContentPage
             if (manual) { message.Text = L("AppUpdateCheckFailed"); message.IsVisible = true; }
         }
         finally { checkingUpdate = false; }
+    }
+
+    private void RenderUpdateCard()
+    {
+        updateContent.Clear();
+        updateCard.IsVisible = availableUpdate is not null;
+        if (availableUpdate is not { } update) return;
+        updateContent.Add(Text(Format("AppUpdateAvailable", update.VersionName), 20));
+        updateContent.Add(Text(L("AppUpdateHint"), 14));
+        updateContent.Add(Button("AppUpdateNow", InstallUpdateAsync));
     }
 
     private async Task InstallUpdateAsync()

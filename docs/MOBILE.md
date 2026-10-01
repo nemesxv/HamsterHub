@@ -216,7 +216,7 @@ JavaScript syntax and parity of all 480 Russian/English resource keys were check
 
 The Android app checks `/download/android/version` on startup/resume (at most once
 per 15 minutes), including before sign-in. Settings also offers a manual check.
-A newer version shows a localized card with one Update button; downloads display
+A newer version shows a localized card inside Settings with one Update button; downloads display
 progress and do not change login tokens or preferences. Network failures during
 an automatic check do not interrupt normal use.
 

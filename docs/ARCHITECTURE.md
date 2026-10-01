@@ -259,3 +259,8 @@ and opens the system installer. REQUEST_INSTALL_PACKAGES is declared; Android 8+
 requires per-app consent. Startup/resume checks are throttled and optional network
 failure leaves the normal app usable. Deployment generates metadata from the signed
 APK with `scripts/Write-AndroidRelease.ps1` and verifies/restores APK+metadata together.
+
+Update controls are Settings-only. The automatic-check preference is persisted on the
+device, defaults to enabled, and gates startup/resume/login checks; manual checks bypass
+it. The website shares `_DashboardAppDownload` between both dashboard welcome areas,
+hiding the compact link when no deployed APK is present. The global banner is removed.

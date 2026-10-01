@@ -1,7 +1,6 @@
 @using System.Globalization
 @using Microsoft.Extensions.Localization
 @inject IStringLocalizer<SharedResource> L
-@inject Microsoft.AspNetCore.Hosting.IWebHostEnvironment HostEnvironment
 @{
     var currentCulture = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
     var nextCulture = currentCulture == "ru" ? "en" : "ru";
@@ -53,19 +52,6 @@
             </div>
         </nav>
     </header>
-
-    @if (Context.Request.Path == "/" &&
-        System.IO.File.Exists(System.IO.Path.Combine(HostEnvironment.ContentRootPath, "Downloads", "HamsterHub.apk")))
-    {
-        <aside class="app-download" aria-label="@L["AndroidAppTitle"]">
-            <div>
-                <strong>@L["AndroidAppTitle"]</strong>
-                <p id="app-download-help">@L["AndroidAppHelp"]</p>
-            </div>
-            <a class="nav-button nav-button-primary" asp-controller="AppDownload" asp-action="Android"
-               download="HamsterHub.apk" aria-describedby="app-download-help">@L["DownloadAndroidApp"]</a>
-        </aside>
-    }
 
     <main role="main">
         @RenderBody()

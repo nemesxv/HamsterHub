@@ -518,4 +518,5 @@
   <data name="AppUpdatePermission" xml:space="preserve"><value>Android попросит один раз разрешить обновления из HamsterHub. Включите «Разрешить из этого источника» и вернитесь назад — установка продолжится.</value></data>
   <data name="AppUpdateProgress" xml:space="preserve"><value>Скачиваем обновление: {0}%</value></data>
   <data name="AppUpToDate" xml:space="preserve"><value>Установлена последняя версия приложения.</value></data>
+  <data name="AppAutoCheckUpdates" xml:space="preserve"><value>Автоматически проверять обновления</value></data>
 </root>
