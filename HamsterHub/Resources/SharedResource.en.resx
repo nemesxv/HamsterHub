@@ -566,4 +566,13 @@
   <data name="MobileSwitchAccount" xml:space="preserve"><value>Switch account</value></data>
   <data name="MobileSavedSessionExpired" xml:space="preserve"><value>Enter your password to sign in to this saved account again.</value></data>
   <data name="MobileAnotherAccount" xml:space="preserve"><value>Another account</value></data>
+  <data name="MobileTabToday" xml:space="preserve"><value>Today</value></data>
+  <data name="MobileTabFamily" xml:space="preserve"><value>Family</value></data>
+  <data name="MobileTabHistory" xml:space="preserve"><value>History</value></data>
+  <data name="MobileSelectedSection" xml:space="preserve"><value>Selected</value></data>
+  <data name="MobileMoreHistory" xml:space="preserve"><value>Show more</value></data>
+  <data name="MobileNothingToReview" xml:space="preserve"><value>All caught up</value></data>
+  <data name="MobileNoPets" xml:space="preserve"><value>Family pets will appear here.</value></data>
+  <data name="MobileNoRewardHistory" xml:space="preserve"><value>Reward requests and received rewards will appear here.</value></data>
+  <data name="MobileBackgroundRefreshFailed" xml:space="preserve"><value>Could not refresh. Showing the last loaded data; pull down to retry.</value></data>
 </root>

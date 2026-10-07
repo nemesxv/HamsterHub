@@ -299,3 +299,11 @@ refreshed tokens to the selected account only. Saved accounts are keyed by serve
 passwords are never persisted. Switching cancels reminders before replacing the active
 session. PhotoViewerPage runs outside the dashboard ScrollView and pauses dashboard
 refresh while presented. AccountScreens/VisualScreens isolate the new presentation code.
+
+ScreenNavigation retains detached MAUI controls and their validation dictionaries for
+nested navigation within the active account. Login, successful dashboard reloads and
+language changes discard those snapshots. The dashboard section and its scroll offset
+are kept in memory; account/household changes reset them. A screen revision guards
+delayed scrolling and background fetches against applying to a different screen.
+Periodic reads do not disable controls, and only responses for the unchanged current
+session/screen may rebuild the dashboard. Dashboard navigation is hidden on subpages.

@@ -29,6 +29,7 @@ public sealed partial class MainPage : ContentPage
     private DashboardDto? dashboard;
     private HouseholdHubDto? household;
     private DateTimeOffset? lastUpdatedAt;
+    private Label? refreshTimestamp;
     private AndroidReleaseDto? availableUpdate;
     private Uri? updateServer;
     private DateTimeOffset lastUpdateCheck;
@@ -38,7 +39,6 @@ public sealed partial class MainPage : ContentPage
     private readonly VerticalStackLayout body = new() { Spacing = 16 };
     private readonly Label message = new() { FontSize = 16, IsVisible = false };
     private readonly ActivityIndicator activity = new() { IsVisible = false, HeightRequest = 24 };
-    private readonly Grid columns = new() { ColumnSpacing = 24, RowSpacing = 24 };
     private readonly ScrollView scroll = new();
     private readonly RefreshView refreshView = new();
     private readonly Microsoft.Maui.Dispatching.IDispatcherTimer dashboardRefreshTimer;
@@ -46,7 +46,6 @@ public sealed partial class MainPage : ContentPage
     private readonly List<FileResult> selectedPhotos = [];
     private bool initialized;
     private bool busy;
-    private bool wide;
     private bool showingCompletion;
     private bool showingForm;
     private bool showingSettings;
@@ -81,21 +80,16 @@ public sealed partial class MainPage : ContentPage
             }
             finally { refreshView.IsRefreshing = false; }
         };
-        Content = refreshView;
+        var page = new Grid { RowDefinitions = { new(GridLength.Star), new(GridLength.Auto) } };
+        page.Add(refreshView); page.Add(dashboardNavigation, 0, 1);
+        Content = page;
         dashboardRefreshTimer = Dispatcher.CreateTimer();
         dashboardRefreshTimer.Interval = TimeSpan.FromMinutes(1);
         dashboardRefreshTimer.IsRepeating = true;
         dashboardRefreshTimer.Tick += async (_, _) =>
         {
             if (!foreground || busy || session is null || member is null || showingCompletion || showingForm || photoViewerOpen) return;
-            await RunAsync(() => RefreshAsync(preserveScroll: true));
-        };
-        SizeChanged += (_, _) =>
-        {
-            var nextWide = Width >= 720;
-            if (nextWide == wide) return;
-            wide = nextWide;
-            ArrangeColumns();
+            await RefreshInBackgroundAsync();
         };
         Loaded += async (_, _) =>
         {
@@ -158,7 +152,11 @@ public sealed partial class MainPage : ContentPage
         return string.IsNullOrWhiteSpace(legacy) ? DefaultServerAddress : legacy;
     }
 
-    private void ResetScroll() => Dispatcher.Dispatch(() => _ = scroll.ScrollToAsync(0, 0, false));
+    private void ResetScroll()
+    {
+        screenRevision++;
+        RestoreScroll(0);
+    }
 
     private static void SaveServerOverride(string address)
     {
@@ -185,7 +183,8 @@ public sealed partial class MainPage : ContentPage
     {
         var button = new Button { Text = string.IsNullOrEmpty(ButtonIcon(key)) ? L(key) : ButtonIcon(key) + "  " + L(key), MinimumHeightRequest = 52, CornerRadius = 16,
             Margin = new Thickness(0, 0, 4, 4), BackgroundColor = MintDeep, TextColor = Colors.White,
-            FontAttributes = FontAttributes.Bold, FontSize = 16, Padding = new Thickness(16, 10) };
+            FontAttributes = FontAttributes.Bold, FontSize = 16, LineBreakMode = LineBreakMode.WordWrap,
+            Padding = new Thickness(12, 10) };
         SemanticProperties.SetDescription(button, L(key));
         button.Clicked += async (_, _) =>
         {
@@ -220,13 +219,20 @@ public sealed partial class MainPage : ContentPage
         return border;
     }
 
-    private void AddSettings() => body.Add(SecondaryButton("MobileSettings", () =>
-    { ShowSettings(); return Task.CompletedTask; }));
+    private void AddSettings()
+    {
+        var settings = SecondaryButton("MobileSettings", () => { ShowSettings(); return Task.CompletedTask; });
+        settings.HorizontalOptions = LayoutOptions.End;
+        body.Add(settings);
+    }
 
     private void ShowSettings()
     {
+        if (!showingSettings) RememberScreen();
+        showingCompletion = false;
         ResetScroll(); body.Clear(); showingForm = true; showingSettings = true; formInputs.Clear(); formPickers.Clear(); formGroups.Clear(); formPhotoErrors.Clear();
         var settings = new VerticalStackLayout { Spacing = 14, MaximumWidthRequest = 620 };
+        settings.Add(BackButton());
         settings.Add(Text(L("MobileSettings"), 28));
         var automaticUpdates = new Switch { IsToggled = Preferences.Default.Get(AutoUpdateCheckPreference, true) };
         SemanticProperties.SetDescription(automaticUpdates, L("AppAutoCheckUpdates"));
@@ -256,6 +262,7 @@ public sealed partial class MainPage : ContentPage
         }
         settings.Add(SecondaryButton("SwitchLanguage", async () =>
         {
+            previousScreens.Clear();
             Strings.Culture = Strings.Culture == "ru" ? "en" : "ru";
             Preferences.Default.Set("language", Strings.Culture);
             if (api is not null) api.Culture = Strings.Culture;
@@ -279,8 +286,6 @@ public sealed partial class MainPage : ContentPage
             { TaskNotifications.Clear(); await api!.LogoutAsync(); ShowLogin(); }));
             settings.Add(SecondaryButton("Logout", async () => { TaskNotifications.Clear(); await api!.LogoutAsync(); ShowLogin(); }));
         }
-        settings.Add(SecondaryButton("MobileBack", () =>
-        { if (session is null) ShowLogin(); else ShowDashboard(); return Task.CompletedTask; }));
         body.Add(Card(settings));
     }
 
@@ -402,7 +407,7 @@ public sealed partial class MainPage : ContentPage
 
     private bool ValidateInputs()
     {
-        Entry? first = null;
+        VisualElement? first = null;
         message.Text = ""; message.IsVisible = false;
         foreach (var (input, details) in formInputs)
         {
@@ -419,6 +424,7 @@ public sealed partial class MainPage : ContentPage
             details.Error.IsVisible = details.Required && picker.SelectedItem is null;
             details.Error.Text = details.Error.IsVisible ? L("FieldRequired") : "";
             additionalErrors |= details.Error.IsVisible;
+            if (details.Error.IsVisible) first ??= picker;
         }
         foreach (var group in formGroups)
         {
@@ -426,8 +432,13 @@ public sealed partial class MainPage : ContentPage
             group.Error.Text = reason is null ? "" : L(reason);
             group.Error.IsVisible = reason is not null;
             additionalErrors |= group.Error.IsVisible;
+            if (group.Error.IsVisible) first ??= group.Error;
         }
-        first?.Focus();
+        if (first is { } invalid)
+        {
+            if (invalid is Entry entry) entry.Focus();
+            Dispatcher.DispatchDelayed(TimeSpan.FromMilliseconds(60), () => _ = scroll.ScrollToAsync(invalid, ScrollToPosition.Center, true));
+        }
         return first is null && !additionalErrors;
     }
 
@@ -471,10 +482,14 @@ public sealed partial class MainPage : ContentPage
 
     private void ShowLogin(SavedAccount? selectedAccount = null)
     {
+        if (selectedAccount is not null && session is null) RememberScreen(); else previousScreens.Clear();
+        pendingPhotoChanges.Clear();
+        dashboardNavigation.IsVisible = false;
+        dashboardSection = DashboardSection.Today; sectionScroll.Clear(); dashboardHistoryVisible = 10;
         formInputs.Clear(); formPickers.Clear(); formGroups.Clear(); formPhotoErrors.Clear(); showingSettings = false;
         ResetScroll();
         body.Clear();
-        showingForm = false;
+        showingForm = selectedAccount is not null;
         showingCompletion = false;
         session = null;
         member = null;
@@ -485,6 +500,7 @@ public sealed partial class MainPage : ContentPage
         AddSettings();
         if (selectedAccount is null) AddSavedAccountCards();
         var form = new VerticalStackLayout { Spacing = 14, MaximumWidthRequest = 480 };
+        if (selectedAccount is not null) form.Add(BackButton());
         form.Add(Text(L(selectedAccount is null && SavedAccounts.Items.Count > 0 ? "MobileAnotherAccount" : "LoginTitle"), 26));
         if (selectedAccount is null && SavedAccounts.Items.Count == 0) form.Add(Text(L("MobileLoginIntro")));
         var address = Field("MobileServer");
@@ -559,24 +575,41 @@ public sealed partial class MainPage : ContentPage
 
     private Task RefreshAsync() => RefreshAsync(preserveScroll: false);
 
-    private async Task RefreshAsync(bool preserveScroll)
+    private async Task RefreshAsync(bool preserveScroll, bool background = false)
     {
-        var position = scroll.ScrollY;
-        var dashboardTask = api!.GetDashboardAsync(member!.Id);
-        var householdTask = api.GetHouseholdAsync(member.Id);
+        var revision = screenRevision;
+        var client = api!; var membership = member!;
+        var dashboardTask = client.GetDashboardAsync(membership.Id);
+        var householdTask = client.GetHouseholdAsync(membership.Id);
         await Task.WhenAll(dashboardTask, householdTask);
-        dashboard = await dashboardTask;
-        household = await householdTask;
-        lastUpdatedAt = DateTimeOffset.Now;
-        try { await TaskNotifications.ConfigureAsync(server!, member!, api!); }
+        if (background && (busy || !foreground || photoViewerOpen || revision != screenRevision || client != api || membership != member)) return;
+        var nextDashboard = await dashboardTask;
+        var nextHousehold = await householdTask;
+        try { await TaskNotifications.ConfigureAsync(server!, membership, client); }
         catch (HttpRequestException) { message.Text = L("NotificationSyncFailed"); }
         catch (TaskCanceledException) { message.Text = L("NotificationSyncFailed"); }
+        if (background && (busy || !foreground || photoViewerOpen || revision != screenRevision || client != api || membership != member)) return;
+        var position = scroll.ScrollY;
+        lastUpdatedAt = DateTimeOffset.Now;
+        var unchanged = background &&
+            System.Text.Json.JsonSerializer.Serialize(dashboard) == System.Text.Json.JsonSerializer.Serialize(nextDashboard) &&
+            System.Text.Json.JsonSerializer.Serialize(household) == System.Text.Json.JsonSerializer.Serialize(nextHousehold);
+        dashboard = nextDashboard; household = nextHousehold;
+        if (background) { message.Text = ""; message.IsVisible = false; }
+        if (unchanged)
+        {
+            if (refreshTimestamp is not null) refreshTimestamp.Text = Format("MobileUpdatedAt", lastUpdatedAt.Value.LocalDateTime.ToString("t",
+                System.Globalization.CultureInfo.GetCultureInfo(Strings.Culture)));
+            return;
+        }
         ShowDashboard(resetScroll: !preserveScroll);
-        if (preserveScroll) await scroll.ScrollToAsync(0, position, false);
+        if (preserveScroll) RestoreScroll(position);
     }
 
     private void ShowDashboard(bool resetScroll = true)
     {
+        previousScreens.Clear(); pendingPhotoChanges.Clear(); screenRevision++;
+        RenderDashboardNavigation();
         formInputs.Clear(); formPickers.Clear(); formGroups.Clear(); formPhotoErrors.Clear(); showingSettings = false;
         if (resetScroll) ResetScroll();
         showingCompletion = false;
@@ -587,8 +620,11 @@ public sealed partial class MainPage : ContentPage
         if (member is not null)
         {
             if (lastUpdatedAt is { } refreshed)
-                body.Add(Text(Format("MobileUpdatedAt", refreshed.LocalDateTime.ToString("t",
-                    System.Globalization.CultureInfo.GetCultureInfo(Strings.Culture))), 13));
+            {
+                refreshTimestamp = Text(Format("MobileUpdatedAt", refreshed.LocalDateTime.ToString("t",
+                    System.Globalization.CultureInfo.GetCultureInfo(Strings.Culture))), 13);
+                body.Add(refreshTimestamp);
+            }
         }
         if (member is null || dashboard is null)
         {
@@ -604,20 +640,7 @@ public sealed partial class MainPage : ContentPage
 
     private void ShowRoleDashboard()
     {
-        var accountRow = new Grid { ColumnDefinitions = new ColumnDefinitionCollection
-            { new(GridLength.Star), new(GridLength.Auto) }, ColumnSpacing = 12 };
-        var identity = new VerticalStackLayout { Spacing = 2 };
-        identity.Add(Text(session!.DisplayName, 24));
-        var role = Text(L("Role_" + member!.Role), 13);
-        role.SetAppThemeColor(Label.TextColorProperty,
-            member.Role == "Parent" ? MintDeep : Coral,
-            member.Role == "Parent" ? Color.FromArgb("72C8B8") : Color.FromArgb("FF9B85"));
-        role.FontAttributes = FontAttributes.Bold;
-        identity.Add(role);
-        accountRow.Add(identity);
-        body.Add(accountRow);
-
-        if (session.Memberships.Count > 1)
+        if (session!.Memberships.Count > 1)
         {
             var picker = new Picker { Title = L("MobileHousehold"), ItemsSource = session.Memberships.ToList(),
                 ItemDisplayBinding = new Binding(nameof(MemberDto.HouseholdName)), SelectedItem = member };
@@ -626,7 +649,11 @@ public sealed partial class MainPage : ContentPage
             picker.SelectedIndexChanged += async (_, _) =>
             {
                 if (picker.SelectedItem is MemberDto next && next.Id != member?.Id)
-                    await RunAsync(async () => { member = next; await RefreshAsync(); });
+                    await RunAsync(async () =>
+                    {
+                        member = next; dashboardSection = DashboardSection.Today; sectionScroll.Clear();
+                        await RefreshAsync();
+                    });
             };
             body.Add(picker);
         }
@@ -640,110 +667,59 @@ public sealed partial class MainPage : ContentPage
     private void ShowChildRoleDashboard()
     {
         body.Add(RoleHero(false));
-        var waiting = dashboard!.History.Count(item => item.Status == "Pending");
-        body.Add(RoleStats(
-            ("🐾", dashboard.Tasks.Count(item => item.CanComplete).ToString(), L("AvailableTasks"), Color.FromArgb("CDEBFA")),
-            ("★", dashboard.Balance.ToString(), L("ApprovedPoints"), Color.FromArgb("FFF0A8")),
-            ("⌛", waiting.ToString(), L("WaitingApproval"), Color.FromArgb("DDF3E8"))));
-        columns.Children.Clear();
-        columns.Add(RoleTaskSection(true));
-        if (household is not null) columns.Add(ChildHouseholdSection());
-        ArrangeColumns();
-        body.Add(columns);
-        body.Add(RoleHistorySection("RecentCare", true));
+        switch (dashboardSection)
+        {
+            case DashboardSection.Today: body.Add(RoleTaskSection(true)); break;
+            case DashboardSection.Rewards:
+                if (household is not null) body.Add(ChildHouseholdSection());
+                break;
+            case DashboardSection.Family:
+                if (household is not null) body.Add(ChildFamilySection());
+                break;
+            case DashboardSection.History:
+                body.Add(RoleHistorySection("RecentCare", true));
+                if (household is not null) body.Add(RewardHistorySection());
+                break;
+        }
     }
 
     private void ShowParentRoleDashboard()
     {
-        var pendingTotal = dashboard!.PendingApprovals.Count + (household?.RewardRequests.Count ?? 0);
         body.Add(RoleHero(true));
-        body.Add(RoleStats(
-            ("✓", dashboard.Tasks.Count(item => item.CanComplete).ToString(), L("CareTasks"), Mint),
-            ("!", pendingTotal.ToString(), L("AwaitingApproval"), Color.FromArgb("FFF0C8")),
-            ("↻", dashboard.History.Count.ToString(), L("RecentCare"), Peach)));
-
-        var attention = new VerticalStackLayout { Spacing = 14 };
-        attention.Add(RoleSectionHeading(dashboard.PendingApprovals.Count == 0 ? "✓" : "!",
-            L("MobileApprovals"), L(dashboard.PendingApprovals.Count == 0 ? "MobileNoCareApprovals" : "AttentionHint")));
-        foreach (var log in dashboard.PendingApprovals) attention.Add(RoleLogCard(log, true, false));
-        body.Add(Card(attention, dashboard.PendingApprovals.Count == 0 ? Mint : Color.FromArgb("FFF7D8"),
-            dashboard.PendingApprovals.Count == 0 ? Color.FromArgb("25443E") : Color.FromArgb("3C3525"), 26, 1));
-
-        if (household is not null) body.Add(ParentRewardRequests());
-
-        if (household is not null) body.Add(ParentManagementSection());
-        columns.Children.Clear();
-        columns.Add(RoleTaskSection(false));
-        columns.Add(RoleHistorySection("MobileParentHistory", false));
-        ArrangeColumns();
-        body.Add(columns);
+        if (dashboardSection == DashboardSection.Family)
+        {
+            if (household is not null) body.Add(ParentManagementSection());
+            return;
+        }
+        if (dashboardSection == DashboardSection.History)
+        {
+            body.Add(RoleHistorySection("MobileParentHistory", false));
+            return;
+        }
+        var pending = dashboard!.PendingApprovals.Count + (household?.RewardRequests.Count ?? 0);
+        if (pending == 0) body.Add(Card(Text("✓ " + L("MobileNothingToReview"), 16), Mint));
+        if (dashboard.PendingApprovals.Count > 0)
+        {
+            body.Add(RoleSectionHeading("⌛", L("MobileApprovals")));
+            foreach (var log in dashboard.PendingApprovals) body.Add(RoleLogCard(log, true, false));
+        }
+        if (household?.RewardRequests.Count > 0) body.Add(ParentRewardRequests());
+        if (household is not null) body.Add(ParentCreateActions());
+        body.Add(RoleTaskSection(false));
     }
 
     private Border RoleHero(bool parent)
     {
-        var copy = new VerticalStackLayout { Spacing = 7, VerticalOptions = LayoutOptions.Center };
-        var eyebrow = Text(L(parent ? "ParentSpace" : "KidSpace"), 13);
-        eyebrow.FontAttributes = FontAttributes.Bold;
-        eyebrow.SetAppThemeColor(Label.TextColorProperty, parent ? MintDeep : Coral,
-            parent ? Color.FromArgb("72C8B8") : Color.FromArgb("FF9B85"));
-        copy.Add(eyebrow);
-        var title = Text(Format(parent ? "ParentWelcome" : "KidWelcome", session!.DisplayName), parent ? 30 : 34);
-        title.FontAttributes = FontAttributes.Bold;
-        copy.Add(title);
-        copy.Add(Text(parent ? Format("HouseholdSubtitle", member!.HouseholdName) : L("ReadyToCare"), 16));
-
-        var score = new VerticalStackLayout { Spacing = 0, HorizontalOptions = LayoutOptions.Center,
-            VerticalOptions = LayoutOptions.Center };
-        var scoreValue = Text((parent ? dashboard!.PendingApprovals.Count + (household?.RewardRequests.Count ?? 0) : dashboard!.Balance).ToString(), 34);
-        scoreValue.HorizontalTextAlignment = TextAlignment.Center;
-        scoreValue.FontAttributes = FontAttributes.Bold;
-        score.Add(scoreValue);
-        var scoreLabel = Text(L(parent ? "AwaitingApproval" : "ApprovedPoints"), 12);
-        scoreLabel.HorizontalTextAlignment = TextAlignment.Center;
-        score.Add(scoreLabel);
-        var scoreBadge = Card(score, parent ? Paper : Color.FromArgb("FFF0A8"),
-            parent ? Color.FromArgb("17312D") : Color.FromArgb("5A4A23"), parent ? 22 : 42, 1);
-        scoreBadge.WidthRequest = 122;
-        scoreBadge.MinimumHeightRequest = 112;
-
-        var hero = new Grid { ColumnDefinitions = new ColumnDefinitionCollection
-            { new(GridLength.Star), new(GridLength.Auto) }, ColumnSpacing = 16 };
-        if (wide) { hero.Add(copy); hero.Add(scoreBadge, 1); }
-        else
-        {
-            hero.ColumnDefinitions.Clear(); hero.ColumnDefinitions.Add(new(GridLength.Star));
-            hero.RowDefinitions.Add(new(GridLength.Auto)); hero.RowDefinitions.Add(new(GridLength.Auto));
-            hero.RowSpacing = 12; hero.Add(copy); hero.Add(scoreBadge, 0, 1);
-            scoreBadge.HorizontalOptions = LayoutOptions.Start;
-        }
-        return Card(hero, parent ? Mint : Color.FromArgb("F7D8E7"),
-            parent ? Color.FromArgb("25443E") : Color.FromArgb("4B3340"), parent ? 28 : 36, parent ? 1 : 3);
-    }
-
-    private Grid RoleStats(params (string Icon, string Value, string Label, Color Background)[] items)
-    {
-        var grid = new Grid { ColumnSpacing = 9 };
-        foreach (var _ in items) grid.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-        for (var index = 0; index < items.Length; index++)
-        {
-            var item = items[index];
-            var stack = new VerticalStackLayout { Spacing = 2, HorizontalOptions = LayoutOptions.Center };
-            var icon = new Label { Text = item.Icon, FontSize = 23, HorizontalTextAlignment = TextAlignment.Center };
-            icon.SetAppThemeColor(Label.TextColorProperty, Ink, Color.FromArgb("E8F5F1"));
-            stack.Add(icon);
-            var value = Text(item.Value, 27);
-            value.FontAttributes = FontAttributes.Bold;
-            value.HorizontalTextAlignment = TextAlignment.Center;
-            stack.Add(value);
-            var label = Text(item.Label, 11);
-            label.HorizontalTextAlignment = TextAlignment.Center;
-            label.LineBreakMode = LineBreakMode.TailTruncation;
-            stack.Add(label);
-            var card = Card(stack, item.Background, Color.FromArgb("25443E"), 21, 1);
-            card.MinimumHeightRequest = 116;
-            grid.Add(card, index);
-        }
-        return grid;
+        var content = new VerticalStackLayout { Spacing = 6 };
+        var title = Text(Format(parent ? "ParentWelcome" : "KidWelcome", session!.DisplayName), 26);
+        title.FontAttributes = FontAttributes.Bold; content.Add(title);
+        content.Add(Text(parent ? Format("HouseholdSubtitle", member!.HouseholdName) : L("ReadyToCare"), 15));
+        var summary = parent
+            ? "⌛ " + (dashboard!.PendingApprovals.Count + (household?.RewardRequests.Count ?? 0)) + " · " + L("AwaitingApproval")
+            : "★ " + dashboard!.Balance + " · " + L("ApprovedPoints");
+        var badge = Text(summary, 18); badge.FontAttributes = FontAttributes.Bold; content.Add(badge);
+        return Card(content, parent ? Mint : Color.FromArgb("F7D8E7"),
+            Color.FromArgb(parent ? "25443E" : "4B3340"), 24);
     }
 
     private View RoleSectionHeading(string icon, string title, string? subtitle = null)
@@ -771,8 +747,7 @@ public sealed partial class MainPage : ContentPage
         if (dashboard!.Tasks.Count == 0)
             tasks.Add(Card(Text(L("MobileNoTasks")), Mint, Color.FromArgb("25443E"), 22, 1));
         var ordered = dashboard.Tasks.OrderByDescending(task => task.CanComplete).ToList();
-        for (var index = 0; index < ordered.Count; index++)
-            tasks.Add(RoleTaskCard(ordered[index], child, index));
+        tasks.Add(CardFlow(ordered.Select((task, index) => (View)RoleTaskCard(task, child, index)).ToList()));
         return tasks;
     }
 
@@ -783,8 +758,7 @@ public sealed partial class MainPage : ContentPage
             HeightRequest = child ? 190 : 130, Aspect = Aspect.AspectFit };
         SemanticProperties.SetDescription(image, task.Name + ", " + task.PetName);
         content.Add(image);
-        var titleRow = new Grid { ColumnDefinitions = new ColumnDefinitionCollection
-            { new(GridLength.Star), new(GridLength.Auto) }, ColumnSpacing = 10 };
+        var titleRow = new Grid { RowDefinitions = { new(GridLength.Auto), new(GridLength.Auto) }, RowSpacing = 8 };
         var names = new VerticalStackLayout { Spacing = 1 };
         var pet = Text(task.PetName, 14);
         pet.SetAppThemeColor(Label.TextColorProperty, child ? Coral : MintDeep,
@@ -797,7 +771,8 @@ public sealed partial class MainPage : ContentPage
         names.Add(Text(L("Frequency_" + task.Frequency), 13));
         titleRow.Add(names);
         var points = Card(Text("★ +" + task.Points, 17), Color.FromArgb("FFF0A8"), Color.FromArgb("5A4A23"), 18);
-        titleRow.Add(points, 1);
+        points.HorizontalOptions = LayoutOptions.Start;
+        titleRow.Add(points, 0, 1);
         content.Add(titleRow);
         if (!child)
         {
@@ -835,7 +810,7 @@ public sealed partial class MainPage : ContentPage
         if (dashboard!.History.Count == 0)
             history.Add(Card(Text(L("MobileNoHistory")), child ? Color.FromArgb("FFF0C8") : Mint,
                 Color.FromArgb("25443E"), 22, 1));
-        foreach (var log in dashboard.History) history.Add(RoleLogCard(log, false, child));
+        AddHistoryCards(history, dashboard.History, child);
         return history;
     }
 
@@ -852,8 +827,7 @@ public sealed partial class MainPage : ContentPage
             memberName.FontAttributes = FontAttributes.Bold;
             content.Add(memberName);
         }
-        var statusRow = new Grid { ColumnDefinitions = new ColumnDefinitionCollection
-            { new(GridLength.Star), new(GridLength.Auto) }, ColumnSpacing = 10 };
+        var statusRow = new Grid { RowDefinitions = { new(GridLength.Auto), new(GridLength.Auto) }, RowSpacing = 4 };
         statusRow.Add(Text(L("MobileStatus" + log.Status), 14));
         var points = Text(log.Status switch
         {
@@ -863,7 +837,7 @@ public sealed partial class MainPage : ContentPage
         }, 16);
         points.FontAttributes = FontAttributes.Bold;
         points.SetAppThemeColor(Label.TextColorProperty, MintDeep, Color.FromArgb("72C8B8"));
-        statusRow.Add(points, 1);
+        statusRow.Add(points, 0, 1);
         content.Add(statusRow);
         content.Add(Text(log.CompletedAt.ToLocalTime().ToString("g",
             System.Globalization.CultureInfo.GetCultureInfo(Strings.Culture)), 14));
@@ -912,10 +886,8 @@ public sealed partial class MainPage : ContentPage
         return Card(section, Paper, Color.FromArgb("17312D"), 26, 1);
     }
 
-    private View ParentManagementSection()
+    private View ParentCreateActions()
     {
-        var section = new VerticalStackLayout { Spacing = 16 };
-        section.Add(RoleSectionHeading("⚙", L("FamilySetup"), L("FamilySetupHint")));
         var actions = new Grid { ColumnSpacing = 12, RowSpacing = 12,
             ColumnDefinitions = { new(GridLength.Star), new(GridLength.Star) },
             RowDefinitions = { new(GridLength.Auto), new(GridLength.Auto) } };
@@ -931,7 +903,14 @@ public sealed partial class MainPage : ContentPage
             var action = addActions[index];
             actions.Add(CreateTile(action.Icon, action.Key, action.Hint, action.Open, index % 2 == 1), index % 2, index / 2);
         }
-        section.Add(actions);
+        return actions;
+    }
+
+    private View ParentManagementSection()
+    {
+        var section = new VerticalStackLayout { Spacing = 16 };
+        section.Add(RoleSectionHeading("⚙", L("FamilySetup"), L("FamilySetupHint")));
+        section.Add(ParentCreateActions());
         section.Add(Text(L("MobileTapToEdit"), 14));
         section.Add(ManagementHeading("FamilyMembers"));
         foreach (var item in household!.Members)
@@ -949,7 +928,7 @@ public sealed partial class MainPage : ContentPage
         foreach (var item in household.Rewards)
             section.Add(EntityRow(item.Name, Format("RewardCostCount", item.PointCost), "🎁", item.ImagePath,
                 () => { ShowEditReward(item); return Task.CompletedTask; }));
-        return Card(section, Paper, Color.FromArgb("17312D"), 28, 1);
+        return section;
     }
 
     private View ChildHouseholdSection()
@@ -980,23 +959,7 @@ public sealed partial class MainPage : ContentPage
             section.Add(Card(card, Color.FromArgb("FFF0C8"), Color.FromArgb("3C3525"), 28, 2));
         }
 
-        section.Add(RoleSectionHeading("👪", L("FamilyMembers")));
-        foreach (var item in household.Members)
-            section.Add(EntityRow(item.DisplayName, $"{L("Role_" + item.Role)} · ★ {item.Balance}",
-                "👤", item.PhotoPath, () => ShowMemberProfileAsync(item), true));
-        section.Add(RoleSectionHeading("🐾", L("FamilyPets")));
-        foreach (var item in household.Pets)
-            section.Add(EntityRow(item.Name, item.Species, "🐹", item.PhotoPath, () => ShowPetProfileAsync(item), true));
-        if (household.RewardHistory.Count > 0)
-        {
-            section.Add(RoleSectionHeading("↻", L("PointHistory")));
-            foreach (var item in household.RewardHistory)
-                section.Add(ManagementRow(item.RewardName,
-                    item.Status == "Approved"
-                        ? $"{L("RewardStatus_" + item.Status)} · −{item.PointsCost} ★"
-                        : $"{L("RewardStatus_" + item.Status)} · {Format("MobilePotentialCost", item.PointsCost)}"));
-        }
-        return Card(section, Color.FromArgb("FFFDF7"), Color.FromArgb("17312D"), 30, 2);
+        return section;
     }
 
     private Label ManagementHeading(string key)
@@ -1031,8 +994,12 @@ public sealed partial class MainPage : ContentPage
 
     private void AddPicker(VerticalStackLayout form, Picker picker)
     {
-        form.Add(picker);
-        if (formPickers.TryGetValue(picker, out var details)) form.Add(details.Error);
+        if (formPickers.TryGetValue(picker, out var details))
+        {
+            form.Add(Text(details.Title + (details.Required ? " *" : ""), 14));
+            form.Add(picker); form.Add(details.Error);
+        }
+        else form.Add(picker);
     }
 
     private Picker ChoicePicker(string title, IReadOnlyList<Choice> choices, string selectedValue)
@@ -1044,13 +1011,14 @@ public sealed partial class MainPage : ContentPage
 
     private void ShowForm(string titleKey, Action<VerticalStackLayout> build)
     {
+        RememberScreen();
+        pendingPhotoChanges.Clear();
         formInputs.Clear(); formPickers.Clear(); formGroups.Clear(); formPhotoErrors.Clear(); showingSettings = false;
-        ResetScroll(); body.Clear(); selectedPhotos.Clear(); showingForm = true;
+        ResetScroll(); body.Clear(); selectedPhotos.Clear(); showingForm = true; showingCompletion = false;
         var form = new VerticalStackLayout { Spacing = 14, MaximumWidthRequest = 620 };
         var title = Text(L(titleKey), 28); title.FontAttributes = FontAttributes.Bold; form.Add(title);
-        form.Add(SecondaryButton("MobileBack", () => { ShowDashboard(); return Task.CompletedTask; }));
+        form.Add(BackButton());
         build(form);
-        form.Add(SecondaryButton("MobileBack", () => { ShowDashboard(); return Task.CompletedTask; }));
         body.Add(Card(form, Paper, Color.FromArgb("17312D"), 28, 1));
     }
 
@@ -1077,8 +1045,7 @@ public sealed partial class MainPage : ContentPage
     private Func<DateOnly?> AddBirthDatePicker(VerticalStackLayout form, DateOnly? initial)
     {
         var known = new CheckBox { IsChecked = initial.HasValue };
-        var row = new HorizontalStackLayout { Spacing = 10,
-            Children = { known, Text(L("MobileBirthDateKnown"), 16) } };
+        var row = CheckRow(known, L("MobileBirthDateKnown"));
         var date = new DatePicker
         {
             Date = initial?.ToDateTime(TimeOnly.MinValue) ?? DateTime.Today,
@@ -1152,8 +1119,10 @@ public sealed partial class MainPage : ContentPage
     {
         var enabled = new Switch { IsToggled = initial is not null };
         SemanticProperties.SetDescription(enabled, L("TaskNotification"));
-        form.Add(new HorizontalStackLayout { Spacing = 10,
-            Children = { enabled, Text(L("TaskNotification"), 16) } });
+        var notificationRow = new Grid { ColumnSpacing = 10,
+            ColumnDefinitions = { new(GridLength.Star), new(GridLength.Auto) } };
+        notificationRow.Add(Text(L("TaskNotification"), 16)); notificationRow.Add(enabled, 1);
+        form.Add(notificationRow);
         var zone = initial?.TimeZoneId ?? TimeZoneInfo.Local.Id;
         var options = new VerticalStackLayout { Spacing = 8 };
         var time = new TimePicker { Time = initial?.Time.ToTimeSpan() ?? TimeSpan.FromHours(18) };
@@ -1233,7 +1202,7 @@ public sealed partial class MainPage : ContentPage
         foreach (var child in household!.Members.Where(item => item.Role == "Child"))
         {
             var box = new CheckBox(); choices.Add((child.Id, box));
-            var row = new HorizontalStackLayout { Spacing = 10, Children = { box, Text(child.DisplayName, 17) } };
+            var row = CheckRow(box, child.DisplayName);
             form.Add(row);
         }
         var audienceError = new Label { IsVisible = false, FontSize = 13 };
@@ -1277,6 +1246,7 @@ public sealed partial class MainPage : ContentPage
         {
             // Upload before a self password reset invalidates the current bearer session.
             if (photo is not null) { await UploadManagementPhotoAsync("members", item.Id, photo); photo = null; }
+            await ApplyPendingPhotoChangesAsync();
             await api!.UpdateMemberAsync(member!.Id, item.Id, new UpdateMemberRequest(name.Text ?? "",
                 (role.SelectedItem as Choice)?.Value ?? item.Role, email.Text ?? "",
                 string.IsNullOrEmpty(password.Text) ? null : password.Text, canView.IsToggled, share.IsToggled));
@@ -1315,6 +1285,7 @@ public sealed partial class MainPage : ContentPage
             await api!.UpdatePetAsync(member!.Id, item.Id,
                 new UpdatePetRequest(name.Text ?? "", species.Text ?? "", birthDate()));
             if (photo is not null) await UploadManagementPhotoAsync("pets", item.Id, photo);
+            await ApplyPendingPhotoChangesAsync();
             await RefreshAsync();
         }));
         AddDeleteAction(form, item.Name, () => api!.ArchivePetAsync(member!.Id, item.Id));
@@ -1344,7 +1315,8 @@ public sealed partial class MainPage : ContentPage
         AddInput(form, name); AddPicker(form, pet); AddPicker(form, assignee); AddPicker(form, category); AddInput(form, custom); AddPicker(form, frequency); AddInput(form, points);
         var reminder = AddTaskReminderPicker(form, frequency, item.Reminder);
         AddPhotoPicker(form, "TaskImage", file => photo = file, item.ImagePath,
-            () => api!.UpdateMediaAsync(member!.Id, "tasks", item.Id, null, true));
+            item.ImagePath.StartsWith("/uploads/tasks/", StringComparison.Ordinal)
+                ? () => api!.UpdateMediaAsync(member!.Id, "tasks", item.Id, null, true) : null);
         form.Add(Button("SaveChanges", async () =>
         {
             if (string.IsNullOrWhiteSpace(name.Text)) throw new MobileApiException("TaskNameRequired");
@@ -1356,6 +1328,7 @@ public sealed partial class MainPage : ContentPage
                 selectedMember.Id, categoryId, OptionalCategory(custom),
                 (frequency.SelectedItem as Choice)?.Value ?? item.Frequency, pointValue, name.Text.Trim(), reminder()));
             if (photo is not null) await UploadManagementPhotoAsync("tasks", item.Id, photo);
+            await ApplyPendingPhotoChangesAsync();
             await RefreshAsync();
         }));
         AddDeleteAction(form, item.Name, () => api!.ArchiveTaskAsync(member!.Id, item.Id));
@@ -1398,45 +1371,42 @@ public sealed partial class MainPage : ContentPage
         };
         preview.GestureRecognizers.Add(previewTap);
         var replacement = false;
-        var remove = SecondaryButton("MobileRemovePhoto", async () =>
+        var removeOriginal = false;
+        Button? remove = null;
+        void SyncRemoval()
         {
-            if (!replacement && removeExisting is not null) { await removeExisting(); existing = null; }
+            if (!replacement && removeOriginal && removeExisting is not null) pendingPhotoChanges[key] = removeExisting;
+            else pendingPhotoChanges.Remove(key);
+        }
+        remove = SecondaryButton("MobileRemovePhoto", () =>
+        {
+            if (!replacement && removeExisting is not null) removeOriginal = true;
             setPhoto(null); replacement = false;
-            preview.Source = existing is null ? null : PhotoSource(existing);
-            preview.IsVisible = existing is not null; error.IsVisible = false;
+            preview.Source = existing is null || removeOriginal ? null : PhotoSource(existing);
+            preview.IsVisible = existing is not null && !removeOriginal;
+            remove!.IsVisible = preview.IsVisible && removeExisting is not null;
+            error.IsVisible = false;
+            SyncRemoval();
+            return Task.CompletedTask;
         });
-        remove.IsVisible = preview.IsVisible;
+        remove.IsVisible = preview.IsVisible && removeExisting is not null;
         form.Add(SecondaryButton(key, async () =>
         {
             var file = (await ChoosePhotosAsync(1)).FirstOrDefault();
             if (file is null) return;
-            setPhoto(file); replacement = true;
+            setPhoto(file); replacement = true; SyncRemoval();
             error.IsVisible = false;
             preview.Source = ImageSource.FromStream(_ => file.OpenReadAsync());
             preview.IsVisible = true; remove.IsVisible = true;
         }));
         preview.PropertyChanged += (_, args) =>
-        { if (args.PropertyName == nameof(IsVisible)) remove.IsVisible = preview.IsVisible; };
+        { if (args.PropertyName == nameof(IsVisible)) remove.IsVisible = preview.IsVisible && (replacement || removeExisting is not null); };
         form.Add(error); form.Add(preview); form.Add(remove);
     }
 
     private Task UploadManagementPhotoAsync(string kind, int id, FileResult file) =>
         api!.UpdateMediaAsync(member!.Id, kind, id,
             new UploadPhoto(file.FileName, MimeType(file), file.OpenReadAsync));
-
-    private void ArrangeColumns()
-    {
-        columns.ColumnDefinitions.Clear(); columns.RowDefinitions.Clear();
-        columns.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-        if (wide) columns.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-        columns.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-        if (!wide) columns.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
-        if (columns.Children.Count > 1)
-        {
-            Grid.SetColumn((BindableObject)columns.Children[1], wide ? 1 : 0);
-            Grid.SetRow((BindableObject)columns.Children[1], wide ? 0 : 1);
-        }
-    }
 
     private ImageSource PhotoSource(string path)
     {
@@ -1453,31 +1423,41 @@ public sealed partial class MainPage : ContentPage
 
     private void ShowCompletion(TaskDto task)
     {
+        RememberScreen();
         ResetScroll();
-        showingCompletion = true;
+        showingCompletion = true; showingForm = false; showingSettings = false;
+        formInputs.Clear(); formPickers.Clear(); formGroups.Clear(); formPhotoErrors.Clear();
+        selectedPhotos.Clear();
         body.Clear();
+        body.Add(BackButton());
         body.Add(Text(task.PetName + " · " + task.Name, 26));
         body.Add(Text(L("MobileCompletionShort"), 16));
         body.Add(TappablePhoto(PhotoSource(task.ImagePath), height: 180));
         var previews = new VerticalStackLayout { Spacing = 10 };
+        Button? addPhoto = null;
         void RefreshPreviews()
         {
             previews.Clear();
+            if (addPhoto is not null)
+            {
+                addPhoto.IsEnabled = selectedPhotos.Count < 8;
+                addPhoto.Text = "📷 " + L("MobileAddPhoto") + $" ({selectedPhotos.Count}/8)";
+            }
             foreach (var file in selectedPhotos.ToList())
             {
                 previews.Add(TappablePhoto(ImageSource.FromStream(_ => file.OpenReadAsync()), height: 170));
-                previews.Add(Button("MobileRemovePhoto", () =>
+                previews.Add(SecondaryButton("MobileRemovePhoto", () =>
                 { selectedPhotos.Remove(file); RefreshPreviews(); return Task.CompletedTask; }));
             }
         }
-        body.Add(Button("MobileAddPhoto", async () =>
+        addPhoto = SecondaryButton("MobileAddPhoto", async () =>
         {
             if (selectedPhotos.Count >= 8) throw new MobileApiException("MobilePhotoLimit");
             var files = await ChoosePhotosAsync(8 - selectedPhotos.Count);
             selectedPhotos.AddRange(files);
             RefreshPreviews();
-        }));
-        body.Add(previews);
+        });
+        body.Add(addPhoto); RefreshPreviews(); body.Add(previews);
         body.Add(Button("MobileSendCompletion", async () =>
         {
             var photos = selectedPhotos.Select(f => new UploadPhoto(f.FileName, MimeType(f), f.OpenReadAsync)).ToList();
@@ -1487,7 +1467,6 @@ public sealed partial class MainPage : ContentPage
             message.Text = L(member.Role == "Parent" ? "ParentTaskCompleted" : "TaskSentForApproval");
             await RefreshAsync();
         }));
-        body.Add(SecondaryButton("MobileBack", () => { ShowDashboard(); return Task.CompletedTask; }));
     }
 
     private static string MimeType(FileResult file) => System.IO.Path.GetExtension(file.FileName).ToLowerInvariant() switch
@@ -1500,9 +1479,9 @@ public sealed partial class MainPage : ContentPage
     protected override bool OnBackButtonPressed()
     {
         if (busy) return true;
-        if (showingCompletion || showingForm)
+        if (previousScreens.Count > 0 || showingCompletion || showingForm)
         {
-            if (session is null) ShowLogin(); else ShowDashboard();
+            _ = GoBackAsync();
             return true;
         }
         return base.OnBackButtonPressed();
@@ -1511,7 +1490,8 @@ public sealed partial class MainPage : ContentPage
     private async Task RunAsync(Func<Task> action)
     {
         if (busy) return;
-        busy = true; body.IsEnabled = false; activity.IsVisible = true; activity.IsRunning = true; message.Text = ""; message.IsVisible = false;
+        busy = true; body.IsEnabled = false; dashboardNavigation.IsEnabled = false;
+        activity.IsVisible = true; activity.IsRunning = true; message.Text = ""; message.IsVisible = false;
         try { await action(); }
         catch (MobileApiException exception)
         {
@@ -1531,7 +1511,7 @@ public sealed partial class MainPage : ContentPage
         catch (HttpRequestException) { message.Text = L("MobileConnectionError"); }
         catch (OperationCanceledException) { message.Text = L("MobileRequestTimeout"); }
         catch (Exception) { message.Text = L("MobileUnexpectedError"); }
-        finally { busy = false; body.IsEnabled = true; activity.IsRunning = false; activity.IsVisible = false; message.IsVisible = !string.IsNullOrEmpty(message.Text);
+        finally { busy = false; body.IsEnabled = true; dashboardNavigation.IsEnabled = true; activity.IsRunning = false; activity.IsVisible = false; message.IsVisible = !string.IsNullOrEmpty(message.Text);
             if (message.IsVisible) ResetScroll(); }
     }
 }

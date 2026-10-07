@@ -552,7 +552,7 @@
   <data name="MobileDeleteConfirm" xml:space="preserve"><value>Удалить «{0}»? История останется сохранённой.</value></data>
   <data name="PhotoOpen" xml:space="preserve"><value>Нажмите, чтобы увеличить</value></data>
   <data name="PhotoZoomHint" xml:space="preserve"><value>Разведите пальцы, чтобы увеличить. Перетаскивайте фото. Двойное нажатие меняет масштаб.</value></data>
-  <data name="PhotoResetZoom" xml:space="preserve"><value>Сбросить масштаб</value></data>
+  <data name="PhotoResetZoom" xml:space="preserve"><value>Сбросить</value></data>
   <data name="PhotoPrevious" xml:space="preserve"><value>Назад</value></data>
   <data name="PhotoNext" xml:space="preserve"><value>Далее</value></data>
   <data name="MobileCompletionShort" xml:space="preserve"><value>Готово? Можно добавить фото или отправить без него.</value></data>
@@ -566,4 +566,13 @@
   <data name="MobileSwitchAccount" xml:space="preserve"><value>Сменить аккаунт</value></data>
   <data name="MobileSavedSessionExpired" xml:space="preserve"><value>Введите пароль, чтобы снова войти в сохранённый аккаунт.</value></data>
   <data name="MobileAnotherAccount" xml:space="preserve"><value>Другой аккаунт</value></data>
+  <data name="MobileTabToday" xml:space="preserve"><value>Сегодня</value></data>
+  <data name="MobileTabFamily" xml:space="preserve"><value>Семья</value></data>
+  <data name="MobileTabHistory" xml:space="preserve"><value>История</value></data>
+  <data name="MobileSelectedSection" xml:space="preserve"><value>Выбрано</value></data>
+  <data name="MobileMoreHistory" xml:space="preserve"><value>Показать ещё</value></data>
+  <data name="MobileNothingToReview" xml:space="preserve"><value>Все отчёты проверены</value></data>
+  <data name="MobileNoPets" xml:space="preserve"><value>Здесь появятся питомцы семьи.</value></data>
+  <data name="MobileNoRewardHistory" xml:space="preserve"><value>Здесь появятся запросы и полученные награды.</value></data>
+  <data name="MobileBackgroundRefreshFailed" xml:space="preserve"><value>Не удалось обновить. Показаны последние данные; потяните вниз, чтобы повторить.</value></data>
 </root>

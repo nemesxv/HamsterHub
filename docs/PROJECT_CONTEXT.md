@@ -276,3 +276,15 @@ Expired/revoked sessions fall back to password entry. Signing out clears the act
 session and reminders but retains explicitly saved sign-in choices. Only the active
 child account receives reminders. Local tests/builds remain skipped by user instruction;
 deployment compilation and actual-phone acceptance are separate verification stages.
+
+### Navigation and ergonomics (2026-10-07)
+
+Mobile profiles and forms have one shared Back action. Back and Android system Back
+restore the previous screen, scroll position, unsaved form controls and validation state.
+Dashboards use fixed visual destinations: Today, Family and History for parents;
+Today, Rewards, Family and History for children. The welcome summary is compact,
+empty approval queues are combined, and long history lists expand ten items at a time.
+Family lists avoid nested padding; labels and selection rows wrap on small screens.
+Automatic refresh keeps the app interactive and discards responses when navigation or
+another operation has changed the screen. Manual refresh remains pull-down.
+This iteration keeps the user's preference for deployment builds without local tests.

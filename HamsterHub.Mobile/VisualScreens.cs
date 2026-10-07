@@ -50,14 +50,14 @@ public sealed partial class MainPage
     {
         var copy = new VerticalStackLayout { Spacing = 4, VerticalOptions = LayoutOptions.Center };
         var title = Text(titleText, child ? 22 : 19); title.FontAttributes = FontAttributes.Bold; copy.Add(title);
-        copy.Add(Text(detail, 14));
+        var details = Text(detail, 14); details.LineBreakMode = LineBreakMode.CharacterWrap; copy.Add(details);
         var grid = new Grid { ColumnSpacing = 12,
             ColumnDefinitions = { new(GridLength.Auto), new(GridLength.Star), new(GridLength.Auto) } };
         if (!string.IsNullOrWhiteSpace(photoPath))
-            grid.Add(new Image { Source = PhotoSource(photoPath), WidthRequest = child ? 80 : 60,
-                HeightRequest = child ? 80 : 60, Aspect = Aspect.AspectFill });
+            grid.Add(new Image { Source = PhotoSource(photoPath), WidthRequest = child ? 64 : 52,
+                HeightRequest = child ? 64 : 52, Aspect = Aspect.AspectFill });
         else
-            grid.Add(new Label { Text = icon, FontSize = child ? 44 : 36, WidthRequest = child ? 80 : 60,
+            grid.Add(new Label { Text = icon, FontSize = child ? 44 : 36, WidthRequest = child ? 64 : 52,
                 VerticalTextAlignment = TextAlignment.Center, HorizontalTextAlignment = TextAlignment.Center });
         grid.Add(copy, 1);
         var arrow = Text("›", 28); arrow.VerticalTextAlignment = TextAlignment.Center; grid.Add(arrow, 2);
@@ -78,7 +78,10 @@ public sealed partial class MainPage
         var toggle = new Switch { IsToggled = initial };
         var row = new Grid { ColumnSpacing = 12,
             ColumnDefinitions = { new(GridLength.Star), new(GridLength.Auto) } };
-        row.Add(Text(L(key), 16)); row.Add(toggle, 1);
+        var label = Text(L(key), 16); label.VerticalTextAlignment = TextAlignment.Center;
+        var tap = new TapGestureRecognizer(); tap.Tapped += (_, _) =>
+        { if (!busy && toggle.IsEnabled) toggle.IsToggled = !toggle.IsToggled; };
+        label.GestureRecognizers.Add(tap); row.Add(label); row.Add(toggle, 1);
         SemanticProperties.SetDescription(toggle, L(key)); form.Add(row); return toggle;
     }
 
@@ -140,13 +143,12 @@ public sealed partial class MainPage
     {
         ShowForm("MobileProfile", form =>
         {
-            form.Add(SecondaryButton("MobileBack", () => { ShowDashboard(); return Task.CompletedTask; }));
             if (photo is not null) form.Add(TappablePhoto(PhotoSource(photo), height: 230));
             else { var visual = Text(icon, 64); visual.HorizontalTextAlignment = TextAlignment.Center; form.Add(visual); }
             var title = Text(name, 28); title.FontAttributes = FontAttributes.Bold; form.Add(title);
             form.Add(Text(detail)); form.Add(RoleSectionHeading("📷", L("RecentCare")));
             if (history.Count == 0) form.Add(Text(L("MobileNoHistory"), 16));
-            foreach (var log in history) form.Add(RoleLogCard(log, false, member!.Role == "Child"));
+            AddHistoryCards(form, history, member!.Role == "Child");
         });
     }
 
@@ -163,7 +165,7 @@ public sealed partial class MainPage
         {
             var box = new CheckBox { IsChecked = item.VisibleToMemberIds.Contains(child.Id) };
             choices.Add((child.Id, box));
-            form.Add(new HorizontalStackLayout { Spacing = 8, Children = { box, Text(child.DisplayName, 16) } });
+            form.Add(CheckRow(box, child.DisplayName));
         }
         var error = Text("", 13); error.TextColor = Color.FromArgb("DE5757"); error.IsVisible = false;
         form.Add(error); formGroups.Add((() => choices.Any(item => item.Box.IsChecked) ? null : "ChooseRewardAudience", error));
@@ -172,6 +174,7 @@ public sealed partial class MainPage
             await api!.UpdateRewardAsync(member!.Id, item.Id, new CreateRewardRequest(name.Text ?? "",
                 ParsePoints(cost, 1, 100000, "RewardPointRange"), choices.Where(item => item.Box.IsChecked).Select(item => item.Id).ToList()));
             if (photo is not null) await UploadManagementPhotoAsync("rewards", item.Id, photo);
+            await ApplyPendingPhotoChangesAsync();
             await RefreshAsync();
         }));
         var children = household.Members.Where(child => child.Role == "Child").ToList();

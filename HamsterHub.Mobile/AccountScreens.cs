@@ -28,7 +28,8 @@ public sealed partial class MainPage
             {
                 if (await DisplayAlertAsync(L("MobileForgetAccount"), account.Name, L("Delete"), L("Cancel")))
                 { await SavedAccounts.RemoveAsync(account.Id); ShowLogin(); }
-            }), 1);
+            }), account.Tokens is null ? 0 : 1);
+            if (account.Tokens is null) options.ColumnDefinitions.RemoveAt(1);
             content.Add(options); body.Add(Card(content, Mint, Color.FromArgb("25443E")));
         }
     }

@@ -52,7 +52,8 @@ internal sealed class PhotoViewerPage : ContentPage
         viewport.GestureRecognizers.Add(doubleTap);
         Button Control(string text, Action action)
         {
-            var button = new Button { Text = text, MinimumHeightRequest = 52, CornerRadius = 14,
+            var button = new Button { Text = text, MinimumHeightRequest = 52, CornerRadius = 14, FontSize = 14,
+                LineBreakMode = LineBreakMode.WordWrap, Padding = new Thickness(8, 10),
                 TextColor = Colors.White, BackgroundColor = Color.FromArgb("2F8174") };
             button.Clicked += (_, _) => action(); return button;
         }

@@ -9,9 +9,8 @@ its implementation and proportionate verification are complete.
   Doze, permission grant/denial, offline sync, and parent edits on another device.
 - Consider cloud push if immediate remote schedule updates are needed; current
   reminders use local alarms with periodic background synchronization.
-- Split the long Android dashboard into persistent Today, Tasks/Rewards, and
-  History/Family destinations. Keep form drafts when navigating back and add
-  accessible, field-level validation and save/refresh retry states.
+- Verify mobile dashboard destinations, restored drafts/scroll, and background-refresh
+  interaction on a real phone and tablet.
 - Guided family setup and child-device pairing; complete password/account
   recovery and parent account-security handoff from Android.
 - Reward editing/archival, a combined point ledger, and mobile history-sharing
@@ -139,3 +138,8 @@ its implementation and proportionate verification are complete.
   account/password sign-in choices. Added readable field labels, password visibility,
   top Back actions, available-task ordering and shorter completion copy. Local tests/
   builds skipped by instruction; autodeploy compilation and phone acceptance pending.
+
+- Implemented mobile single-Back navigation, nested draft/scroll restoration, fixed
+  dashboard destinations, compact summaries, incremental history rendering, wrapping
+  labels, tappable selection rows and nonblocking guarded automatic refresh. Publication
+  uses autodeploy; real-device interaction acceptance remains pending.
