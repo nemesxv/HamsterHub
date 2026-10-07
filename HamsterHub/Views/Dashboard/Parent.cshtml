@@ -11,6 +11,14 @@
 
 <div hidden data-photo-labels data-camera="@L["MobileTakePhoto"]" data-gallery="@L["MobilePickPhoto"]" data-remove="@L["MobileRemovePhoto"]" data-limit="@L["MobilePhotoLimit"]"></div>
 <div class="dashboard-shell parent-home">
+    @foreach (var task in Model.CareTasks.Where(item => item.HelpRequested))
+    {
+        <section class="dashboard-panel">
+            <h2>🙋 @L["ChildNeedsHelp", task.AssignedMemberName]</h2><p>@task.CategoryName</p>
+            <form asp-action="ResolveTaskHelp" method="post"><input type="hidden" name="careTaskId" value="@task.Id" />
+                <button class="dashboard-button" type="submit">@L["HelpResolved"]</button></form>
+        </section>
+    }
     <section class="parent-home-hero">
         <div class="parent-home-welcome">
             <span class="parent-home-eyebrow">🏡 @L["ParentSpace"]</span>
@@ -104,6 +112,7 @@
                                         <form asp-action="ReviewCareLog" method="post">
                                             <input type="hidden" name="id" value="@item.Id" />
                                             <input type="hidden" name="decision" value="@CareLogStatus.Approved" />
+                                            <input type="hidden" name="feedback" value="@L["FeedbackWellDone"]" />
                                             <button type="submit" class="approve-button">
                                                 <span aria-hidden="true">✓</span>
                                                 @L["Approve"] · +@item.Points ★
@@ -112,7 +121,11 @@
                                         <form asp-action="ReviewCareLog" method="post">
                                             <input type="hidden" name="id" value="@item.Id" />
                                             <input type="hidden" name="decision" value="@CareLogStatus.Rejected" />
-                                            <button type="submit" class="reject-button">× @L["Reject"]</button>
+                                            <label for="feedback-@item.Id">@L["ChooseFeedback"]</label>
+                                            <select id="feedback-@item.Id" name="feedback">
+                                                <option>@L["FeedbackTogether"]</option><option>@L["FeedbackOneMoreStep"]</option><option>@L["FeedbackShowMe"]</option>
+                                            </select>
+                                            <button type="submit" class="reject-button">↻ @L["MobileReject"]</button>
                                         </form>
                                     </div>
                                 </article>
@@ -662,6 +675,7 @@
             <h2 id="taskModalLabel">@L["AddCareTask"]</h2>
             <p>@L["TaskFormIntro"]</p>
             <form asp-action="AddCareTask" method="post" enctype="multipart/form-data">
+                <partial name="_TaskVisuals" model='@(("AddCareTask", Model.AddCareTask.VisualKey, Model.AddCareTask.Instructions))' />
                 <label asp-for="AddCareTask.Name"></label>
                 <input asp-for="AddCareTask.Name" required maxlength="100" placeholder="@L["TaskNamePlaceholder"]" />
                 <label asp-for="AddCareTask.PetId"></label>
@@ -770,6 +784,11 @@
                     <label for="member-name-@member.Id">@L["DisplayName"]</label>
                     <input id="member-name-@member.Id" name="UpdateMember.DisplayName" value="@member.DisplayName" required maxlength="100" />
                     <label for="member-role-@member.Id">@L["FamilyRole"]</label>
+                    <label for="member-reading-@member.Id">@L["ReadingMode"]</label>
+                    <select id="member-reading-@member.Id" name="UpdateMember.PictureMode">
+                        <option value="true" selected="@member.PictureMode">@L["PictureVoiceMode"]</option>
+                        <option value="false" selected="@(!member.PictureMode)">@L["PicturesWordsMode"]</option>
+                    </select>
                     <select id="member-role-@member.Id" name="UpdateMember.Role"
                             disabled="@member.IsCurrentUser">
                         <option value="@((int)HouseholdMemberRole.Child)" selected="@(member.Role == HouseholdMemberRole.Child)">@L["Role_Child"]</option>
@@ -837,6 +856,7 @@
                     <input type="hidden" name="UpdateCareTask.Id" value="@task.Id" />
                     <label for="task-name-@task.Id">@L["TaskName"]</label>
                     <input id="task-name-@task.Id" name="UpdateCareTask.Name" value="@task.CategoryName" required maxlength="100" />
+                    <partial name="_TaskVisuals" model='@(("UpdateCareTask", task.VisualKey, task.Instructions))' />
                     <label for="task-pet-@task.Id">@L["TaskPet"]</label>
                     <select id="task-pet-@task.Id" name="UpdateCareTask.PetId">
                         <option value="" selected="@(task.PetId is null)">@L["NoPet"]</option>

@@ -1,3 +1,4 @@
+using HamsterHub.Contracts;
 using HamsterHub.Data;
 using HamsterHub.Models;
 using HamsterHub.Services;
@@ -133,7 +134,7 @@ public class DashboardController(
                     member.User.Email ?? "",
                     member.MemberRole,
                     member.UserId == user.Id,
-                    member.User.ProfilePhotoPath))
+                    member.User.ProfilePhotoPath, member.PictureMode))
                 .ToListAsync(),
             Pets = await dbContext.Pets
                 .AsNoTracking()
@@ -159,7 +160,7 @@ public class DashboardController(
                     task.PointValue,
                     GetTaskImagePath(task),
                     task.ImagePath is not null,
-                    task.AssignedMember.UserId == user.Id, Reminder: TaskReminderSettings.Read(task)))
+                    task.AssignedMember.UserId == user.Id, Reminder: TaskReminderSettings.Read(task), VisualKey: task.VisualKey, Instructions: task.Instructions, HelpRequested: task.HelpRequestedAt is not null))
                 .ToList(),
             PendingCare = pendingEntities
                 .Select(log => new PendingCareSummary(
@@ -313,7 +314,7 @@ public class DashboardController(
 
         return View(new KidDashboardViewModel
         {
-            ChildName = user.DisplayName,
+            ChildName = user.DisplayName, MemberId = membership.Id, PictureMode = membership.PictureMode,
             HouseholdName = GetHouseholdDisplayName(membership.Household),
             CurrentPoints = currentBalance,
             PendingCount = await dbContext.CareLogs.CountAsync(log =>
@@ -346,7 +347,7 @@ public class DashboardController(
                     GetTaskImagePath(task),
                     task.ImagePath is not null,
                     periodStatus is null,
-                    periodStatus);
+                    periodStatus, VisualKey: task.VisualKey, Instructions: task.Instructions, HelpRequested: task.HelpRequestedAt is not null);
                 })
                 .ToList(),
             RecentCare = recentCareEntities
@@ -363,7 +364,7 @@ public class DashboardController(
                     log.Photos
                         .OrderBy(photo => photo.CreatedAt)
                         .Select(photo => photo.ImagePath)
-                        .ToList()))
+                        .ToList(), log.Feedback))
                 .ToList(),
             FamilyMembers = visibleFamilyMemberEntities
                 .Select(member => new KidFamilyMemberSummary(
@@ -811,7 +812,8 @@ public class DashboardController(
             ReminderStartDate = input.Reminder?.StartDate,
             ReminderTimeZoneId = input.Reminder?.TimeZoneId,
             PointValue = input.PointValue,
-            ImagePath = imagePath
+            ImagePath = imagePath, VisualKey = TaskTemplates.IsValid(input.VisualKey) ? input.VisualKey : null,
+            Instructions = input.Instructions?.Trim()
         });
         try
         {
@@ -855,12 +857,12 @@ public class DashboardController(
     }
 
     [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Parent")]
-    public async Task<IActionResult> ReviewCareLog(int id, CareLogStatus decision)
+    public async Task<IActionResult> ReviewCareLog(int id, CareLogStatus decision, string? feedback = null)
     {
         if (decision is not (CareLogStatus.Approved or CareLogStatus.Rejected)) return BadRequest();
         var membership = await GetCurrentMembershipAsync(HouseholdMemberRole.Parent);
         if (membership is null) return Forbid();
-        var result = await workflow.ReviewAsync(membership, id, decision);
+        var result = await workflow.ReviewAsync(membership, id, decision, feedback: feedback);
         if (!result.Success) return NotFound();
         TempData["StatusMessage"] = localizer[
             decision == CareLogStatus.Approved ? "CareApproved" : "CareRejected"].Value;
@@ -1141,6 +1143,7 @@ public class DashboardController(
 
         var previousRole = member.MemberRole;
         member.User.DisplayName = input.DisplayName.Trim();
+        if (input.PictureMode is { } pictureMode) member.PictureMode = pictureMode;
         if (photoChanged)
         {
             member.User.ProfilePhotoPath = replacementPhotoPath;
@@ -1353,6 +1356,9 @@ public class DashboardController(
             return RedirectToAction(nameof(Parent));
         }
 
+        task.VisualKey = TaskTemplates.IsValid(input.VisualKey) ? input.VisualKey : null;
+        task.Instructions = input.Instructions?.Trim();
+        if (task.AssignedMemberId != input.AssignedMemberId) task.HelpRequestedAt = null;
         task.PetId = input.PetId;
         task.Name = input.Name?.Trim();
         task.AssignedMemberId = input.AssignedMemberId;
@@ -1474,6 +1480,31 @@ public class DashboardController(
             ? localizer[$"Category_{category.Code}"].Value
             : category?.CustomName ?? localizer["GeneralTask"].Value;
 
+    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Child")]
+    public async Task<IActionResult> AskForHelp(int careTaskId)
+    {
+        var child = await GetCurrentMembershipAsync(HouseholdMemberRole.Child);
+        if (child is null) return Forbid();
+        var task = await dbContext.CareTasks.Include(item => item.Pet).Include(item => item.AssignedMember)
+            .FirstOrDefaultAsync(item => item.Id == careTaskId && item.HouseholdId == child.HouseholdId);
+        if (task is null || !careLogService.CanCompleteTask(task, child)) return NotFound();
+        task.HelpRequestedAt ??= careLogService.GetUtcNow();
+        await dbContext.SaveChangesAsync();
+        TempData["StatusMessage"] = localizer["HelpRequestedHint"].Value;
+        return RedirectToAction(nameof(Child));
+    }
+
+    [HttpPost, ValidateAntiForgeryToken, Authorize(Roles = "Parent")]
+    public async Task<IActionResult> ResolveTaskHelp(int careTaskId)
+    {
+        var parent = await GetCurrentMembershipAsync(HouseholdMemberRole.Parent);
+        if (parent is null) return Forbid();
+        var task = await dbContext.CareTasks.FirstOrDefaultAsync(item => item.Id == careTaskId && item.HouseholdId == parent.HouseholdId);
+        if (task is null) return NotFound();
+        task.HelpRequestedAt = null; await dbContext.SaveChangesAsync();
+        return RedirectToAction(nameof(Parent));
+    }
+
     private string GetTaskImagePath(CareTask task)
     {
         if (!string.IsNullOrWhiteSpace(task.ImagePath))
@@ -1481,6 +1512,7 @@ public class DashboardController(
             return task.ImagePath;
         }
 
+        if (TaskTemplates.ImagePath(task.VisualKey) is { } illustration) return illustration;
         var categoryCode = task.CareCategory?.Code;
         if (categoryCode is not null &&
             DefaultTaskImages.TryGetValue(categoryCode, out var defaultPath))

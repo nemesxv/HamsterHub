@@ -13,6 +13,9 @@ public class CareTask
     public TimeOnly? ReminderTime { get; set; }
     public DateOnly? ReminderStartDate { get; set; }
     public string? ReminderTimeZoneId { get; set; }
+    public string? VisualKey { get; set; }
+    public string? Instructions { get; set; }
+    public DateTimeOffset? HelpRequestedAt { get; set; }
     public string? ImagePath { get; set; }
     public bool IsActive { get; set; } = true;
     public Household Household { get; set; } = null!;

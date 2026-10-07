@@ -1,0 +1,19 @@
+.task-template-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.task-template-grid button { display: flex; flex-direction: column; align-items: center; gap: 8px; min-height: 140px; padding: 12px; border: 2px solid transparent; border-radius: 20px; background: #dff4ea; color: #173d3a; font: inherit; }
+.task-template-grid img { width: 100%; height: 100px; object-fit: contain; }
+.task-template-grid button[aria-pressed=true] { border-color: #2f8174; box-shadow: inset 0 0 0 2px #2f8174; }
+.task-template-picker { display: grid; gap: 12px; border: 0; padding: 0; margin: 12px 0 24px; min-width: 0; }
+.task-template-picker textarea { width: 100%; padding: 12px; font: inherit; border-radius: 12px; }
+.listen-task, .task-template-picker > button { min-height: 52px; padding: 12px 18px; border: 0; border-radius: 16px; background: #dff4ea; color: #173d3a; font: inherit; font-weight: 700; white-space: normal; }
+.listen-task:focus-visible, .task-template-picker button:focus-visible { outline: 3px solid #d16649; outline-offset: 4px; }
+.listen-task[aria-pressed=true] { outline: 3px solid #2f8174; }
+.child-task-steps { text-align: left; padding-inline-start: 32px; font-size: 1.25rem; line-height: 1.65; }
+.kid-goal-summary { border-radius: 24px; padding: 24px; background: #fff0c8; color: #173d3a; margin: 20px 0; }
+.kid-goal-summary[hidden] { display: none; }
+.kid-goal-summary progress, .kid-reward-card progress { display: block; width: 100%; height: 24px; accent-color: #2f8174; }
+.child-feedback { font-size: 1rem; line-height: 1.5; }
+.picture-voice-mode .kid-task-name h3 { font-size: 1.6rem; }
+.kid-photo-choices { margin-top: 20px; }
+@media (prefers-reduced-motion: reduce) { .kid-celebration { animation: none !important; } }
+[data-theme=dark] .task-template-grid button, [data-theme=dark] .listen-task { background: #244c43; color: #e8f5f1; }
+@media (max-width: 360px) { .task-template-grid { gap: 8px; } .task-template-grid button { padding: 8px; } }

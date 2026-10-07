@@ -41,7 +41,7 @@ public sealed class MobileHouseholdController(
                 isParent ? item.User.Email ?? "" : "", item.MemberRole.ToString(), item.Id == viewer.Id,
                 item.User.ProfilePhotoPath,
                 await points.GetBalanceAsync(viewer.HouseholdId, item.UserId, cancellationToken),
-                isParent && item.CanViewOtherChildrenHistory, isParent && item.ShareHistoryWithChildren));
+                isParent && item.CanViewOtherChildrenHistory, isParent && item.ShareHistoryWithChildren, item.PictureMode));
         }
 
         var pets = await db.Pets.AsNoTracking().Where(item => item.HouseholdId == viewer.HouseholdId && item.IsActive)
@@ -61,7 +61,7 @@ public sealed class MobileHouseholdController(
         var taskItems = tasks.Select(item => new ManagedTaskItemDto(item.Id, item.PetId, item.Pet?.Name ?? CategoryName(item.CareCategory),
             item.CareCategoryId, item.Name ?? CategoryName(item.CareCategory), item.AssignedMemberId,
             item.AssignedMember.User.DisplayName, item.Frequency.ToString(), item.PointValue,
-            TaskImage(item), false, TaskReminderSettings.Read(item))).ToList();
+            TaskImage(item), false, TaskReminderSettings.Read(item), item.VisualKey, item.Instructions, item.HelpRequestedAt is not null)).ToList();
 
         var rewardQuery = db.Rewards.AsNoTracking().Include(item => item.VisibleToMembers)
             .Where(item => item.HouseholdId == viewer.HouseholdId && item.IsActive);
@@ -162,7 +162,7 @@ public sealed class MobileHouseholdController(
         if (parent is null) return Forbid();
         if (!Enum.TryParse<CareTaskFrequency>(request.Frequency, true, out var frequency) ||
             !Enum.IsDefined(frequency) || request.Points is < 0 or > 1000 ||
-            !TaskReminderSettings.IsValid(frequency, request.Reminder)) return BadRequest(new ApiError("CheckFormFields"));
+            !TaskReminderSettings.IsValid(frequency, request.Reminder) || !TaskTemplates.IsValid(request.VisualKey)) return BadRequest(new ApiError("CheckFormFields"));
         var pet = await db.Pets.FirstOrDefaultAsync(item => item.Id == request.PetId &&
             item.HouseholdId == parent.HouseholdId && item.IsActive, cancellationToken);
         var assignee = await db.HouseholdMembers.FirstOrDefaultAsync(item =>
@@ -193,6 +193,8 @@ public sealed class MobileHouseholdController(
             AssignedMemberId = assignee.Id, CareCategory = category, Frequency = frequency,
             PointValue = request.Points };
         TaskReminderSettings.Apply(task, request.Reminder);
+        task.VisualKey = string.IsNullOrEmpty(request.VisualKey) ? null : request.VisualKey;
+        task.Instructions = string.IsNullOrWhiteSpace(request.Instructions) ? null : request.Instructions.Trim();
         db.CareTasks.Add(task);
         await db.SaveChangesAsync(cancellationToken);
         return Ok(new CreatedItemDto(task.Id));
@@ -266,6 +268,7 @@ public sealed class MobileHouseholdController(
             target.MemberRole = role;
             await users.UpdateSecurityStampAsync(target.User);
         }
+        if (request.PictureMode is { } pictureMode) target.PictureMode = pictureMode;
         if (request.CanViewOtherChildrenHistory is { } canView) target.CanViewOtherChildrenHistory = canView;
         if (request.ShareHistoryWithChildren is { } share) target.ShareHistoryWithChildren = share;
         await db.SaveChangesAsync(cancellationToken);
@@ -332,7 +335,7 @@ public sealed class MobileHouseholdController(
         if (parent is null) return Forbid();
         if (!Enum.TryParse<CareTaskFrequency>(request.Frequency, true, out var frequency) ||
             !Enum.IsDefined(frequency) || request.Points is < 0 or > 1000 ||
-            !TaskReminderSettings.IsValid(frequency, request.Reminder)) return BadRequest(new ApiError("CheckFormFields"));
+            !TaskReminderSettings.IsValid(frequency, request.Reminder) || !TaskTemplates.IsValid(request.VisualKey)) return BadRequest(new ApiError("CheckFormFields"));
         var task = await db.CareTasks.FirstOrDefaultAsync(item => item.Id == id &&
             item.HouseholdId == parent.HouseholdId && item.IsActive, cancellationToken);
         var pet = await db.Pets.FirstOrDefaultAsync(item => item.Id == request.PetId &&
@@ -361,10 +364,13 @@ public sealed class MobileHouseholdController(
             return BadRequest(new ApiError("ChooseOrAddCategory"));
         if (string.IsNullOrWhiteSpace(request.Name) && category is null)
             return BadRequest(new ApiError("TaskNameRequired"));
+        if (task.AssignedMemberId != assignee.Id) task.HelpRequestedAt = null;
         task.PetId = pet?.Id; task.Name = request.Name?.Trim(); task.AssignedMemberId = assignee.Id;
         task.CareCategoryId = category?.Id; task.CareCategory = category;
         task.Frequency = frequency; task.PointValue = request.Points;
         TaskReminderSettings.Apply(task, request.Reminder);
+        task.VisualKey = string.IsNullOrEmpty(request.VisualKey) ? null : request.VisualKey;
+        task.Instructions = string.IsNullOrWhiteSpace(request.Instructions) ? null : request.Instructions.Trim();
         await db.SaveChangesAsync(cancellationToken);
         return Ok();
     }
@@ -557,7 +563,7 @@ public sealed class MobileHouseholdController(
 
     private string CategoryName(CareCategory? category) => category?.Code is { } code
         ? localizer[$"Category_{code}"].Value : category?.CustomName ?? localizer["GeneralTask"].Value;
-    private static string TaskImage(CareTask task) => task.ImagePath ?? (task.CareCategory?.Code is
+    private static string TaskImage(CareTask task) => task.ImagePath ?? TaskTemplates.ImagePath(task.VisualKey) ?? (task.CareCategory?.Code is
         "Feeding" or "Water" or "Cleaning" or "Playing" or "Health"
             ? $"/images/tasks/{task.CareCategory!.Code!.ToLowerInvariant()}.webp"
             : task.Pet?.PhotoPath ?? "/images/tasks/general.svg");

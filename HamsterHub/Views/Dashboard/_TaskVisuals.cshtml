@@ -1,0 +1,22 @@
+@model (string Prefix, string? VisualKey, string? Instructions)
+@using HamsterHub.Contracts
+@inject Microsoft.Extensions.Localization.IStringLocalizer<SharedResource> L
+<fieldset class="task-template-picker" data-task-templates data-prefix="@Model.Prefix">
+    <legend>@L["ChooseTaskPicture"]</legend>
+    <div class="task-template-grid">
+        @foreach (var template in TaskTemplates.All)
+        {
+            <button type="button" data-template="@template.Id" data-title="@L[template.TitleKey]"
+                    data-steps="@L[template.StepsKey]" data-frequency="@(template.Frequency == "Weekly" ? 2 : 1)"
+                    aria-pressed="@(Model.VisualKey == template.Id ? "true" : "false")">
+                <img src="/images/tasks/@template.Image" alt="" loading="lazy" />
+                <span>@L[template.TitleKey]</span>
+            </button>
+        }
+    </div>
+    <input type="hidden" name="@(Model.Prefix).VisualKey" value="@Model.VisualKey" data-visual-key />
+    <button type="button" data-default-picture>@L["DefaultPicture"]</button>
+    <label for="@(Model.Prefix)-steps">@L["TaskSteps"]</label>
+    <textarea id="@(Model.Prefix)-steps" name="@(Model.Prefix).Instructions" rows="3" maxlength="600"
+              placeholder="@L["TaskStepsHint"]">@Model.Instructions</textarea>
+</fieldset>

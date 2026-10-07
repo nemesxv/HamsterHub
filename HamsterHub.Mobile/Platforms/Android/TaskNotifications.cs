@@ -31,6 +31,21 @@ internal static class TaskNotifications
     private static void Save(ReminderDeviceState state) =>
         Storage.Edit()!.PutString("state", JsonSerializer.Serialize(state))!.Commit();
 
+    public static void SendTest()
+    {
+        EnsureChannel();
+        if (!NotificationsAllowed) return;
+        var launch = new Intent(Context, typeof(MainActivity)).AddFlags(ActivityFlags.ClearTop | ActivityFlags.SingleTop);
+        var tap = PendingIntent.GetActivity(Context, 7410, launch, PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
+        var builder = new AndroidX.Core.App.NotificationCompat.Builder(Context, ChannelId);
+        builder.SetSmallIcon(Resource.Drawable.ic_task_reminder);
+        builder.SetContentTitle(Strings.Get("TestReminder"));
+        builder.SetContentText(Strings.Get("TestReminderBody"));
+        builder.SetVisibility(AndroidX.Core.App.NotificationCompat.VisibilityPrivate);
+        builder.SetAutoCancel(true); builder.SetContentIntent(tap);
+        ((NotificationManager)Context.GetSystemService(Context.NotificationService)!).Notify(7410, builder.Build());
+    }
+
     public static void Clear()
     {
         lock (StateLock)

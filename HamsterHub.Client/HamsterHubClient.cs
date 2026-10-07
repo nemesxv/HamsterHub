@@ -55,6 +55,11 @@ public sealed class HamsterHubClient(HttpClient http, ISessionStore store)
         await store.ClearAsync();
     }
 
+    public Task RequestHelpAsync(int memberId, int taskId) =>
+        PostAsync($"api/v1/memberships/{memberId}/tasks/{taskId}/help", new { });
+    public Task ResolveHelpAsync(int memberId, int taskId) =>
+        DeleteAsync($"api/v1/memberships/{memberId}/tasks/{taskId}/help");
+
     public Task<SessionDto> GetSessionAsync() => GetAsync<SessionDto>("api/v1/me");
     public Task<DashboardDto> GetDashboardAsync(int memberId) =>
         GetAsync<DashboardDto>($"api/v1/memberships/{memberId}/dashboard");
@@ -128,7 +133,7 @@ public sealed class HamsterHubClient(HttpClient http, ISessionStore store)
         return await response.Content.ReadAsByteArrayAsync();
     }
 
-    public async Task CompleteAsync(int memberId, int taskId, IReadOnlyList<UploadPhoto> photos)
+    public async Task CompleteAsync(int memberId, int taskId, IReadOnlyList<UploadPhoto> photos, Guid? submissionId = null)
     {
         using var response = await SendAsync(async () =>
         {
@@ -137,6 +142,7 @@ public sealed class HamsterHubClient(HttpClient http, ISessionStore store)
             {
                 // A field keeps the multipart body valid even when no photos were selected.
                 content.Add(new StringContent("true"), "submitted");
+                if (submissionId is { } id) content.Add(new StringContent(id.ToString()), "submissionId");
                 foreach (var photo in photos)
                 {
                     var stream = new StreamContent(await photo.OpenReadAsync());
@@ -150,11 +156,11 @@ public sealed class HamsterHubClient(HttpClient http, ISessionStore store)
         });
     }
 
-    public async Task ReviewAsync(int memberId, int logId, bool approve)
+    public async Task ReviewAsync(int memberId, int logId, bool approve, string? feedback = null)
     {
         using var response = await SendAsync(() => Task.FromResult(new HttpRequestMessage(HttpMethod.Post,
             $"api/v1/memberships/{memberId}/care-logs/{logId}/review")
-            { Content = JsonContent.Create(new ReviewRequest(approve)) }));
+            { Content = JsonContent.Create(new ReviewRequest(approve, feedback)) }));
     }
 
     private async Task<T> GetAsync<T>(string path)

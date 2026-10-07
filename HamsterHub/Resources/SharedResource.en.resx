@@ -464,7 +464,7 @@
   <data name="MobileStatusRejected" xml:space="preserve"><value>Rejected</value></data>
   <data name="MobileCarePhoto" xml:space="preserve"><value>Task completion photo</value></data>
   <data name="MobileApprove" xml:space="preserve"><value>Approve</value></data>
-  <data name="MobileReject" xml:space="preserve"><value>Reject</value></data>
+  <data name="MobileReject" xml:space="preserve"><value>Ask to try again</value></data>
   <data name="MobileCompletionHelp" xml:space="preserve"><value>Finished your task? Add up to 8 photos from your camera or gallery (JPG, PNG or WebP, up to 5 MB each), or send without photos.</value></data>
   <data name="MobileRemovePhoto" xml:space="preserve"><value>Remove photo</value></data>
   <data name="MobilePickPhoto" xml:space="preserve"><value>Choose from gallery</value></data>
@@ -575,4 +575,96 @@
   <data name="MobileNoPets" xml:space="preserve"><value>Family pets will appear here.</value></data>
   <data name="MobileNoRewardHistory" xml:space="preserve"><value>Reward requests and received rewards will appear here.</value></data>
   <data name="MobileBackgroundRefreshFailed" xml:space="preserve"><value>Could not refresh. Showing the last loaded data; pull down to retry.</value></data>
+  <data name="ParentUnlock" xml:space="preserve"><value>Parent access</value></data>
+  <data name="ParentUnlockHint" xml:space="preserve"><value>Use your phone screen lock to confirm access.</value></data>
+  <data name="ParentPasswordRequired" xml:space="preserve"><value>Enter the parent password. Set up a phone screen lock to enable quick access.</value></data>
+  <data name="ListenTask" xml:space="preserve"><value>Listen</value></data>
+  <data name="VoiceUnavailable" xml:space="preserve"><value>Voice is unavailable. Add an English voice in the phone text-to-speech settings.</value></data>
+  <data name="TaskStateReady" xml:space="preserve"><value>Ready to start</value></data>
+  <data name="TaskStateWaiting" xml:space="preserve"><value>Waiting for a parent</value></data>
+  <data name="TaskStateDone" xml:space="preserve"><value>Completed</value></data>
+  <data name="TaskStateQueued" xml:space="preserve"><value>Waiting to send</value></data>
+  <data name="OpenMyTask" xml:space="preserve"><value>Start</value></data>
+  <data name="DidIt" xml:space="preserve"><value>I did it!</value></data>
+  <data name="NeedHelp" xml:space="preserve"><value>Help me</value></data>
+  <data name="HelpRequested" xml:space="preserve"><value>Help requested</value></data>
+  <data name="HelpRequestedHint" xml:space="preserve"><value>Your parent will see your request when they open or refresh their dashboard.</value></data>
+  <data name="ChildNeedsHelp" xml:space="preserve"><value>{0} needs help</value></data>
+  <data name="HelpResolved" xml:space="preserve"><value>Help given</value></data>
+  <data name="CompletionThanks" xml:space="preserve"><value>Thanks for trying!</value></data>
+  <data name="CompletionWaiting" xml:space="preserve"><value>Task sent! Your parent will check it, then your stars will appear.</value></data>
+  <data name="CompletionQueued" xml:space="preserve"><value>Saved on this phone. We will send it when the app reconnects.</value></data>
+  <data name="ChooseGoal" xml:space="preserve"><value>Choose this reward</value></data>
+  <data name="ChooseGoalHint" xml:space="preserve"><value>Choose a reward to save your stars for.</value></data>
+  <data name="MyGoal" xml:space="preserve"><value>My reward</value></data>
+  <data name="GoalProgress" xml:space="preserve"><value>{0} of {1} ★</value></data>
+  <data name="FamilyGuide" xml:space="preserve"><value>Let’s get started</value></data>
+  <data name="FamilyGuideHint" xml:space="preserve"><value>Add your child, choose a task, and see how it looks.</value></data>
+  <data name="SetupChild" xml:space="preserve"><value>1 · Add a child</value></data>
+  <data name="SetupChildStatus" xml:space="preserve"><value>Child added</value></data>
+  <data name="SetupTask" xml:space="preserve"><value>2 · Choose a task</value></data>
+  <data name="SetupTaskStatus" xml:space="preserve"><value>Child task added</value></data>
+  <data name="SetupReminderHint" xml:space="preserve"><value>Turn on a reminder and choose a convenient time inside the task.</value></data>
+  <data name="PreviewChild" xml:space="preserve"><value>Preview child view</value></data>
+  <data name="PreviewChildHint" xml:space="preserve"><value>This is a preview. Tasks cannot be submitted here.</value></data>
+  <data name="ChooseTaskTemplate" xml:space="preserve"><value>Ready-made task</value></data>
+  <data name="ChooseTaskPicture" xml:space="preserve"><value>Choose a picture</value></data>
+  <data name="SelectedPicture" xml:space="preserve"><value>Picture</value></data>
+  <data name="DefaultPicture" xml:space="preserve"><value>Default picture</value></data>
+  <data name="TaskSteps" xml:space="preserve"><value>Task steps</value></data>
+  <data name="TaskStepsHint" xml:space="preserve"><value>Up to three short steps, one per line.</value></data>
+  <data name="TaskMoreOptions" xml:space="preserve"><value>More options</value></data>
+  <data name="ReadingMode" xml:space="preserve"><value>How tasks appear</value></data>
+  <data name="PictureVoiceMode" xml:space="preserve"><value>Large pictures and voice</value></data>
+  <data name="PictureModeHint" xml:space="preserve"><value>On: large pictures and less text. Off: pictures, words and details for early readers. The listen button is always available.</value></data>
+  <data name="GentleCelebrations" xml:space="preserve"><value>Gentle animation after a task</value></data>
+  <data name="ChooseFeedback" xml:space="preserve"><value>How can we help them try again?</value></data>
+  <data name="FeedbackWellDone" xml:space="preserve"><value>Thank you, well done!</value></data>
+  <data name="FeedbackTogether" xml:space="preserve"><value>Let’s try together.</value></data>
+  <data name="FeedbackOneMoreStep" xml:space="preserve"><value>There is one more step. I will help.</value></data>
+  <data name="FeedbackShowMe" xml:space="preserve"><value>Show me what you did, and we will finish together.</value></data>
+  <data name="TestReminder" xml:space="preserve"><value>Test notification</value></data>
+  <data name="TestReminderBody" xml:space="preserve"><value>Notifications work. Time for a little task!</value></data>
+  <data name="OutboxFull" xml:space="preserve"><value>Send saved reports first or remove reports you no longer need.</value></data>
+  <data name="OfflineTasksHint" xml:space="preserve"><value>Showing saved tasks. New reports will be sent when the app reconnects.</value></data>
+  <data name="WaitingToSend" xml:space="preserve"><value>Waiting to send: {0}</value></data>
+  <data name="RemoveQueuedReport" xml:space="preserve"><value>Remove saved report</value></data>
+  <data name="SendWaitingReports" xml:space="preserve"><value>Send saved reports</value></data>
+  <data name="RestoreDraft" xml:space="preserve"><value>Restore draft</value></data>
+  <data name="DiscardDraft" xml:space="preserve"><value>Discard draft</value></data>
+  <data name="NoSavedDraft" xml:space="preserve"><value>No saved draft yet.</value></data>
+  <data name="DraftSaveFailed" xml:space="preserve"><value>Could not save the draft on this phone.</value></data>
+  <data name="Template_teeth" xml:space="preserve"><value>Brush teeth</value></data>
+  <data name="TemplateSteps_teeth" xml:space="preserve"><value>Pick up your toothbrush.
+Brush with a grown-up.
+Put your toothbrush away.</value></data>
+  <data name="Template_toys" xml:space="preserve"><value>Put toys away</value></data>
+  <data name="TemplateSteps_toys" xml:space="preserve"><value>Collect your toys.
+Put them in their places.
+Check that the floor is clear.</value></data>
+  <data name="Template_books" xml:space="preserve"><value>Read together</value></data>
+  <data name="TemplateSteps_books" xml:space="preserve"><value>Choose a book.
+Ask a grown-up to join you.
+Read together.</value></data>
+  <data name="Template_dress" xml:space="preserve"><value>Get dressed</value></data>
+  <data name="TemplateSteps_dress" xml:space="preserve"><value>Choose clothes with a grown-up.
+Put them on.
+Ask for help if needed.</value></data>
+  <data name="Template_feeding" xml:space="preserve"><value>Feed the pet</value></data>
+  <data name="TemplateSteps_feeding" xml:space="preserve"><value>Ask a grown-up to join you.
+Measure the food together.
+Put the food in the bowl.</value></data>
+  <data name="Template_water" xml:space="preserve"><value>Give the pet water</value></data>
+  <data name="TemplateSteps_water" xml:space="preserve"><value>Ask a grown-up to join you.
+Add fresh water together.
+Put the water container back.</value></data>
+  <data name="Template_cleaning" xml:space="preserve"><value>Clean the pet’s home</value></data>
+  <data name="TemplateSteps_cleaning" xml:space="preserve"><value>Ask a grown-up to join you.
+Help clean the pet’s home.
+Wash your hands.</value></data>
+  <data name="Template_playing" xml:space="preserve"><value>Play with the pet</value></data>
+  <data name="TemplateSteps_playing" xml:space="preserve"><value>Ask a grown-up if it is playtime.
+Play gently together.
+Let your pet rest.</value></data>
+  <data name="PicturesWordsMode" xml:space="preserve"><value>Pictures and words</value></data>
 </root>

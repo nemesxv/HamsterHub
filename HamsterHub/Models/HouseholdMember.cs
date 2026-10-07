@@ -8,6 +8,7 @@ public class HouseholdMember
     public HouseholdMemberRole MemberRole { get; set; }
     public DateTimeOffset JoinedAt { get; set; } = DateTimeOffset.UtcNow;
     public bool IsActive { get; set; } = true;
+    public bool PictureMode { get; set; } = true;
     public bool CanViewOtherChildrenHistory { get; set; }
     public bool ShareHistoryWithChildren { get; set; }
     public Household Household { get; set; } = null!;

@@ -6,7 +6,7 @@ using HamsterHub.Contracts;
 namespace HamsterHub.Mobile;
 
 internal sealed record SavedAccount(string Id, string Server, string Email, string Name,
-    TokenResponse? Tokens);
+    TokenResponse? Tokens, string? Role = null);
 
 // Account identities and optional tokens live in Android encrypted storage; never store passwords.
 internal static class SavedAccounts

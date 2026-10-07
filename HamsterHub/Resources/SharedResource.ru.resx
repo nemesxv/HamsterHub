@@ -464,7 +464,7 @@
   <data name="MobileStatusRejected" xml:space="preserve"><value>Отклонено</value></data>
   <data name="MobileCarePhoto" xml:space="preserve"><value>Фото выполненного задания</value></data>
   <data name="MobileApprove" xml:space="preserve"><value>Одобрить</value></data>
-  <data name="MobileReject" xml:space="preserve"><value>Отклонить</value></data>
+  <data name="MobileReject" xml:space="preserve"><value>Попробовать ещё раз</value></data>
   <data name="MobileCompletionHelp" xml:space="preserve"><value>Задание выполнено? Добавь до 8 фотографий с камеры или из галереи (JPG, PNG или WebP, до 5 МБ каждая) или отправь отчёт без фото.</value></data>
   <data name="MobileRemovePhoto" xml:space="preserve"><value>Убрать фото</value></data>
   <data name="MobilePickPhoto" xml:space="preserve"><value>Выбрать из галереи</value></data>
@@ -575,4 +575,96 @@
   <data name="MobileNoPets" xml:space="preserve"><value>Здесь появятся питомцы семьи.</value></data>
   <data name="MobileNoRewardHistory" xml:space="preserve"><value>Здесь появятся запросы и полученные награды.</value></data>
   <data name="MobileBackgroundRefreshFailed" xml:space="preserve"><value>Не удалось обновить. Показаны последние данные; потяните вниз, чтобы повторить.</value></data>
+  <data name="ParentUnlock" xml:space="preserve"><value>Для родителей</value></data>
+  <data name="ParentUnlockHint" xml:space="preserve"><value>Подтвердите вход с помощью блокировки телефона.</value></data>
+  <data name="ParentPasswordRequired" xml:space="preserve"><value>Введите пароль родителя. Для быстрого входа можно настроить блокировку экрана телефона.</value></data>
+  <data name="ListenTask" xml:space="preserve"><value>Послушать</value></data>
+  <data name="VoiceUnavailable" xml:space="preserve"><value>Голос недоступен. Добавьте русский голос в настройках озвучивания телефона.</value></data>
+  <data name="TaskStateReady" xml:space="preserve"><value>Можно начать</value></data>
+  <data name="TaskStateWaiting" xml:space="preserve"><value>Ждём родителя</value></data>
+  <data name="TaskStateDone" xml:space="preserve"><value>Выполнено</value></data>
+  <data name="TaskStateQueued" xml:space="preserve"><value>Ждёт отправки</value></data>
+  <data name="OpenMyTask" xml:space="preserve"><value>Начать</value></data>
+  <data name="DidIt" xml:space="preserve"><value>Готово!</value></data>
+  <data name="NeedHelp" xml:space="preserve"><value>Нужна помощь</value></data>
+  <data name="HelpRequested" xml:space="preserve"><value>Помощь запрошена</value></data>
+  <data name="HelpRequestedHint" xml:space="preserve"><value>Родитель увидит просьбу, когда откроет или обновит свои задания.</value></data>
+  <data name="ChildNeedsHelp" xml:space="preserve"><value>{0} просит помочь</value></data>
+  <data name="HelpResolved" xml:space="preserve"><value>Помогли</value></data>
+  <data name="CompletionThanks" xml:space="preserve"><value>Спасибо за старание!</value></data>
+  <data name="CompletionWaiting" xml:space="preserve"><value>Задание отправлено! Родитель проверит его, и тогда появятся звёзды.</value></data>
+  <data name="CompletionQueued" xml:space="preserve"><value>Сохранили на телефоне. Отправим, когда приложение снова свяжется с сервером.</value></data>
+  <data name="ChooseGoal" xml:space="preserve"><value>Хочу эту награду</value></data>
+  <data name="ChooseGoalHint" xml:space="preserve"><value>Выбери, на какую награду копить звёзды.</value></data>
+  <data name="MyGoal" xml:space="preserve"><value>Моя награда</value></data>
+  <data name="GoalProgress" xml:space="preserve"><value>{0} из {1} ★</value></data>
+  <data name="FamilyGuide" xml:space="preserve"><value>Начнём вместе</value></data>
+  <data name="FamilyGuideHint" xml:space="preserve"><value>Добавьте ребёнка, выберите задание и посмотрите, как оно выглядит.</value></data>
+  <data name="SetupChild" xml:space="preserve"><value>1 · Добавить ребёнка</value></data>
+  <data name="SetupChildStatus" xml:space="preserve"><value>Ребёнок в семье</value></data>
+  <data name="SetupTask" xml:space="preserve"><value>2 · Выбрать задание</value></data>
+  <data name="SetupTaskStatus" xml:space="preserve"><value>Задание для ребёнка создано</value></data>
+  <data name="SetupReminderHint" xml:space="preserve"><value>В задании можно включить напоминание и выбрать удобное время.</value></data>
+  <data name="PreviewChild" xml:space="preserve"><value>Посмотреть глазами ребёнка</value></data>
+  <data name="PreviewChildHint" xml:space="preserve"><value>Это предпросмотр. Задания здесь не отправляются.</value></data>
+  <data name="ChooseTaskTemplate" xml:space="preserve"><value>Готовое задание</value></data>
+  <data name="ChooseTaskPicture" xml:space="preserve"><value>Выбрать картинку</value></data>
+  <data name="SelectedPicture" xml:space="preserve"><value>Картинка</value></data>
+  <data name="DefaultPicture" xml:space="preserve"><value>Обычная картинка</value></data>
+  <data name="TaskSteps" xml:space="preserve"><value>Шаги задания</value></data>
+  <data name="TaskStepsHint" xml:space="preserve"><value>До трёх коротких шагов, каждый с новой строки.</value></data>
+  <data name="TaskMoreOptions" xml:space="preserve"><value>Ещё настройки</value></data>
+  <data name="ReadingMode" xml:space="preserve"><value>Как показывать задания</value></data>
+  <data name="PictureVoiceMode" xml:space="preserve"><value>Крупные картинки и голос</value></data>
+  <data name="PictureModeHint" xml:space="preserve"><value>Включено — крупные картинки и меньше текста. Выключено — картинки, слова и детали для начинающего читателя. Кнопка озвучивания доступна всегда.</value></data>
+  <data name="GentleCelebrations" xml:space="preserve"><value>Небольшая анимация после задания</value></data>
+  <data name="ChooseFeedback" xml:space="preserve"><value>Как помочь попробовать снова?</value></data>
+  <data name="FeedbackWellDone" xml:space="preserve"><value>Спасибо, отлично получилось!</value></data>
+  <data name="FeedbackTogether" xml:space="preserve"><value>Давай попробуем вместе.</value></data>
+  <data name="FeedbackOneMoreStep" xml:space="preserve"><value>Остался ещё один шаг. Я помогу.</value></data>
+  <data name="FeedbackShowMe" xml:space="preserve"><value>Покажи, что получилось, и закончим вместе.</value></data>
+  <data name="TestReminder" xml:space="preserve"><value>Проверить уведомление</value></data>
+  <data name="TestReminderBody" xml:space="preserve"><value>Уведомления работают. Пора выполнить маленькое задание!</value></data>
+  <data name="OutboxFull" xml:space="preserve"><value>Сначала отправьте сохранённые отчёты или удалите ненужные.</value></data>
+  <data name="OfflineTasksHint" xml:space="preserve"><value>Показаны сохранённые задания. Новые отчёты отправятся при следующем подключении приложения.</value></data>
+  <data name="WaitingToSend" xml:space="preserve"><value>Ожидают отправки: {0}</value></data>
+  <data name="RemoveQueuedReport" xml:space="preserve"><value>Убрать сохранённый отчёт</value></data>
+  <data name="SendWaitingReports" xml:space="preserve"><value>Отправить сохранённые отчёты</value></data>
+  <data name="RestoreDraft" xml:space="preserve"><value>Вернуть черновик</value></data>
+  <data name="DiscardDraft" xml:space="preserve"><value>Удалить черновик</value></data>
+  <data name="NoSavedDraft" xml:space="preserve"><value>Черновика пока нет.</value></data>
+  <data name="DraftSaveFailed" xml:space="preserve"><value>Не удалось сохранить черновик на телефоне.</value></data>
+  <data name="Template_teeth" xml:space="preserve"><value>Почистить зубы</value></data>
+  <data name="TemplateSteps_teeth" xml:space="preserve"><value>Возьми щётку.
+Почисти зубы вместе со взрослым.
+Убери щётку на место.</value></data>
+  <data name="Template_toys" xml:space="preserve"><value>Убрать игрушки</value></data>
+  <data name="TemplateSteps_toys" xml:space="preserve"><value>Собери игрушки.
+Разложи их по местам.
+Проверь, свободен ли пол.</value></data>
+  <data name="Template_books" xml:space="preserve"><value>Почитать вместе</value></data>
+  <data name="TemplateSteps_books" xml:space="preserve"><value>Выбери книгу.
+Позови взрослого.
+Почитайте вместе.</value></data>
+  <data name="Template_dress" xml:space="preserve"><value>Одеться</value></data>
+  <data name="TemplateSteps_dress" xml:space="preserve"><value>Выбери одежду со взрослым.
+Надень её.
+Попроси помочь, если нужно.</value></data>
+  <data name="Template_feeding" xml:space="preserve"><value>Покормить питомца</value></data>
+  <data name="TemplateSteps_feeding" xml:space="preserve"><value>Позови взрослого.
+Вместе отмерьте корм.
+Положите корм в миску.</value></data>
+  <data name="Template_water" xml:space="preserve"><value>Дать питомцу воды</value></data>
+  <data name="TemplateSteps_water" xml:space="preserve"><value>Позови взрослого.
+Вместе налейте свежую воду.
+Поставьте поилку на место.</value></data>
+  <data name="Template_cleaning" xml:space="preserve"><value>Убрать домик питомца</value></data>
+  <data name="TemplateSteps_cleaning" xml:space="preserve"><value>Позови взрослого.
+Помоги убрать домик.
+Вымой руки.</value></data>
+  <data name="Template_playing" xml:space="preserve"><value>Поиграть с питомцем</value></data>
+  <data name="TemplateSteps_playing" xml:space="preserve"><value>Спроси взрослого, можно ли играть.
+Поиграйте спокойно.
+Дай питомцу отдохнуть.</value></data>
+  <data name="PicturesWordsMode" xml:space="preserve"><value>Картинки и слова</value></data>
 </root>

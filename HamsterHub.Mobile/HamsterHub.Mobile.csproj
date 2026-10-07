@@ -19,7 +19,7 @@
     <MauiIcon Include="Resources/AppIcon/appicon.svg" Color="#F2AB68" />
     <MauiSplashScreen Include="Resources/AppIcon/appicon.svg" Color="#FFF8ED" BaseSize="128,128" />
     <MauiImage Include="../HamsterHub/wwwroot/images/tasks/*.webp" Link="Resources/Images/%(Filename)%(Extension)" />
-    <MauiImage Include="../HamsterHub/wwwroot/images/tasks/general.svg" Link="Resources/Images/general.svg" />
+    <MauiImage Include="../HamsterHub/wwwroot/images/tasks/*.svg" Link="Resources/Images/%(Filename)%(Extension)" />
     <MauiFont Include="Resources/Fonts/*" />
     <EmbeddedResource Include="../HamsterHub/Resources/SharedResource.ru.resx" Link="Resources/SharedResource.resx" WithCulture="false" LogicalName="HamsterHub.Mobile.Resources.SharedResource.resources" />
     <EmbeddedResource Include="../HamsterHub/Resources/SharedResource.en.resx" Link="Resources/SharedResource.en.resx" />

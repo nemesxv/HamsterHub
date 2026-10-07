@@ -288,3 +288,42 @@ Family lists avoid nested padding; labels and selection rows wrap on small scree
 Automatic refresh keeps the app interactive and discards responses when navigation or
 another operation has changed the screen. Manual refresh remains pull-down.
 This iteration keeps the user's preference for deployment builds without local tests.
+
+
+### Visual-first family experience (2026-10-07)
+
+Tasks support an allowlisted built-in illustration and optional short instructions, shared
+by website and Android. Eight editable templates cover toys, teeth, dressing, reading,
+and supervised pet care. Uploaded task photos retain priority over default illustrations.
+Parents choose a per-child picture/voice or picture/words presentation. Speech is always
+user-triggered, uses the configured device/browser speech engine, and stops on navigation.
+No cloud speech service or new external account is required by HamsterHub.
+
+Android Today separates ready, waiting-to-send, waiting-for-parent, and completed tasks.
+Completion has one primary action, optional photos, and an explicit pending-stars receipt.
+Children may ask for help; parents see the request on their next dashboard refresh and
+can mark it handled. Approval adds friendly feedback; another attempt uses a supportive
+parent-selected message. Help is a dashboard request, not an instant push notification.
+A device-local reward goal shows approved balance progress without streak penalties or
+rankings. Settings can disable the short completion animation and send a test notification.
+
+Parent family setup offers templates and child preview; advanced task options collapse.
+Saved parent sessions require Android screen-lock verification, falling back to the
+Identity account password when no device lock is configured or verification is cancelled.
+Parent content is concealed while backgrounded and verified on return. Saved child access
+remains available with the parent's existing direct-sign-in choice.
+
+Android stores management text/selection drafts, cached child dashboards, and submitted
+report queues in authenticated-encrypted private files; the encryption key is in
+SecureStorage. Passwords, email login fields and authentication codes are excluded from
+drafts. Unsubmitted selected photos are still temporary; submitted report photos are
+persisted with the queue. Child cache fallback is limited to seven days and a saved child
+account; parent sessions cannot be restored offline. Outboxes are scoped by server and
+membership, bounded to 20 reports / 80 MB of photo bytes, and retry when the app refreshes
+or resumes. Reports use a unique submission ID checked inside the shared server
+transaction before recurrence checks. Replays return the same log, including unlimited
+tasks, without a second point award. The server validates current assignment, media,
+recurrence and task value on first receipt; offline reports use server receipt time.
+
+Local builds/tests remain skipped at the user's request; deployment compilation and
+health checks are separate from pending actual-device and child/parent usability checks.

@@ -69,7 +69,7 @@ public sealed class MobileCareController(ApplicationDbContext db, UserManager<Ap
         return new SessionDto(user.DisplayName, members.Where(m => roles.Contains(m.MemberRole.ToString()))
             .Select(m => new MemberDto(m.Id, m.HouseholdId,
                 m.Household.IsNameCustomized ? m.Household.Name : localizer["DefaultHouseholdName"].Value,
-                m.MemberRole.ToString())).ToList());
+                m.MemberRole.ToString(), m.PictureMode)).ToList());
     }
 
     [HttpGet("memberships/{memberId:int}/dashboard")]
@@ -93,7 +93,8 @@ public sealed class MobileCareController(ApplicationDbContext db, UserManager<Ap
             {
                 return new TaskDto(t.Id, t.Pet?.Name ?? CategoryName(t.CareCategory), t.Name ?? CategoryName(t.CareCategory), ImagePath(t),
                     t.PointValue, t.Frequency.ToString(), care.CanCompleteTask(t, member) &&
-                    care.GetCurrentPeriodStatus(t, ownLogs, now) is null);
+                    care.GetCurrentPeriodStatus(t, ownLogs, now) is null,
+                    care.GetCurrentPeriodStatus(t, ownLogs, now)?.ToString(), t.VisualKey, t.Instructions, t.HelpRequestedAt is not null);
             }).ToList(),
             ownLogs.OrderByDescending(l => l.CompletedAt).Take(50).Select(ToDto).ToList(),
             pending.OrderByDescending(l => l.CompletedAt).Select(ToDto).ToList());
@@ -175,11 +176,11 @@ public sealed class MobileCareController(ApplicationDbContext db, UserManager<Ap
     [HttpPost("memberships/{memberId:int}/tasks/{taskId:int}/complete")]
     [Consumes("multipart/form-data"), RequestSizeLimit(45 * 1024 * 1024)]
     public async Task<IActionResult> Complete(int memberId, int taskId,
-        [FromForm] List<IFormFile>? photos, CancellationToken cancellationToken)
+        [FromForm] List<IFormFile>? photos, CancellationToken cancellationToken, [FromForm] Guid? submissionId = null)
     {
         var member = await GetMemberAsync(memberId, cancellationToken);
         if (member is null) return Forbid();
-        var result = await workflow.CompleteAsync(member, taskId, photos, cancellationToken);
+        var result = await workflow.CompleteAsync(member, taskId, photos, cancellationToken, submissionId);
         return WorkflowResponse(result);
     }
 
@@ -190,7 +191,33 @@ public sealed class MobileCareController(ApplicationDbContext db, UserManager<Ap
         var member = await GetMemberAsync(memberId, cancellationToken);
         if (member?.MemberRole != HouseholdMemberRole.Parent) return Forbid();
         return WorkflowResponse(await workflow.ReviewAsync(member, logId,
-            request.Approve ? CareLogStatus.Approved : CareLogStatus.Rejected, cancellationToken));
+            request.Approve ? CareLogStatus.Approved : CareLogStatus.Rejected, cancellationToken, request.Feedback));
+    }
+
+    [HttpPost("memberships/{memberId:int}/tasks/{taskId:int}/help")]
+    public async Task<IActionResult> RequestHelp(int memberId, int taskId, CancellationToken cancellationToken)
+    {
+        var member = await GetMemberAsync(memberId, cancellationToken);
+        if (member?.MemberRole != HouseholdMemberRole.Child) return Forbid();
+        var task = await db.CareTasks.Include(t => t.Pet).Include(t => t.AssignedMember)
+            .FirstOrDefaultAsync(t => t.Id == taskId && t.HouseholdId == member.HouseholdId, cancellationToken);
+        if (task is null || !care.CanCompleteTask(task, member)) return NotFound();
+        task.HelpRequestedAt ??= care.GetUtcNow();
+        await db.SaveChangesAsync(cancellationToken);
+        return Ok();
+    }
+
+    [HttpDelete("memberships/{memberId:int}/tasks/{taskId:int}/help")]
+    public async Task<IActionResult> ResolveHelp(int memberId, int taskId, CancellationToken cancellationToken)
+    {
+        var parent = await GetMemberAsync(memberId, cancellationToken);
+        if (parent?.MemberRole != HouseholdMemberRole.Parent) return Forbid();
+        var task = await db.CareTasks.FirstOrDefaultAsync(t => t.Id == taskId &&
+            t.HouseholdId == parent.HouseholdId, cancellationToken);
+        if (task is null) return NotFound();
+        task.HelpRequestedAt = null;
+        await db.SaveChangesAsync(cancellationToken);
+        return Ok();
     }
 
     private IActionResult WorkflowResponse(CareWorkflowResult result) => result.Error switch
@@ -218,11 +245,11 @@ public sealed class MobileCareController(ApplicationDbContext db, UserManager<Ap
 
     private string CategoryName(CareCategory? category) => category?.Code is { } code
         ? localizer[$"Category_{code}"].Value : category?.CustomName ?? localizer["GeneralTask"].Value;
-    private static string ImagePath(CareTask task) => task.ImagePath ?? (task.CareCategory?.Code is
+    private static string ImagePath(CareTask task) => task.ImagePath ?? TaskTemplates.ImagePath(task.VisualKey) ?? (task.CareCategory?.Code is
         "Feeding" or "Water" or "Cleaning" or "Playing" or "Health"
             ? $"/images/tasks/{task.CareCategory!.Code!.ToLowerInvariant()}.webp"
             : task.Pet?.PhotoPath ?? "/images/tasks/general.svg");
     private CareLogDto ToDto(CareLog log) => new(log.Id, log.Pet?.Name ?? CategoryName(log.CareTask.CareCategory), log.CareTask.Name ?? CategoryName(log.CareTask.CareCategory),
         log.CompletedByUser.DisplayName, log.Status.ToString(), log.PointsAwarded, log.CompletedAt,
-        log.Photos.OrderBy(p => p.Id).Select(p => p.ImagePath).ToList());
+        log.Photos.OrderBy(p => p.Id).Select(p => p.ImagePath).ToList(), log.CareTaskId, log.Feedback);
 }

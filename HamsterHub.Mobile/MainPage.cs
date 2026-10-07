@@ -99,9 +99,22 @@ public sealed partial class MainPage : ContentPage
             {
                 window.Activated += (_, _) => { foreground = true; dashboardRefreshTimer.Start(); };
                 window.Deactivated += (_, _) => { foreground = false; dashboardRefreshTimer.Stop(); };
-                window.Stopped += (_, _) => { foreground = false; dashboardRefreshTimer.Stop(); };
+                window.Stopped += async (_, _) =>
+                {
+                    foreground = false; dashboardRefreshTimer.Stop(); speech?.Cancel();
+                    if (flushDraft is not null) { try { await flushDraft(); } catch { } }
+                    if (session?.Memberships.Any(item => item.Role == "Parent") == true && !ParentAccess.IsAuthenticating)
+                    { parentNeedsUnlock = true; Content.IsVisible = false; }
+                };
                 window.Resumed += async (_, _) =>
                 {
+                    if (ParentAccess.IsAuthenticating) return;
+                    if (parentNeedsUnlock)
+                    {
+                        parentNeedsUnlock = false;
+                        try { if (!await AllowParentSessionAsync(false)) return; }
+                        finally { Content.IsVisible = true; }
+                    }
                     foreground = true;
                     dashboardRefreshTimer.Start();
                     await RunAsync(async () => { AppUpdateInstaller.Continue(); await Task.CompletedTask; });
@@ -119,7 +132,12 @@ public sealed partial class MainPage : ContentPage
                 Connect(ConfiguredServerAddress());
                 if (!Preferences.Default.Get("restore-active-session", true))
                 { await api!.LogoutAsync(); TaskNotifications.Clear(); }
-                else if (await api!.RestoreAsync()) await LoadSessionAsync();
+                else if (await api!.RestoreAsync())
+                {
+                    try { await LoadSessionAsync(); }
+                    catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException)
+                    { if (!await RestoreCachedChildAsync()) throw; }
+                }
             });
             await CheckUpdateAsync();
         };
@@ -191,7 +209,13 @@ public sealed partial class MainPage : ContentPage
             if (key is "LoginSubmit" or "SaveChanges" or "SavePet" or "SaveCareTask" or "SaveReward" ||
                 (key == "AddFamilyMember" && showingForm))
                 if (!ValidateInputs()) return;
-            await RunAsync(action);
+            await RunAsync(async () =>
+            {
+                var draftBefore = currentDraftKey;
+                await action();
+                if (draftBefore is not null && !showingForm && (key is "SaveChanges" or "SavePet" or "SaveCareTask" or "SaveReward" or "AddFamilyMember"))
+                    PrivateDeviceFiles.Remove(draftBefore);
+            });
         };
         return button;
     }
@@ -234,6 +258,16 @@ public sealed partial class MainPage : ContentPage
         var settings = new VerticalStackLayout { Spacing = 14, MaximumWidthRequest = 620 };
         settings.Add(BackButton());
         settings.Add(Text(L("MobileSettings"), 28));
+        var celebrations = AddToggle(settings, "GentleCelebrations", Preferences.Default.Get("gentle-celebrations", true));
+        celebrations.Toggled += (_, args) => Preferences.Default.Set("gentle-celebrations", args.Value);
+        if (member?.Role == "Parent")
+            settings.Add(SecondaryButton("PreviewChild", () => { ShowChildPreview(); return Task.CompletedTask; }));
+        settings.Add(SecondaryButton("TestReminder", async () =>
+        {
+            if (!TaskNotifications.NotificationsAllowed) await TaskNotifications.RequestPermissionAsync();
+            if (TaskNotifications.NotificationsAllowed) TaskNotifications.SendTest();
+            else message.Text = L("NotificationPermissionWarning");
+        }));
         var automaticUpdates = new Switch { IsToggled = Preferences.Default.Get(AutoUpdateCheckPreference, true) };
         SemanticProperties.SetDescription(automaticUpdates, L("AppAutoCheckUpdates"));
         var automaticUpdateRow = new Grid { ColumnDefinitions = { new ColumnDefinition(GridLength.Star), new ColumnDefinition(GridLength.Auto) }, ColumnSpacing = 12 };
@@ -492,7 +526,8 @@ public sealed partial class MainPage : ContentPage
         showingForm = selectedAccount is not null;
         showingCompletion = false;
         session = null;
-        member = null;
+        member = null; loadedReportScope = null; pendingSubmissions = []; offlineDashboard = false;
+        currentDraftKey = null; flushDraft = null; speech?.Cancel();
         dashboard = null;
         household = null;
         lastUpdatedAt = null;
@@ -549,7 +584,7 @@ public sealed partial class MainPage : ContentPage
                 return;
             }
             password.Text = "";
-            await LoadSessionAsync();
+            await LoadSessionAsync(passwordVerified: true);
             await SaveSignedInAccountAsync(email.Text ?? "", remember.IsToggled, direct.IsToggled);
             await CheckUpdateAsync();
         });
@@ -564,10 +599,13 @@ public sealed partial class MainPage : ContentPage
         body.Add(Card(form));
     }
 
-    private async Task LoadSessionAsync()
+    private async Task LoadSessionAsync(bool passwordVerified = false)
     {
         var previousMember = member?.Id;
         session = await api!.GetSessionAsync();
+        if (!await AllowParentSessionAsync(passwordVerified)) return;
+        if (SavedAccounts.Items.FirstOrDefault(item => item.Id == Preferences.Default.Get("active-saved-account", "")) is { } activeSaved)
+            await SavedAccounts.SaveAsync(activeSaved with { Role = session.Memberships.Any(item => item.Role == "Parent") ? "Parent" : "Child", Name = session.DisplayName });
         member = session.Memberships.FirstOrDefault(m => m.Id == previousMember) ?? session.Memberships.FirstOrDefault();
         if (member is null) { ShowDashboard(); return; }
         await RefreshAsync();
@@ -579,6 +617,8 @@ public sealed partial class MainPage : ContentPage
     {
         var revision = screenRevision;
         var client = api!; var membership = member!;
+        await SendPendingReportsAsync();
+        if (client != api || membership != member || revision != screenRevision) return;
         var dashboardTask = client.GetDashboardAsync(membership.Id);
         var householdTask = client.GetHouseholdAsync(membership.Id);
         await Task.WhenAll(dashboardTask, householdTask);
@@ -594,7 +634,12 @@ public sealed partial class MainPage : ContentPage
         var unchanged = background &&
             System.Text.Json.JsonSerializer.Serialize(dashboard) == System.Text.Json.JsonSerializer.Serialize(nextDashboard) &&
             System.Text.Json.JsonSerializer.Serialize(household) == System.Text.Json.JsonSerializer.Serialize(nextHousehold);
-        dashboard = nextDashboard; household = nextHousehold;
+        dashboard = nextDashboard; household = nextHousehold; offlineDashboard = false;
+        if (household.Members.FirstOrDefault(item => item.Id == membership.Id) is { } currentMember)
+            member = membership with { PictureMode = currentMember.PictureMode };
+        if (background && revision != screenRevision) return;
+        await CacheDashboardAsync();
+        if (background && (busy || !foreground || revision != screenRevision || client != api)) return;
         if (background) { message.Text = ""; message.IsVisible = false; }
         if (unchanged)
         {
@@ -609,6 +654,7 @@ public sealed partial class MainPage : ContentPage
     private void ShowDashboard(bool resetScroll = true)
     {
         previousScreens.Clear(); pendingPhotoChanges.Clear(); screenRevision++;
+        speech?.Cancel(); currentDraftKey = null; flushDraft = null;
         RenderDashboardNavigation();
         formInputs.Clear(); formPickers.Clear(); formGroups.Clear(); formPhotoErrors.Clear(); showingSettings = false;
         if (resetScroll) ResetScroll();
@@ -635,6 +681,7 @@ public sealed partial class MainPage : ContentPage
             body.Add(Card(Text(L("MobileNoHousehold"))));
             return;
         }
+        AddOutboxStatus();
         ShowRoleDashboard();
     }
 
@@ -669,7 +716,10 @@ public sealed partial class MainPage : ContentPage
         body.Add(RoleHero(false));
         switch (dashboardSection)
         {
-            case DashboardSection.Today: body.Add(RoleTaskSection(true)); break;
+            case DashboardSection.Today:
+                body.Add(RoleTaskSection(true));
+                if (household?.Rewards.Count > 0) body.Add(RewardGoal());
+                break;
             case DashboardSection.Rewards:
                 if (household is not null) body.Add(ChildHouseholdSection());
                 break;
@@ -696,6 +746,7 @@ public sealed partial class MainPage : ContentPage
             body.Add(RoleHistorySection("MobileParentHistory", false));
             return;
         }
+        if (household is not null) AddParentHelpRequests();
         var pending = dashboard!.PendingApprovals.Count + (household?.RewardRequests.Count ?? 0);
         if (pending == 0) body.Add(Card(Text("✓ " + L("MobileNothingToReview"), 16), Mint));
         if (dashboard.PendingApprovals.Count > 0)
@@ -704,7 +755,11 @@ public sealed partial class MainPage : ContentPage
             foreach (var log in dashboard.PendingApprovals) body.Add(RoleLogCard(log, true, false));
         }
         if (household?.RewardRequests.Count > 0) body.Add(ParentRewardRequests());
-        if (household is not null) body.Add(ParentCreateActions());
+        if (household is not null)
+        {
+            if (!household.Members.Any(item => item.Role == "Child") || !household.Tasks.Any()) body.Add(FamilySetupGuide());
+            body.Add(ParentCreateActions());
+        }
         body.Add(RoleTaskSection(false));
     }
 
@@ -746,8 +801,18 @@ public sealed partial class MainPage : ContentPage
             child ? L("ReadyToCare") : null));
         if (dashboard!.Tasks.Count == 0)
             tasks.Add(Card(Text(L("MobileNoTasks")), Mint, Color.FromArgb("25443E"), 22, 1));
-        var ordered = dashboard.Tasks.OrderByDescending(task => task.CanComplete).ToList();
-        tasks.Add(CardFlow(ordered.Select((task, index) => (View)RoleTaskCard(task, child, index)).ToList()));
+        if (child)
+        {
+            foreach (var state in new[] { "Ready", "Queued", "Waiting", "Done" })
+            {
+                var group = dashboard.Tasks.Where(task => TaskState(task) == state).ToList();
+                if (group.Count == 0) continue;
+                tasks.Add(Text(L("TaskState" + state) + $" · {group.Count}", 20));
+                tasks.Add(CardFlow(group.Select(ChildTaskCard).ToList()));
+            }
+        }
+        else tasks.Add(CardFlow(dashboard.Tasks.OrderByDescending(task => task.CanComplete)
+            .Select((task, index) => (View)RoleTaskCard(task, false, index)).ToList()));
         return tasks;
     }
 
@@ -839,6 +904,7 @@ public sealed partial class MainPage : ContentPage
         points.SetAppThemeColor(Label.TextColorProperty, MintDeep, Color.FromArgb("72C8B8"));
         statusRow.Add(points, 0, 1);
         content.Add(statusRow);
+        if (!string.IsNullOrWhiteSpace(log.Feedback)) content.Add(Text("💬 " + log.Feedback, 18));
         content.Add(Text(log.CompletedAt.ToLocalTime().ToString("g",
             System.Globalization.CultureInfo.GetCultureInfo(Strings.Culture)), 14));
         var gallery = log.Photos.Select(PhotoSource).ToList();
@@ -849,9 +915,14 @@ public sealed partial class MainPage : ContentPage
             var actions = new Grid { ColumnDefinitions = new ColumnDefinitionCollection
                 { new(GridLength.Star), new(GridLength.Star) }, ColumnSpacing = 10 };
             actions.Add(Button("MobileApprove", async () =>
-            { await api!.ReviewAsync(member!.Id, log.Id, true); await RefreshAsync(); }));
+            { await api!.ReviewAsync(member!.Id, log.Id, true, L("FeedbackWellDone")); await RefreshAsync(); }));
             var reject = SecondaryButton("MobileReject", async () =>
-            { await api!.ReviewAsync(member!.Id, log.Id, false); await RefreshAsync(); });
+            {
+                var feedback = await DisplayActionSheetAsync(L("ChooseFeedback"), L("Cancel"), null,
+                    L("FeedbackTogether"), L("FeedbackOneMoreStep"), L("FeedbackShowMe"));
+                if (string.IsNullOrEmpty(feedback) || feedback == L("Cancel")) return;
+                await api!.ReviewAsync(member!.Id, log.Id, false, feedback); await RefreshAsync();
+            });
             reject.BackgroundColor = Peach;
             reject.SetAppThemeColor(Microsoft.Maui.Controls.Button.TextColorProperty, Coral, Color.FromArgb("7D2F24"));
             actions.Add(reject, 1);
@@ -910,6 +981,7 @@ public sealed partial class MainPage : ContentPage
     {
         var section = new VerticalStackLayout { Spacing = 16 };
         section.Add(RoleSectionHeading("⚙", L("FamilySetup"), L("FamilySetupHint")));
+        section.Add(FamilySetupGuide());
         section.Add(ParentCreateActions());
         section.Add(Text(L("MobileTapToEdit"), 14));
         section.Add(ManagementHeading("FamilyMembers"));
@@ -956,6 +1028,8 @@ public sealed partial class MainPage : ContentPage
             if (string.IsNullOrWhiteSpace(reward.ImagePath))
                 card.Insert(0, new Label { Text = "🎁", FontSize = 56, HorizontalTextAlignment = TextAlignment.Center });
             card.Add(request);
+            card.Add(SecondaryButton("ChooseGoal", () =>
+            { Preferences.Default.Set(FamilyPreference("reward-goal"), reward.Id); dashboardSection = DashboardSection.Today; ShowDashboard(); return Task.CompletedTask; }));
             section.Add(Card(card, Color.FromArgb("FFF0C8"), Color.FromArgb("3C3525"), 28, 2));
         }
 
@@ -1018,7 +1092,11 @@ public sealed partial class MainPage : ContentPage
         var form = new VerticalStackLayout { Spacing = 14, MaximumWidthRequest = 620 };
         var title = Text(L(titleKey), 28); title.FontAttributes = FontAttributes.Bold; form.Add(title);
         form.Add(BackButton());
+        currentDraftKey = null; flushDraft = null;
         build(form);
+        if (formInputs.Count > 0 && member?.Role == "Parent")
+            AttachFormDraft(form, titleKey + "|" + (titleKey.StartsWith("Edit", StringComparison.Ordinal) || titleKey == "MobileEditReward"
+                ? string.Join("|", formInputs.Where(item => item.Value.Key is "TaskName" or "PetName" or "DisplayName" or "RewardName").Select(item => item.Key.Text)) : "new"));
         body.Add(Card(form, Paper, Color.FromArgb("17312D"), 28, 1));
     }
 
@@ -1168,7 +1246,13 @@ public sealed partial class MainPage : ContentPage
             new Choice("AsNeeded", L("Frequency_AsNeeded")) };
         var frequency = ChoicePicker(L("TaskFrequency"), frequencies, "Daily");
         var points = Field("PointValue"); points.Text = "5"; points.Keyboard = Keyboard.Numeric;
-        AddInput(form, name); AddPicker(form, pet); AddPicker(form, assignee); AddPicker(form, category); AddInput(form, custom); AddPicker(form, frequency); AddInput(form, points);
+        AddInput(form, name); AddPicker(form, assignee);
+        var visuals = AddTaskVisuals(form, name, frequency, points, templates: true);
+        AddPicker(form, frequency);
+        var advancedFields = new VerticalStackLayout { Spacing = 12, IsVisible = false };
+        AddPicker(advancedFields, pet); AddPicker(advancedFields, category); AddInput(advancedFields, custom); AddInput(advancedFields, points);
+        form.Add(SecondaryButton("TaskMoreOptions", () => { advancedFields.IsVisible = !advancedFields.IsVisible; return Task.CompletedTask; }));
+        form.Add(advancedFields);
         var reminder = AddTaskReminderPicker(form, frequency, null);
         AddPhotoPicker(form, "TaskImage", file => photo = file);
         form.Add(Button("SaveCareTask", async () =>
@@ -1180,7 +1264,7 @@ public sealed partial class MainPage : ContentPage
             var pointValue = ParsePoints(points, 0, 1000, "PointRange");
             var categoryId = category.SelectedItem is CategoryItemDto { Id: > 0 } selectedCategory ? selectedCategory.Id : (int?)null;
             createdId ??= await api!.AddTaskAsync(member!.Id, new CreateTaskRequest(selectedPet is { Id: > 0 } ? selectedPet.Id : null, selectedMember.Id,
-                categoryId, OptionalCategory(custom), (frequency.SelectedItem as Choice)?.Value ?? "Daily", pointValue, name.Text.Trim(), reminder()));
+                categoryId, OptionalCategory(custom), (frequency.SelectedItem as Choice)?.Value ?? "Daily", pointValue, name.Text.Trim(), reminder(), visuals.VisualKey(), visuals.Instructions.Text));
             if (photo is not null)
             {
                 await UploadManagementPhotoAsync("tasks", createdId.Value, photo);
@@ -1234,6 +1318,9 @@ public sealed partial class MainPage : ContentPage
         AddInput(form, name); AddInput(form, email); AddInput(form, password);
         form.Add(Text(L("MobileKeepPassword"), 13)); AddPicker(form, role);
         var privacy = new VerticalStackLayout { Spacing = 10, IsVisible = item.Role == "Child" };
+        privacy.Add(Text(L("ReadingMode"), 20));
+        var pictureMode = AddToggle(privacy, "PictureVoiceMode", item.PictureMode);
+        privacy.Add(Text(L("PictureModeHint"), 14));
         privacy.Add(Text(L("HistoryPrivacy"), 18));
         var canView = AddToggle(privacy, "MobileViewFamilyHistory", item.CanViewOtherChildrenHistory);
         var share = AddToggle(privacy, "MobileShareHistory", item.ShareHistoryWithChildren);
@@ -1249,7 +1336,7 @@ public sealed partial class MainPage : ContentPage
             await ApplyPendingPhotoChangesAsync();
             await api!.UpdateMemberAsync(member!.Id, item.Id, new UpdateMemberRequest(name.Text ?? "",
                 (role.SelectedItem as Choice)?.Value ?? item.Role, email.Text ?? "",
-                string.IsNullOrEmpty(password.Text) ? null : password.Text, canView.IsToggled, share.IsToggled));
+                string.IsNullOrEmpty(password.Text) ? null : password.Text, canView.IsToggled, share.IsToggled, pictureMode.IsToggled));
             foreach (var saved in SavedAccounts.Items.Where(account => account.Server == server!.AbsoluteUri &&
                 string.Equals(account.Email, item.Email, StringComparison.OrdinalIgnoreCase)).ToList())
             {
@@ -1265,7 +1352,7 @@ public sealed partial class MainPage : ContentPage
                 TaskNotifications.Clear(); await api.LogoutAsync();
                 ShowLogin(); message.Text = L("MobilePasswordChangedSignIn"); return;
             }
-            await LoadSessionAsync();
+            await LoadSessionAsync(passwordVerified: true);
         }));
         if (!item.IsCurrentUser) AddDeleteAction(form, item.DisplayName, () => api!.ArchiveMemberAsync(member!.Id, item.Id));
     });
@@ -1312,7 +1399,13 @@ public sealed partial class MainPage : ContentPage
             new Choice("AsNeeded", L("Frequency_AsNeeded")) };
         var frequency = ChoicePicker(L("TaskFrequency"), frequencies, item.Frequency);
         var points = Field("PointValue"); points.Text = item.Points.ToString(); points.Keyboard = Keyboard.Numeric;
-        AddInput(form, name); AddPicker(form, pet); AddPicker(form, assignee); AddPicker(form, category); AddInput(form, custom); AddPicker(form, frequency); AddInput(form, points);
+        AddInput(form, name); AddPicker(form, assignee);
+        var visuals = AddTaskVisuals(form, name, frequency, points, initialKey: item.VisualKey, initialInstructions: item.Instructions);
+        AddPicker(form, frequency);
+        var advancedFields = new VerticalStackLayout { Spacing = 12, IsVisible = false };
+        AddPicker(advancedFields, pet); AddPicker(advancedFields, category); AddInput(advancedFields, custom); AddInput(advancedFields, points);
+        form.Add(SecondaryButton("TaskMoreOptions", () => { advancedFields.IsVisible = !advancedFields.IsVisible; return Task.CompletedTask; }));
+        form.Add(advancedFields);
         var reminder = AddTaskReminderPicker(form, frequency, item.Reminder);
         AddPhotoPicker(form, "TaskImage", file => photo = file, item.ImagePath,
             item.ImagePath.StartsWith("/uploads/tasks/", StringComparison.Ordinal)
@@ -1326,7 +1419,7 @@ public sealed partial class MainPage : ContentPage
             var categoryId = category.SelectedItem is CategoryItemDto { Id: > 0 } selectedCategory ? selectedCategory.Id : (int?)null;
             await api!.UpdateTaskAsync(member!.Id, item.Id, new UpdateTaskRequest(selectedPet is { Id: > 0 } ? selectedPet.Id : null,
                 selectedMember.Id, categoryId, OptionalCategory(custom),
-                (frequency.SelectedItem as Choice)?.Value ?? item.Frequency, pointValue, name.Text.Trim(), reminder()));
+                (frequency.SelectedItem as Choice)?.Value ?? item.Frequency, pointValue, name.Text.Trim(), reminder(), visuals.VisualKey(), visuals.Instructions.Text));
             if (photo is not null) await UploadManagementPhotoAsync("tasks", item.Id, photo);
             await ApplyPendingPhotoChangesAsync();
             await RefreshAsync();
@@ -1413,10 +1506,18 @@ public sealed partial class MainPage : ContentPage
         if (path.StartsWith("/images/tasks/", StringComparison.Ordinal))
             return ImageSource.FromFile(System.IO.Path.GetFileName(path).Replace(".svg", ".png"));
         var client = api!;
-        var memberId = member!.Id;
+        var memberId = member!.Id; var photoServer = server!.AbsoluteUri;
         return ImageSource.FromStream(async _ =>
         {
-            try { return new MemoryStream(await client.GetPhotoAsync(memberId, path)); }
+            var key = $"photo|{photoServer}|{memberId}|{path}";
+            try
+            {
+                var bytes = await client.GetPhotoAsync(memberId, path);
+                if (bytes.Length <= 5 * 1024 * 1024) await PrivateDeviceFiles.SaveBytesAsync(key, bytes);
+                return new MemoryStream(bytes);
+            }
+            catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException)
+            { return await PrivateDeviceFiles.ReadBytesAsync(key) is { } bytes ? new MemoryStream(bytes) : Stream.Null; }
             catch { return Stream.Null; }
         });
     }
@@ -1431,8 +1532,30 @@ public sealed partial class MainPage : ContentPage
         body.Clear();
         body.Add(BackButton());
         body.Add(Text(task.PetName + " · " + task.Name, 26));
-        body.Add(Text(L("MobileCompletionShort"), 16));
-        body.Add(TappablePhoto(PhotoSource(task.ImagePath), height: 180));
+        body.Add(ListenButton(TaskWords(task with { Instructions = TaskSteps(task.Instructions, task.VisualKey) })));
+        body.Add(TappablePhoto(PhotoSource(task.ImagePath), height: PictureMode ? 220 : 180));
+        AddChildSteps(body, task);
+        body.Add(Button("DidIt", async () =>
+        {
+            var queued = await QueueCompletionAsync(task);
+            try { await RefreshAsync(); }
+            catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException)
+            { offlineDashboard = true; ShowDashboard(); }
+            if (pendingSubmissions.FirstOrDefault(item => item.TaskId == task.Id)?.Error is { } error)
+            { message.Text = L(error); message.IsVisible = true; }
+            else ShowCompletionThanks(queued);
+        }));
+        if (member!.Role == "Child")
+        {
+            var help = SecondaryButton(task.HelpRequested ? "HelpRequested" : "NeedHelp", async () =>
+            {
+                await api!.RequestHelpAsync(member.Id, task.Id);
+                await DisplayAlertAsync(L("HelpRequested"), L("HelpRequestedHint"), L("Close"));
+                await RefreshAsync();
+            });
+            help.Text = "🙋 " + L(task.HelpRequested ? "HelpRequested" : "NeedHelp");
+            help.IsEnabled = !task.HelpRequested; body.Add(help);
+        }
         var previews = new VerticalStackLayout { Spacing = 10 };
         Button? addPhoto = null;
         void RefreshPreviews()
@@ -1458,15 +1581,7 @@ public sealed partial class MainPage : ContentPage
             RefreshPreviews();
         });
         body.Add(addPhoto); RefreshPreviews(); body.Add(previews);
-        body.Add(Button("MobileSendCompletion", async () =>
-        {
-            var photos = selectedPhotos.Select(f => new UploadPhoto(f.FileName, MimeType(f), f.OpenReadAsync)).ToList();
-            await api!.CompleteAsync(member!.Id, task.Id, photos);
-            TaskNotifications.SuppressTask(task.Id, task.Frequency);
-            selectedPhotos.Clear();
-            message.Text = L(member.Role == "Parent" ? "ParentTaskCompleted" : "TaskSentForApproval");
-            await RefreshAsync();
-        }));
+
     }
 
     private static string MimeType(FileResult file) => System.IO.Path.GetExtension(file.FileName).ToLowerInvariant() switch

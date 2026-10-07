@@ -3,6 +3,8 @@ namespace HamsterHub.Models;
 public class CareLog
 {
     public int Id { get; set; }
+    public Guid? SubmissionId { get; set; }
+    public string? Feedback { get; set; }
     public int? PetId { get; set; }
     public int CareTaskId { get; set; }
     public string CompletedByUserId { get; set; } = string.Empty;

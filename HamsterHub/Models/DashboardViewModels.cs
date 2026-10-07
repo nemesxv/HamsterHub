@@ -24,6 +24,8 @@ public class ParentDashboardViewModel
 
 public class KidDashboardViewModel
 {
+    public int MemberId { get; set; }
+    public bool PictureMode { get; set; } = true;
     public string ChildName { get; set; } = string.Empty;
     public string HouseholdName { get; set; } = string.Empty;
     public int CurrentPoints { get; set; }
@@ -43,7 +45,7 @@ public record FamilyMemberSummary(
     string Email,
     HouseholdMemberRole Role,
     bool IsCurrentUser,
-    string? PhotoPath);
+    string? PhotoPath, bool PictureMode = true);
 public record PetSummary(
     int Id,
     string Name,
@@ -66,7 +68,7 @@ public record CareTaskSummary(
     bool HasCustomImage,
     bool CanCurrentUserComplete,
     CareLogStatus? CurrentPeriodStatus = null,
-    HamsterHub.Contracts.TaskReminderDto? Reminder = null);
+    HamsterHub.Contracts.TaskReminderDto? Reminder = null, string? VisualKey = null, string? Instructions = null, bool HelpRequested = false);
 public record TaskReminderFormModel(string Prefix, string Id, HamsterHub.Contracts.TaskReminderDto? Reminder);
 public record PendingCareSummary(
     int Id,
@@ -86,7 +88,7 @@ public record KidCareHistorySummary(
     DateTimeOffset CompletedAt,
     DateTimeOffset? ApprovedAt,
     string ImagePath,
-    IReadOnlyList<string> PhotoPaths);
+    IReadOnlyList<string> PhotoPaths, string? Feedback = null);
 public record KidFamilyMemberSummary(
     int Id,
     string DisplayName,
@@ -150,7 +152,7 @@ public record KidSharedCareHistorySummary(
     string TaskName,
     DateTimeOffset CompletedAt,
     string ImagePath,
-    IReadOnlyList<string> PhotoPaths);
+    IReadOnlyList<string> PhotoPaths, string? Feedback = null);
 
 public record MemberPointHistorySummary(
     MemberPointHistoryKind Kind,
@@ -214,6 +216,10 @@ public class AddPetInput
 
 public class AddCareTaskInput
 {
+    [StringLength(32)]
+    public string? VisualKey { get; set; }
+    [StringLength(600)]
+    public string? Instructions { get; set; }
     [Display(Name = "TaskNotification")]
     public bool NotificationEnabled { get; set; }
     [Display(Name = "NotificationTime")]
@@ -288,6 +294,7 @@ public class DirectRewardPurchaseInput
 
 public class UpdateMemberInput
 {
+    public bool? PictureMode { get; set; }
     [Range(1, int.MaxValue)]
     public int Id { get; set; }
 

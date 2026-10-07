@@ -307,3 +307,19 @@ are kept in memory; account/household changes reset them. A screen revision guar
 delayed scrolling and background fetches against applying to a different screen.
 Periodic reads do not disable controls, and only responses for the unchanged current
 session/screen may rebuild the dashboard. Dashboard navigation is hidden on subpages.
+
+
+## Visual-first task fields and device recovery
+
+`VisualFirstFamilies` adds `CareTask.VisualKey`, `Instructions`, `HelpRequestedAt`,
+`HouseholdMember.PictureMode`, and `CareLog.SubmissionId` / `Feedback`. Template IDs
+are allowlisted in Contracts; clients never choose arbitrary server image paths.
+A filtered unique submission index plus the serializable completion transaction makes
+mobile retries idempotent. Existing API record constructors retain optional trailing
+fields for older clients. Historical point values and reward debits remain unchanged.
+
+`PrivateDeviceFiles` uses AES-GCM, per-record authenticated names and atomic file replacement
+with a random key held by SecureStorage. Outboxes and drafts are isolated per server/member;
+cached child sessions additionally require the active saved account. No parent offline
+restoration is allowed. Android's KeyguardManager owns parent device-credential confirmation;
+Identity remains the fallback and all server authorization remains authoritative.

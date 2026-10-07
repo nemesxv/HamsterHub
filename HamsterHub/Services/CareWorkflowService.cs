@@ -17,7 +17,7 @@ public sealed class CareWorkflowService(
 {
     public async Task<CareWorkflowResult> CompleteAsync(
         HouseholdMember member, int taskId, IReadOnlyList<IFormFile>? photos = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default, Guid? submissionId = null)
     {
         if (!member.IsActive || member.MemberRole is not (HouseholdMemberRole.Child or HouseholdMemberRole.Parent))
             return new(Error: "Forbidden");
@@ -29,8 +29,17 @@ public sealed class CareWorkflowService(
         var task = await db.CareTasks.Include(t => t.Pet).Include(t => t.AssignedMember)
             .FirstOrDefaultAsync(t => t.Id == taskId && t.HouseholdId == member.HouseholdId,
                 cancellationToken);
-        if (task is null || !care.CanCompleteTask(task, member)) return new(Error: "Forbidden");
+        if (task is null) return new(Error: "Forbidden");
 
+        if (submissionId is { } identifier)
+        {
+            var existing = await db.CareLogs.Include(log => log.Photos)
+                .FirstOrDefaultAsync(log => log.SubmissionId == identifier, cancellationToken);
+            if (existing is not null)
+                return existing.CareTaskId == task.Id && existing.CompletedByUserId == member.UserId
+                    ? new(existing) : new(Error: "Forbidden");
+        }
+        if (!care.CanCompleteTask(task, member)) return new(Error: "Forbidden");
         var now = care.GetUtcNow();
         var cutoff = care.GetEarliestAllowed(task.Frequency, now);
         // Evaluate DateTimeOffset in memory for parity between SQL Server and SQLite tests.
@@ -55,6 +64,8 @@ public sealed class CareWorkflowService(
                 ? care.CreateParentCompletion(task, member,
                     await points.GetBalanceAsync(member.HouseholdId, member.UserId, cancellationToken), now)
                 : care.CreateChildCompletion(task, member, now);
+            log.SubmissionId = submissionId;
+            task.HelpRequestedAt = null;
             log.Photos = saved.Select(path => new CareLogPhoto { ImagePath = path }).ToList();
             db.CareLogs.Add(log);
             await db.SaveChangesAsync(cancellationToken);
@@ -70,10 +81,11 @@ public sealed class CareWorkflowService(
     }
 
     public async Task<CareWorkflowResult> ReviewAsync(HouseholdMember parent, int logId,
-        CareLogStatus decision, CancellationToken cancellationToken = default)
+        CareLogStatus decision, CancellationToken cancellationToken = default, string? feedback = null)
     {
         if (!parent.IsActive || parent.MemberRole != HouseholdMemberRole.Parent)
             return new(Error: "Forbidden");
+        if (feedback?.Length > 300) return new(Error: "CheckFormFields");
         if (decision is not (CareLogStatus.Approved or CareLogStatus.Rejected))
             return new(Error: "InvalidDecision");
         await using var transaction = await db.Database.BeginTransactionAsync(
@@ -83,6 +95,7 @@ public sealed class CareWorkflowService(
                 l.CareTask.HouseholdId == parent.HouseholdId,
                 cancellationToken);
         if (log is null || !care.CanReviewCareLog(log, parent)) return new(Error: "NotFound");
+        log.Feedback = string.IsNullOrWhiteSpace(feedback) ? null : feedback.Trim();
         care.ReviewCareLog(log, parent, decision,
             decision == CareLogStatus.Approved
                 ? await points.GetBalanceAsync(parent.HouseholdId, log.CompletedByUserId, cancellationToken) : 0,

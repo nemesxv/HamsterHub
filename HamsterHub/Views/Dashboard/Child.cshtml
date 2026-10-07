@@ -6,7 +6,7 @@
     ViewData["BodyClass"] = "kid-world";
 }
 
-<div class="kid-canvas">
+<div class="kid-canvas @(Model.PictureMode ? "picture-voice-mode" : "picture-words-mode")" data-child-member="@Model.MemberId">
     <div class="kid-doodle kid-doodle-star" aria-hidden="true">☆</div>
     <div class="kid-doodle kid-doodle-heart" aria-hidden="true">♡</div>
     <div class="kid-doodle kid-doodle-flower" aria-hidden="true">✿</div>
@@ -56,6 +56,7 @@
         </article>
     </section>
 
+    <section class="kid-goal-summary" data-goal-summary hidden aria-live="polite"><h2>@L["MyGoal"]</h2><p data-goal-title></p></section>
     <section class="kid-play-section">
         <header class="kid-section-title">
             <span aria-hidden="true">🌈</span>
@@ -74,7 +75,7 @@
         else
         {
             <div class="kid-big-task-grid">
-                @foreach (var task in Model.CareTasks)
+                @foreach (var task in Model.CareTasks.OrderByDescending(item => item.CanCurrentUserComplete))
                 {
                     var rhythmIcon = task.Frequency switch
                     {
@@ -99,6 +100,8 @@
                         <div class="kid-task-name">
                             <small>@task.PetName</small>
                             <h3>@task.CategoryName</h3>
+                            <button type="button" class="listen-task" data-speak="@(task.CategoryName + ". " + task.Instructions)"
+                                    data-voice-unavailable="@L["VoiceUnavailable"]">🔊 @L["ListenTask"]</button>
                         </div>
                         <div class="kid-task-reward" aria-label="@L["TaskPointsLabel", task.PointValue]">
                             <span aria-hidden="true">★</span>
@@ -109,10 +112,10 @@
                                 data-bs-toggle="modal" data-bs-target="#complete-task-@task.Id">
                             <span aria-hidden="true">✓</span>
                             @(task.CurrentPeriodStatus == CareLogStatus.Pending
-                                ? L["MobileStatusPending"]
+                                ? L["TaskStateWaiting"]
                                 : task.CurrentPeriodStatus == CareLogStatus.Approved
-                                    ? L["KidTaskDoneForPeriod"]
-                                    : L["KidDone"])
+                                    ? L["TaskStateDone"]
+                                    : L["OpenMyTask"])
                         </button>
                     </article>
                 }
@@ -148,7 +151,9 @@
                         }
                         <div class="kid-reward-card-copy">
                             <h3>@reward.Name</h3>
-                            <strong>−@reward.PointCost ★</strong>
+                            <strong>@Model.CurrentPoints / @reward.PointCost ★</strong>
+                            <progress max="@reward.PointCost" value="@Math.Min(Model.CurrentPoints, reward.PointCost)" aria-label="@L["GoalProgress", Model.CurrentPoints, reward.PointCost]"></progress>
+                            <button type="button" class="listen-task" data-reward-goal="@reward.Id" data-goal-name="@reward.Name">🎁 @L["ChooseGoal"]</button>
                         </div>
                         <form asp-action="RequestReward" method="post">
                             <input type="hidden" name="rewardId" value="@reward.Id" />
@@ -253,6 +258,7 @@
                             }
                         </div>
                         <strong>@item.TaskName</strong>
+                        @if (!string.IsNullOrWhiteSpace(item.Feedback)) { <p class="child-feedback">💬 @item.Feedback</p> }
                         <small>@item.PetName · @item.CompletedAt.ToLocalTime().ToString("dd.MM")</small>
                         <span class="kid-polaroid-points">@(item.Status switch
                         {
@@ -372,9 +378,21 @@
                 <img class="kid-complete-picture" src="@task.ImagePath"
                      alt="@L["TaskImageAlt", task.CategoryName]" />
                 <h2 id="complete-task-title-@task.Id">@task.CategoryName</h2>
+                @{
+                    var steps = task.Instructions ?? (HamsterHub.Contracts.TaskTemplates.Find(task.VisualKey) is { } preset ? L[preset.StepsKey].Value : "");
+                }
+                <button type="button" class="listen-task" data-speak="@(task.CategoryName + ". " + steps)"
+                        data-voice-unavailable="@L["VoiceUnavailable"]">🔊 @L["ListenTask"]</button>
+                @if (!string.IsNullOrWhiteSpace(steps))
+                {
+                    <ol class="child-task-steps">@foreach (var step in steps.Split('\n', StringSplitOptions.RemoveEmptyEntries)) { <li>@step</li> }</ol>
+                }
+                <form asp-action="AskForHelp" method="post"><input type="hidden" name="careTaskId" value="@task.Id" />
+                    <button class="listen-task" type="submit" disabled="@task.HelpRequested">🙋 @L[task.HelpRequested ? "HelpRequested" : "NeedHelp"]</button></form>
                 <p>@task.PetName</p>
                 <form asp-action="CompleteTask" method="post" enctype="multipart/form-data">
                     <input type="hidden" name="careTaskId" value="@task.Id" />
+                    <button type="submit" class="kid-modal-done">✓ @L["DidIt"]</button>
                     <div class="kid-photo-choices">
                         <button type="button" data-camera-open>
                             <span aria-hidden="true">📷</span>
@@ -402,10 +420,7 @@
                     <div class="kid-selected-photo-preview" data-photo-preview
                          aria-label="@L["SelectedPhotos"]"></div>
                     <small class="kid-photo-hint">@L["TaskPhotosOptional"]</small>
-                    <button type="submit" class="kid-modal-done">
-                        <span aria-hidden="true">★</span>
-                        @L["SendForApproval"]
-                    </button>
+
                 </form>
             </div>
         </div>

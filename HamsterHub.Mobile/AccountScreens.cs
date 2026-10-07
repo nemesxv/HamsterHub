@@ -11,7 +11,8 @@ public sealed partial class MainPage
         foreach (var account in SavedAccounts.Items)
         {
             var content = new VerticalStackLayout { Spacing = 8 };
-            var name = Text("👤 " + account.Name, 21); name.FontAttributes = FontAttributes.Bold;
+            var avatar = Text(account.Role == "Child" ? "🧒" : "🔒", 52); avatar.HorizontalTextAlignment = TextAlignment.Center; content.Add(avatar);
+            var name = Text(account.Name, 23); name.FontAttributes = FontAttributes.Bold;
             content.Add(name); content.Add(Text(account.Email, 14));
             if (account.Server != ConfiguredServerAddress())
                 content.Add(Text(new Uri(account.Server).Authority, 13));
@@ -45,7 +46,9 @@ public sealed partial class MainPage
         await api!.RestoreAsync();
         try
         {
-            await LoadSessionAsync();
+            try { await LoadSessionAsync(); }
+            catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException)
+            { if (!await RestoreCachedChildAsync()) throw; }
             await CheckUpdateAsync();
         }
         catch (MobileApiException exception) when (exception.Code is "SessionExpired" or "MobileAccessDenied" or "InvalidLogin")
@@ -66,7 +69,8 @@ public sealed partial class MainPage
             Preferences.Default.Remove("active-saved-account"); return;
         }
         var tokens = direct ? await new SecureSessionStore(server!).ReadAsync() : null;
-        await SavedAccounts.SaveAsync(new(id, server!.AbsoluteUri, email.Trim(), session!.DisplayName, tokens));
+        await SavedAccounts.SaveAsync(new(id, server!.AbsoluteUri, email.Trim(), session!.DisplayName, tokens, session.Memberships.Any(item => item.Role == "Parent") ? "Parent" : "Child"));
         Preferences.Default.Set("active-saved-account", id);
+        await CacheDashboardAsync();
     }
 }

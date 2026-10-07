@@ -53,6 +53,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<CareTask>(entity =>
         {
+            entity.Property(task => task.VisualKey).HasMaxLength(32);
+            entity.Property(task => task.Instructions).HasMaxLength(600);
             entity.Property(task => task.Name).HasMaxLength(100);
             entity.Property(task => task.ImagePath).HasMaxLength(500);
             entity.Property(task => task.ReminderTimeZoneId).HasMaxLength(100);
@@ -93,6 +95,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
         builder.Entity<CareLog>(entity =>
         {
+            entity.Property(log => log.Feedback).HasMaxLength(300);
+            entity.HasIndex(log => log.SubmissionId).IsUnique().HasFilter("[SubmissionId] IS NOT NULL");
             entity.HasIndex(log => new { log.PetId, log.CompletedAt });
             entity.HasIndex(log => new { log.CompletedByUserId, log.Status });
             entity.ToTable(table =>

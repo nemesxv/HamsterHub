@@ -143,3 +143,19 @@ its implementation and proportionate verification are complete.
   dashboard destinations, compact summaries, incremental history rendering, wrapping
   labels, tappable selection rows and nonblocking guarded automatic refresh. Publication
   uses autodeploy; real-device interaction acceptance remains pending.
+
+
+## Visual-first family release (2026-10-07)
+
+Implemented: eight task templates and shared illustrations/instructions; opt-in spoken
+instructions; parent-controlled reading presentation; explicit task states; simple
+completion/help; supportive review feedback; visual reward goals; parent setup/preview;
+notification test; protected saved parent access; encrypted management drafts; cached
+child tasks and idempotent durable mobile report submission. Website shares task templates,
+help, feedback, reading mode and goal progress. Recorded parent audio is a future optional
+extension; this release uses existing device/browser speech engines.
+
+Acceptance: deployment builds and health checks; local tests/builds skipped by request.
+Still requires actual-phone verification of Android credential return/cancellation,
+offline queued photos/reconnect/account switching, voice availability, and usability
+observation with children of different reading levels and less technical parents.

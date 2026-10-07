@@ -22,16 +22,18 @@ public sealed partial class MainPage
     private void RememberScreen()
     {
         if (body.Children.Count == 0) return;
+        speech?.Cancel();
         var views = body.Children.Cast<View>().ToArray();
         var position = scroll.ScrollY;
         var inputs = formInputs.ToArray(); var pickers = formPickers.ToArray();
         var groups = formGroups.ToArray(); var photoErrors = formPhotoErrors.ToArray();
         var photos = selectedPhotos.ToArray();
         var photoChanges = pendingPhotoChanges.ToArray();
+        var savedDraftKey = currentDraftKey; var savedFlush = flushDraft;
         var wasForm = showingForm; var wasSettings = showingSettings; var wasCompletion = showingCompletion;
         previousScreens.Push(() =>
         {
-            screenRevision++;
+            screenRevision++; currentDraftKey = savedDraftKey; flushDraft = savedFlush;
             body.Clear(); foreach (var view in views) body.Add(view);
             formInputs.Clear(); foreach (var pair in inputs) formInputs.Add(pair.Key, pair.Value);
             formPickers.Clear(); foreach (var pair in pickers) formPickers.Add(pair.Key, pair.Value);
@@ -50,6 +52,7 @@ public sealed partial class MainPage
 
     private Task GoBackAsync()
     {
+        speech?.Cancel(); currentDraftKey = null; flushDraft = null;
         if (previousScreens.TryPop(out var restore)) restore();
         else if (session is null) ShowLogin();
         else ShowDashboard();
