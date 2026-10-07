@@ -104,7 +104,10 @@ public sealed partial class MainPage : ContentPage
                     foreground = false; dashboardRefreshTimer.Stop(); speech?.Cancel();
                     if (flushDraft is not null) { try { await flushDraft(); } catch { } }
                     if (session?.Memberships.Any(item => item.Role == "Parent") == true && !ParentAccess.IsAuthenticating)
-                    { parentNeedsUnlock = true; Content.IsVisible = false; }
+                    {
+                        parentNeedsUnlock = true; Content.IsVisible = false;
+                        foreach (var modal in Navigation.ModalStack) modal.IsVisible = false;
+                    }
                 };
                 window.Resumed += async (_, _) =>
                 {
@@ -112,8 +115,19 @@ public sealed partial class MainPage : ContentPage
                     if (parentNeedsUnlock)
                     {
                         parentNeedsUnlock = false;
-                        try { if (!await AllowParentSessionAsync(false)) return; }
-                        finally { Content.IsVisible = true; }
+                        try
+                        {
+                            if (!await AllowParentSessionAsync(false))
+                            {
+                                while (Navigation.ModalStack.Count > 0) await Navigation.PopModalAsync(false);
+                                return;
+                            }
+                        }
+                        finally
+                        {
+                            Content.IsVisible = true;
+                            foreach (var modal in Navigation.ModalStack) modal.IsVisible = true;
+                        }
                     }
                     foreground = true;
                     dashboardRefreshTimer.Start();

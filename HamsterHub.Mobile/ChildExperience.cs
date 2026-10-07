@@ -22,12 +22,14 @@ public sealed partial class MainPage
         button.Clicked += async (_, _) =>
         {
             speech?.Cancel(); speech?.Dispose(); speech = new();
+            var speechToken = speech.Token;
             try
             {
                 var locales = await TextToSpeech.Default.GetLocalesAsync();
+                speechToken.ThrowIfCancellationRequested();
                 var locale = locales.FirstOrDefault(item => item.Language.StartsWith(Strings.Culture, StringComparison.OrdinalIgnoreCase));
                 if (locale is null) { message.Text = L("VoiceUnavailable"); message.IsVisible = true; return; }
-                await TextToSpeech.Default.SpeakAsync(words, new SpeechOptions { Locale = locale, Pitch = 1, Volume = 1 }, speech.Token);
+                await TextToSpeech.Default.SpeakAsync(words, new SpeechOptions { Locale = locale, Pitch = 1, Volume = 1 }, speechToken);
             }
             catch (OperationCanceledException) { }
             catch { message.Text = L("VoiceUnavailable"); message.IsVisible = true; }
