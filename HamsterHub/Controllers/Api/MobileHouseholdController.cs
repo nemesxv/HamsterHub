@@ -369,8 +369,8 @@ public sealed class MobileHouseholdController(
         task.CareCategoryId = category?.Id; task.CareCategory = category;
         task.Frequency = frequency; task.PointValue = request.Points;
         TaskReminderSettings.Apply(task, request.Reminder);
-        task.VisualKey = string.IsNullOrEmpty(request.VisualKey) ? null : request.VisualKey;
-        task.Instructions = string.IsNullOrWhiteSpace(request.Instructions) ? null : request.Instructions.Trim();
+        if (request.VisualKey is not null) task.VisualKey = string.IsNullOrEmpty(request.VisualKey) ? null : request.VisualKey;
+        if (request.Instructions is not null) task.Instructions = string.IsNullOrWhiteSpace(request.Instructions) ? null : request.Instructions.Trim();
         await db.SaveChangesAsync(cancellationToken);
         return Ok();
     }

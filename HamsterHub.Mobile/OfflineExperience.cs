@@ -3,7 +3,7 @@ using HamsterHub.Contracts;
 
 namespace HamsterHub.Mobile;
 
-internal sealed record DevicePhoto(string Name, string ContentType, string StorageKey, long SizeBytes);
+internal sealed record DevicePhoto(string Name, string ContentType, string? StorageKey = null, long SizeBytes = 0, byte[]? Bytes = null);
 internal sealed record DeviceReport(Guid Id, int TaskId, string TaskName, string Frequency,
     DateTimeOffset CreatedAt, IReadOnlyList<DevicePhoto> Photos, string? Error = null);
 internal sealed record DashboardCache(SessionDto Session, MemberDto Member, DashboardDto Dashboard,
@@ -26,6 +26,24 @@ public sealed partial class MainPage
         var scope = ReportScope;
         if (loadedReportScope == scope) return;
         var stored = await PrivateDeviceFiles.ReadAsync<List<DeviceReport>>(scope) ?? [];
+        if (scope != ReportScope) return;
+        var migrated = false;
+        for (var i = 0; i < stored.Count; i++)
+        {
+            var report = stored[i]; var photos = new List<DevicePhoto>();
+            foreach (var photo in report.Photos)
+            {
+                if (photo.StorageKey is null && photo.Bytes is { } bytes)
+                {
+                    var key = $"report-photo|{scope}|{report.Id}|{photos.Count}";
+                    await PrivateDeviceFiles.SaveBytesAsync(key, bytes);
+                    photos.Add(photo with { StorageKey = key, SizeBytes = bytes.Length, Bytes = null }); migrated = true;
+                }
+                else photos.Add(photo);
+            }
+            stored[i] = report with { Photos = photos };
+        }
+        if (migrated) await PrivateDeviceFiles.SaveAsync(scope, stored);
         if (scope != ReportScope) return;
         pendingSubmissions = stored; loadedReportScope = scope;
     }
@@ -109,7 +127,8 @@ public sealed partial class MainPage
                     await client.CompleteAsync(membership.Id, report.TaskId, report.Photos.Select(photo =>
                         new UploadPhoto(photo.Name, photo.ContentType, async () =>
                         {
-                            var bytes = await PrivateDeviceFiles.ReadBytesAsync(photo.StorageKey)
+                            var bytes = photo.StorageKey is not null ? await PrivateDeviceFiles.ReadBytesAsync(photo.StorageKey) : null;
+                            bytes = bytes
                                 ?? throw new MobileApiException("SavedPhotoUnavailable");
                             return new MemoryStream(bytes, false);
                         })).ToList(), report.Id);
@@ -118,7 +137,7 @@ public sealed partial class MainPage
                     await PrivateDeviceFiles.SaveAsync(scope, next);
                     if (api != client || member != membership || loadedReportScope != scope) return;
                     pendingSubmissions = next;
-                    foreach (var photo in report.Photos) PrivateDeviceFiles.Remove(photo.StorageKey);
+                    foreach (var photo in report.Photos) if (photo.StorageKey is not null) PrivateDeviceFiles.Remove(photo.StorageKey);
                 }
                 catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException) { return; }
                 catch (MobileApiException ex) when (ex.Code is "MobileServerError" or "MobileTryLater") { return; }
@@ -153,7 +172,7 @@ public sealed partial class MainPage
                 {
                     var next = pendingSubmissions.Where(item => item.Id != report.Id).ToList();
                     await PrivateDeviceFiles.SaveAsync(ReportScope, next); pendingSubmissions = next;
-                    foreach (var photo in report.Photos) PrivateDeviceFiles.Remove(photo.StorageKey);
+                    foreach (var photo in report.Photos) if (photo.StorageKey is not null) PrivateDeviceFiles.Remove(photo.StorageKey);
                 }
                 finally { reportGate.Release(); }
                 ShowDashboard();

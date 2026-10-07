@@ -625,7 +625,12 @@ public sealed partial class MainPage : ContentPage
         if (background && (busy || !foreground || photoViewerOpen || revision != screenRevision || client != api || membership != member)) return;
         var nextDashboard = await dashboardTask;
         var nextHousehold = await householdTask;
-        try { await TaskNotifications.ConfigureAsync(server!, membership, client); }
+        try
+        {
+            await TaskNotifications.ConfigureAsync(server!, membership, client);
+            foreach (var queued in pendingSubmissions.Where(item => item.Error is null))
+                TaskNotifications.SuppressTask(queued.TaskId, queued.Frequency);
+        }
         catch (HttpRequestException) { message.Text = L("NotificationSyncFailed"); }
         catch (TaskCanceledException) { message.Text = L("NotificationSyncFailed"); }
         if (background && (busy || !foreground || photoViewerOpen || revision != screenRevision || client != api || membership != member)) return;
@@ -1083,7 +1088,7 @@ public sealed partial class MainPage : ContentPage
         return picker;
     }
 
-    private void ShowForm(string titleKey, Action<VerticalStackLayout> build)
+    private void ShowForm(string titleKey, Action<VerticalStackLayout> build, int? entityId = null)
     {
         RememberScreen();
         pendingPhotoChanges.Clear();
@@ -1095,8 +1100,7 @@ public sealed partial class MainPage : ContentPage
         currentDraftKey = null; flushDraft = null;
         build(form);
         if (formInputs.Count > 0 && member?.Role == "Parent")
-            AttachFormDraft(form, titleKey + "|" + (titleKey.StartsWith("Edit", StringComparison.Ordinal) || titleKey == "MobileEditReward"
-                ? string.Join("|", formInputs.Where(item => item.Value.Key is "TaskName" or "PetName" or "DisplayName" or "RewardName").Select(item => item.Key.Text)) : "new"));
+            AttachFormDraft(form, titleKey + "|" + (entityId?.ToString() ?? "new"));
         body.Add(Card(form, Paper, Color.FromArgb("17312D"), 28, 1));
     }
 
@@ -1355,7 +1359,7 @@ public sealed partial class MainPage : ContentPage
             await LoadSessionAsync(passwordVerified: true);
         }));
         if (!item.IsCurrentUser) AddDeleteAction(form, item.DisplayName, () => api!.ArchiveMemberAsync(member!.Id, item.Id));
-    });
+    }, item.Id);
 
     private void ShowEditPet(PetItemDto item) => ShowForm("EditPet", form =>
     {
@@ -1376,7 +1380,7 @@ public sealed partial class MainPage : ContentPage
             await RefreshAsync();
         }));
         AddDeleteAction(form, item.Name, () => api!.ArchivePetAsync(member!.Id, item.Id));
-    });
+    }, item.Id);
 
     private void ShowEditTask(ManagedTaskItemDto item) => ShowForm("EditCareTask", form =>
     {
@@ -1419,13 +1423,13 @@ public sealed partial class MainPage : ContentPage
             var categoryId = category.SelectedItem is CategoryItemDto { Id: > 0 } selectedCategory ? selectedCategory.Id : (int?)null;
             await api!.UpdateTaskAsync(member!.Id, item.Id, new UpdateTaskRequest(selectedPet is { Id: > 0 } ? selectedPet.Id : null,
                 selectedMember.Id, categoryId, OptionalCategory(custom),
-                (frequency.SelectedItem as Choice)?.Value ?? item.Frequency, pointValue, name.Text.Trim(), reminder(), visuals.VisualKey(), visuals.Instructions.Text));
+                (frequency.SelectedItem as Choice)?.Value ?? item.Frequency, pointValue, name.Text.Trim(), reminder(), visuals.VisualKey() ?? "", visuals.Instructions.Text ?? ""));
             if (photo is not null) await UploadManagementPhotoAsync("tasks", item.Id, photo);
             await ApplyPendingPhotoChangesAsync();
             await RefreshAsync();
         }));
         AddDeleteAction(form, item.Name, () => api!.ArchiveTaskAsync(member!.Id, item.Id));
-    });
+    }, item.Id);
 
     private async Task<IReadOnlyList<FileResult>> ChoosePhotosAsync(int limit)
     {

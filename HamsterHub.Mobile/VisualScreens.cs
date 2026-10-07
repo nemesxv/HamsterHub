@@ -190,5 +190,5 @@ public sealed partial class MainPage
             }));
         }
         AddDeleteAction(form, item.Name, () => api!.ArchiveRewardAsync(member!.Id, item.Id));
-    });
+    }, item.Id);
 }
