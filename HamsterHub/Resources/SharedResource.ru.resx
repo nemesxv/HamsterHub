@@ -667,4 +667,5 @@
 Поиграйте спокойно.
 Дай питомцу отдохнуть.</value></data>
   <data name="PicturesWordsMode" xml:space="preserve"><value>Картинки и слова</value></data>
+  <data name="SavedPhotoUnavailable" xml:space="preserve"><value>Не удалось прочитать сохранённое фото. Удалите этот отчёт и добавьте фото снова.</value></data>
 </root>

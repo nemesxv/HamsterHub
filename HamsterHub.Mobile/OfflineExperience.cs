@@ -3,7 +3,7 @@ using HamsterHub.Contracts;
 
 namespace HamsterHub.Mobile;
 
-internal sealed record DevicePhoto(string Name, string ContentType, byte[] Bytes);
+internal sealed record DevicePhoto(string Name, string ContentType, string StorageKey, long SizeBytes);
 internal sealed record DeviceReport(Guid Id, int TaskId, string TaskName, string Frequency,
     DateTimeOffset CreatedAt, IReadOnlyList<DevicePhoto> Photos, string? Error = null);
 internal sealed record DashboardCache(SessionDto Session, MemberDto Member, DashboardDto Dashboard,
@@ -54,7 +54,12 @@ public sealed partial class MainPage
         await LoadReportsAsync();
         if (pendingSubmissions.Any(item => item.TaskId == task.Id)) return true;
         if (pendingSubmissions.Count >= 20) throw new MobileApiException("OutboxFull");
+        var reportId = Guid.NewGuid();
         var photos = new List<DevicePhoto>();
+        var storedPhotoKeys = new List<string>();
+        var committed = false;
+        try
+        {
         foreach (var file in selectedPhotos)
         {
             using var stream = await file.OpenReadAsync();
@@ -65,23 +70,27 @@ public sealed partial class MainPage
                 if (buffer.Length + count > 5 * 1024 * 1024) throw new MobileApiException("TaskPhotoTooLarge");
                 await buffer.WriteAsync(chunk.AsMemory(0, count));
             }
-            photos.Add(new(file.FileName, MimeType(file), buffer.ToArray()));
+            var key = $"report-photo|{ReportScope}|{reportId}|{photos.Count}";
+            if (pendingSubmissions.Sum(item => item.Photos.Sum(photo => photo.SizeBytes)) + photos.Sum(photo => photo.SizeBytes) + buffer.Length > 80 * 1024 * 1024)
+                throw new MobileApiException("OutboxFull");
+            await PrivateDeviceFiles.SaveBytesAsync(key, buffer.ToArray()); storedPhotoKeys.Add(key);
+            photos.Add(new(file.FileName, MimeType(file), key, buffer.Length));
         }
-        if (pendingSubmissions.Sum(item => item.Photos.Sum(photo => (long)photo.Bytes.Length)) + photos.Sum(photo => (long)photo.Bytes.Length) > 80 * 1024 * 1024)
-            throw new MobileApiException("OutboxFull");
-        var report = new DeviceReport(Guid.NewGuid(), task.Id, task.Name, task.Frequency, DateTimeOffset.UtcNow, photos);
+        var report = new DeviceReport(reportId, task.Id, task.Name, task.Frequency, DateTimeOffset.UtcNow, photos);
         await reportGate.WaitAsync();
         try
         {
             var next = pendingSubmissions.Append(report).ToList();
             await PrivateDeviceFiles.SaveAsync(ReportScope, next);
-            pendingSubmissions = next;
+            pendingSubmissions = next; committed = true;
         }
         finally { reportGate.Release(); }
         selectedPhotos.Clear();
         TaskNotifications.SuppressTask(task.Id, task.Frequency);
         await SendPendingReportsAsync();
         return pendingSubmissions.Any(item => item.Id == report.Id);
+        }
+        finally { if (!committed) foreach (var key in storedPhotoKeys) PrivateDeviceFiles.Remove(key); }
     }
 
     private async Task SendPendingReportsAsync()
@@ -98,12 +107,18 @@ public sealed partial class MainPage
                 try
                 {
                     await client.CompleteAsync(membership.Id, report.TaskId, report.Photos.Select(photo =>
-                        new UploadPhoto(photo.Name, photo.ContentType, () => Task.FromResult<Stream>(new MemoryStream(photo.Bytes, false)))).ToList(), report.Id);
+                        new UploadPhoto(photo.Name, photo.ContentType, async () =>
+                        {
+                            var bytes = await PrivateDeviceFiles.ReadBytesAsync(photo.StorageKey)
+                                ?? throw new MobileApiException("SavedPhotoUnavailable");
+                            return new MemoryStream(bytes, false);
+                        })).ToList(), report.Id);
                     if (api != client || member != membership || loadedReportScope != scope) return;
                     var next = pendingSubmissions.Where(item => item.Id != report.Id).ToList();
                     await PrivateDeviceFiles.SaveAsync(scope, next);
                     if (api != client || member != membership || loadedReportScope != scope) return;
                     pendingSubmissions = next;
+                    foreach (var photo in report.Photos) PrivateDeviceFiles.Remove(photo.StorageKey);
                 }
                 catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException) { return; }
                 catch (MobileApiException ex) when (ex.Code is "MobileServerError" or "MobileTryLater") { return; }
@@ -138,6 +153,7 @@ public sealed partial class MainPage
                 {
                     var next = pendingSubmissions.Where(item => item.Id != report.Id).ToList();
                     await PrivateDeviceFiles.SaveAsync(ReportScope, next); pendingSubmissions = next;
+                    foreach (var photo in report.Photos) PrivateDeviceFiles.Remove(photo.StorageKey);
                 }
                 finally { reportGate.Release(); }
                 ShowDashboard();

@@ -667,4 +667,5 @@ Wash your hands.</value></data>
 Play gently together.
 Let your pet rest.</value></data>
   <data name="PicturesWordsMode" xml:space="preserve"><value>Pictures and words</value></data>
+  <data name="SavedPhotoUnavailable" xml:space="preserve"><value>Could not read a saved photo. Remove this report and add the photo again.</value></data>
 </root>
