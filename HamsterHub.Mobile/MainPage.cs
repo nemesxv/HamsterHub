@@ -453,6 +453,21 @@ public sealed partial class MainPage : ContentPage
         };
     }
 
+    private void RevealInput(VisualElement input)
+    {
+        // Expand form sections only, never the page concealed by the parent lock.
+        var ancestors = new List<VisualElement>();
+        for (Element? parent = input.Parent; parent is not null; parent = parent.Parent)
+        {
+            if (ReferenceEquals(parent, body))
+            {
+                foreach (var ancestor in ancestors) ancestor.IsVisible = true;
+                return;
+            }
+            if (parent is VisualElement visual) ancestors.Add(visual);
+        }
+    }
+
     private bool ValidateInputs()
     {
         VisualElement? first = null;
@@ -463,7 +478,7 @@ public sealed partial class MainPage : ContentPage
             var reason = InputError(details.Key, input.Text);
             details.Error.Text = reason is null ? "" : L(reason);
             details.Error.IsVisible = reason is not null;
-            if (reason is not null) first ??= input;
+            if (reason is not null) { RevealInput(input); first ??= input; }
         }
         var additionalErrors = false;
         foreach (var (picker, details) in formPickers)
@@ -472,7 +487,7 @@ public sealed partial class MainPage : ContentPage
             details.Error.IsVisible = details.Required && picker.SelectedItem is null;
             details.Error.Text = details.Error.IsVisible ? L("FieldRequired") : "";
             additionalErrors |= details.Error.IsVisible;
-            if (details.Error.IsVisible) first ??= picker;
+            if (details.Error.IsVisible) { RevealInput(picker); first ??= picker; }
         }
         foreach (var group in formGroups)
         {
@@ -480,7 +495,7 @@ public sealed partial class MainPage : ContentPage
             group.Error.Text = reason is null ? "" : L(reason);
             group.Error.IsVisible = reason is not null;
             additionalErrors |= group.Error.IsVisible;
-            if (group.Error.IsVisible) first ??= group.Error;
+            if (group.Error.IsVisible) { RevealInput(group.Error); first ??= group.Error; }
         }
         if (first is { } invalid)
         {
@@ -497,16 +512,16 @@ public sealed partial class MainPage : ContentPage
             "InvalidRewardImage" or "RewardImageTooLarge")
         {
             if (formPhotoErrors.Values.FirstOrDefault() is { } photoError)
-            { photoError.Text = L(code); photoError.IsVisible = true; return true; }
+            { photoError.Text = L(code); photoError.IsVisible = true; RevealInput(photoError); return true; }
         }
         if (code == "ChooseRewardAudience" && formGroups.Count > 0)
         {
-            formGroups[0].Error.Text = L(code); formGroups[0].Error.IsVisible = true; return true;
+            formGroups[0].Error.Text = L(code); formGroups[0].Error.IsVisible = true; RevealInput(formGroups[0].Error); return true;
         }
         if (code == "ChooseMember")
         {
             foreach (var details in formPickers.Values.Where(item => item.Title == L("ChooseMember")))
-            { details.Error.Text = L(code); details.Error.IsVisible = true; }
+            { details.Error.Text = L(code); details.Error.IsVisible = true; RevealInput(details.Error); }
             return formPickers.Values.Any(item => item.Title == L("ChooseMember"));
         }
         var key = code switch
@@ -523,7 +538,7 @@ public sealed partial class MainPage : ContentPage
             (pair.Value.Key == key || (code == "NameLength" && pair.Value.Key is "DisplayName" or "TaskName" or "PetName" or "RewardName"))).ToList();
         if (candidates.Count == 0) return false;
         foreach (var pair in candidates)
-        { pair.Value.Error.Text = L(code); pair.Value.Error.IsVisible = true; }
+        { pair.Value.Error.Text = L(code); pair.Value.Error.IsVisible = true; RevealInput(pair.Key); }
         candidates[0].Key.Focus();
         return true;
     }
